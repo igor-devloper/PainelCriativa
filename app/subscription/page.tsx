@@ -20,7 +20,7 @@ const SubscriptionPage = async (): Promise<JSX.Element> => {
   return (
     <>
       <Navbar />
-      <h1 className="scroll-my-2.5 space-y-10 p-6 text-2xl font-bold">
+      <h1 className="md:items-star flex items-center justify-center space-y-10 p-6 text-2xl font-bold md:justify-start">
         Assinatura
       </h1>
       <ScrollArea>
@@ -54,7 +54,7 @@ const SubscriptionPage = async (): Promise<JSX.Element> => {
             <Card className="mb-10 w-[300px] md:w-[400px]">
               <CardHeader className="relative border-b border-solid">
                 {hasPremiumPlan && (
-                  <Badge className="absolute left-4 top-12 bg-primary/10 text-primary">
+                  <Badge className="md:eft-4 w-[48px] bg-primary/10 text-primary md:absolute md:top-12">
                     Ativo
                   </Badge>
                 )}
@@ -76,8 +76,7 @@ const SubscriptionPage = async (): Promise<JSX.Element> => {
                   <CheckIcon className="text-primary" />
                   <p>Relatórios de IA</p>
                 </div>
-                {/* Exibir o botão para adquirir o plano em qualquer condição */}
-                {!hasPremiumPlan && <AcquirePlanButton />}
+                <AcquirePlanButton />
               </CardContent>
             </Card>
           </div>
