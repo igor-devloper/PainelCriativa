@@ -61,7 +61,7 @@ const TransactionsPieChart = ({
     },
   ];
   return (
-    <ScrollArea className="h-full rounded-md border pb-6">
+    <ScrollArea className="h-full rounded-md border">
       <Card className="flex flex-col p-6">
         <CardContent className="flex-1 pb-0">
           <ChartContainer
