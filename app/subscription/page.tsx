@@ -8,23 +8,25 @@ import { Badge } from "../_components/ui/badge";
 import { getCurrentMonthTransactions } from "../_data/get-current-month-transactions";
 import { ScrollArea } from "../_components/ui/scroll-area";
 
-const SubscriptionPage = async () => {
+const SubscriptionPage = async (): Promise<JSX.Element> => {
   const { userId } = await auth();
   if (!userId) {
     redirect("/login");
   }
-  const user = await clerkClient().users.getUser(userId);
+  const user = await clerkClient.users.getUser(userId);
   const currentMonthTransactions = await getCurrentMonthTransactions();
-  const hasPremiumPlan = user.publicMetadata.subscriptionPlan == "premium";
+  const hasPremiumPlan = user?.publicMetadata?.subscriptionPlan === "premium";
+
   return (
     <>
       <Navbar />
-      <div className="space-y-6 p-6">
-        <h1 className="scroll-my-2.5 text-2xl font-bold">Assinatura</h1>
-
-        <ScrollArea className="h-screen w-full object-cover">
-          <div className="flex flex-col items-center gap-6 md:flex-row">
-            <Card className="w-[400px]">
+      <h1 className="scroll-my-2.5 space-y-10 p-6 text-2xl font-bold">
+        Assinatura
+      </h1>
+      <ScrollArea>
+        <div className="scroll-mb-20">
+          <div className="flex flex-col items-center justify-center gap-6 md:flex-row">
+            <Card className="w-[300px] md:w-[400px]">
               <CardHeader className="border-b border-solid py-8">
                 <h2 className="text-center text-2xl font-semibold">
                   Plano Básico
@@ -49,8 +51,8 @@ const SubscriptionPage = async () => {
               </CardContent>
             </Card>
 
-            <Card className="w-[400px]">
-              <CardHeader className="relative border-b border-solid py-8">
+            <Card className="mb-10 w-[300px] md:w-[400px]">
+              <CardHeader className="relative border-b border-solid">
                 {hasPremiumPlan && (
                   <Badge className="absolute left-4 top-12 bg-primary/10 text-primary">
                     Ativo
@@ -74,12 +76,13 @@ const SubscriptionPage = async () => {
                   <CheckIcon className="text-primary" />
                   <p>Relatórios de IA</p>
                 </div>
-                <AcquirePlanButton />
+                {/* Exibir o botão para adquirir o plano em qualquer condição */}
+                {!hasPremiumPlan && <AcquirePlanButton />}
               </CardContent>
             </Card>
           </div>
-        </ScrollArea>
-      </div>
+        </div>
+      </ScrollArea>
     </>
   );
 };
