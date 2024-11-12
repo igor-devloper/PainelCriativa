@@ -22,7 +22,7 @@ Bem-vindo ao **finance.app**! Este é um projeto desenvolvido com **Next.js**, q
 
 | Tela de Login | Tela de Relatórios |
 | --- | --- |
-| ![login](./public/) | ![relatorios](./screenshots/relatorios.png) |
+| ![login](./public/login.png) | ![relatorios](./public/dashboard.png) |
 
 ## ⚙️ Como Executar o Projeto
 
@@ -70,7 +70,7 @@ Para desbloquear todos os recursos do **finance.app**, você pode optar pelo nos
 
 ## 🤖 Usando a API da OpenAI
 A API da OpenAI é usada para gerar relatórios dinâmicos com base nas suas transações cadastradas. Com isso, você terá insights detalhados, dicas de economia e muito mais!
-![relatorios](./screenshots/relatorios.png) 
+![relatorios](./public/image.png) 
 
 ## 🛠️ Configurações Extras
 
