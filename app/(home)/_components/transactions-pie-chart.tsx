@@ -43,23 +43,31 @@ const TransactionsPieChart = ({
   expensesTotal,
   typesPercentage,
 }: TransactionsPieChartProps) => {
-  const chartData = [
-    {
-      type: TransactionType.DEPOSIT,
-      amount: depositsTotal,
-      fill: "#55B02E",
-    },
-    {
-      type: TransactionType.EXPENSE,
-      amount: expensesTotal,
-      fill: "#E93030",
-    },
-    {
-      type: TransactionType.INVESTMENT,
-      amount: investmentsTotal,
-      fill: "#FFFFFF",
-    },
-  ];
+  // Verifica se todos os valores são zero
+  const hasNoData =
+    depositsTotal === 0 && investmentsTotal === 0 && expensesTotal === 0;
+
+  // Configuração de dados do gráfico
+  const chartData = hasNoData
+    ? [] // Vazio se não houver dados
+    : [
+        {
+          type: TransactionType.DEPOSIT,
+          amount: depositsTotal,
+          fill: "#55B02E",
+        },
+        {
+          type: TransactionType.EXPENSE,
+          amount: expensesTotal,
+          fill: "#E93030",
+        },
+        {
+          type: TransactionType.INVESTMENT,
+          amount: investmentsTotal,
+          fill: "#FFFFFF",
+        },
+      ];
+
   return (
     <ScrollArea className="h-full rounded-md border">
       <Card className="flex flex-col p-6">
@@ -68,35 +76,41 @@ const TransactionsPieChart = ({
             config={chartConfig}
             className="mx-auto aspect-square max-h-[250px]"
           >
-            <PieChart>
-              <ChartTooltip
-                cursor={false}
-                content={<ChartTooltipContent hideLabel />}
-              />
-              <Pie
-                data={chartData}
-                dataKey="amount"
-                nameKey="type"
-                innerRadius={60}
-              />
-            </PieChart>
+            {hasNoData ? (
+              <p className="text-center font-bold text-gray-500">Not found</p>
+            ) : (
+              <PieChart>
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent hideLabel />}
+                />
+                <Pie
+                  data={chartData}
+                  dataKey="amount"
+                  nameKey="type"
+                  innerRadius={60}
+                />
+              </PieChart>
+            )}
           </ChartContainer>
 
           <div className="space-y-3">
             <PercentageItem
               icon={<TrendingUpIcon size={16} className="text-primary" />}
               title="Receita"
-              value={typesPercentage[TransactionType.DEPOSIT]}
+              value={hasNoData ? 0 : typesPercentage[TransactionType.DEPOSIT]}
             />
             <PercentageItem
               icon={<TrendingDownIcon size={16} className="text-red-500" />}
               title="Despesas"
-              value={typesPercentage[TransactionType.EXPENSE]}
+              value={hasNoData ? 0 : typesPercentage[TransactionType.EXPENSE]}
             />
             <PercentageItem
               icon={<PiggyBankIcon size={16} />}
               title="Investido"
-              value={typesPercentage[TransactionType.INVESTMENT]}
+              value={
+                hasNoData ? 0 : typesPercentage[TransactionType.INVESTMENT]
+              }
             />
           </div>
         </CardContent>

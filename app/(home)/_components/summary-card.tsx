@@ -28,18 +28,22 @@ const SummaryCard = ({
         </p>
       </CardHeader>
       <CardContent className="flex justify-between">
-        <p
-          className={`font-bold ${size === "small" ? "text-xl md:text-2xl" : "text-2xl md:text-4xl"}`}
-        >
-          {Intl.NumberFormat("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-          }).format(amount)}
-        </p>
+        <div className="space-y-4 md:flex md:flex-col md:gap-2">
+          <p
+            className={`font-bold ${size === "small" ? "text-xl md:text-2xl" : "text-2xl md:text-4xl"}`}
+          >
+            {Intl.NumberFormat("pt-BR", {
+              style: "currency",
+              currency: "BRL",
+            }).format(amount)}
+          </p>
 
-        {size === "large" && (
-          <AddTransactionButton userCanAddTransaction={userCanAddTransaction} />
-        )}
+          {size === "large" && (
+            <AddTransactionButton
+              userCanAddTransaction={userCanAddTransaction}
+            />
+          )}
+        </div>
       </CardContent>
     </Card>
   );
