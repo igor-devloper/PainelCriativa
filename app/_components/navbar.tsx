@@ -61,7 +61,7 @@ const Navbar = () => {
 
       {/* DIREITA */}
       <div className="flex items-center gap-4 md:gap-6">
-        <div className="hidden">
+        <div className="hidden justify-center md:flex">
           <UserButton showName />
         </div>
         <div className="flex justify-center md:hidden">
