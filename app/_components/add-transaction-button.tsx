@@ -20,15 +20,22 @@ const AddTransactionButton = ({
 }: AddTransactionButtonProps) => {
   const [dialogIsOpen, setDialogIsOpen] = useState(false);
 
+  const handleClick = () => {
+    if (userCanAddTransaction) {
+      setDialogIsOpen(true);
+    }
+  };
+
   return (
     <>
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              className="h-9 rounded-full px-3 md:rounded-full md:font-bold"
-              onClick={() => setDialogIsOpen(true)}
-              disabled={!userCanAddTransaction}
+              className={`h-9 rounded-full px-3 md:rounded-full md:font-bold ${
+                userCanAddTransaction ? "" : "cursor-not-allowed opacity-50"
+              }`}
+              onClick={handleClick}
             >
               Adicionar transação
               <ArrowDownUpIcon />
