@@ -22,8 +22,8 @@ const SubscriptionPage = async () => {
       <div className="space-y-6 p-6">
         <h1 className="scroll-my-2.5 text-2xl font-bold">Assinatura</h1>
 
-        <ScrollArea>
-          <div className="flex flex-col items-center gap-6 pb-5 md:flex-row">
+        <ScrollArea className="h-screen w-full object-cover">
+          <div className="flex flex-col items-center gap-6 md:flex-row">
             <Card className="w-[400px]">
               <CardHeader className="border-b border-solid py-8">
                 <h2 className="text-center text-2xl font-semibold">
