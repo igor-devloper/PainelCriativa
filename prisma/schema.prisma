@@ -25,7 +25,7 @@ model Transaction {
   createdAt     DateTime                 @default(now())
   updatedAt     DateTime                 @updatedAt
   userId        String
-  imageUrl      String?                  // Adiciona o campo para a URL da imagem
+  imageUrl      String[]                  // Adiciona o campo para a URL da imagem
 }
 
 enum TransactionType {

@@ -1,11 +1,9 @@
 import { db } from "../_lib/prisma";
 import { DataTable } from "../_components/ui/data-table";
-import { transactionColumns } from "./_columns";
-import AddTransactionButton from "../_components/add-transaction-button";
+import { adminColumns } from "./_columns";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { ScrollArea } from "../_components/ui/scroll-area";
-import { canUserAddTransaction } from "../_data/can-user-add-transaction";
+import { ScrollArea, ScrollBar } from "../_components/ui/scroll-area";
 import {
   SidebarInset,
   SidebarProvider,
@@ -13,22 +11,25 @@ import {
 } from "../_components/ui/sidebar";
 import { AppSidebar } from "../_components/app-sidebar";
 import { Separator } from "../_components/ui/separator";
-import { HandCoins } from "lucide-react";
+import { userAdmin } from "../_data/user-admin";
+import { FileSliders } from "lucide-react";
 
-const TransactionsPage = async () => {
+const AdminPage = async () => {
   const { userId } = await auth();
+  const usuarioAdm = await userAdmin();
   if (!userId) {
     redirect("/login");
   }
+  if (usuarioAdm) {
+    redirect("/");
+  }
+
   const transactions = await db.transaction.findMany({
-    where: {
-      userId,
-    },
     orderBy: {
       date: "desc",
     },
   });
-  const userCanAddTransaction = await canUserAddTransaction();
+  console.log(transactions);
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -45,18 +46,16 @@ const TransactionsPage = async () => {
               {/* TÍTULO E BOTÃO */}
               <div className="flex flex-col items-center gap-4 md:w-full md:flex-row md:justify-between">
                 <div className="flex items-center justify-center gap-2">
-                  <HandCoins />
-                  <h1 className="text-2xl font-bold">Transações</h1>
+                  <FileSliders />
+                  <h1 className="text-2xl font-bold">Dashboard Admin</h1>
                 </div>
-                <AddTransactionButton
-                  userCanAddTransaction={userCanAddTransaction}
-                />
               </div>
               <ScrollArea className="h-full">
                 <DataTable
-                  columns={transactionColumns}
+                  columns={adminColumns}
                   data={JSON.parse(JSON.stringify(transactions))}
                 />
+                <ScrollBar orientation="horizontal" />
               </ScrollArea>
             </div>
           </>
@@ -66,4 +65,4 @@ const TransactionsPage = async () => {
   );
 };
 
-export default TransactionsPage;
+export default AdminPage;

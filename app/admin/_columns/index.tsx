@@ -1,17 +1,18 @@
 "use client";
 
 import { Transaction } from "@prisma/client";
+import { CldImage } from "next-cloudinary";
 import { ColumnDef } from "@tanstack/react-table";
-import TransactionTypeBadge from "../_components/type-badge";
+import TransactionTypeBadge from "../../transactions/_components/type-badge";
 import {
   TRANSACTION_CATEGORY_LABELS,
   TRANSACTION_PAYMENT_METHOD_LABELS,
 } from "@/app/_constants/transactions";
-import EditTransactionButton from "../_components/edit-transaction-button";
-import DeleteTransactionButton from "../_components/delete-transaction-button";
-import { ImageGallery } from "../_components/image-gallery";
+import EditTransactionButton from "../../transactions/_components/edit-transaction-button";
+import DeleteTransactionButton from "../../transactions/_components/delete-transaction-button";
+import UserInfo from "@/app/_components/user-info";
 
-export const transactionColumns: ColumnDef<Transaction>[] = [
+export const adminColumns: ColumnDef<Transaction>[] = [
   {
     accessorKey: "name",
     header: "Nome",
@@ -55,12 +56,34 @@ export const transactionColumns: ColumnDef<Transaction>[] = [
       }).format(Number(transaction.amount)),
   },
   {
-    accessorKey: "imageUrl",
+    accessorKey: "image",
     header: "Comprovantes",
-    cell: ({ row }) => {
-      const imageUrls = row.original.imageUrl;
-      return <ImageGallery images={imageUrls} />;
+    cell: ({ row: { original: transaction } }) => {
+      const imageUrl = transaction.imageUrl;
+
+      return (
+        <div className="space-x-1">
+          {imageUrl ? (
+            <CldImage
+              src={Array.isArray(imageUrl) ? imageUrl[0] : imageUrl}
+              width="50"
+              height="50"
+              crop={{ type: "auto", source: true }}
+              alt="Comprovante"
+            />
+          ) : (
+            <div>Sem imagem disponível</div>
+          )}
+        </div>
+      );
     },
+  },
+  {
+    accessorKey: "user",
+    header: "Usuário",
+    cell: ({ row: { original: transaction } }) => (
+      <UserInfo userId={transaction.userId} />
+    ),
   },
   {
     accessorKey: "actions",

@@ -38,12 +38,12 @@ import {
   TransactionCategory,
   TransactionPaymentMethod,
 } from "@prisma/client";
-import { FileImage } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { upsertTransaction } from "../_actions/upsert-transaction";
 import { toast } from "sonner";
 import { useState } from "react";
+import { ImageUpload } from "./image-upload";
 
 interface UpsertTransactionDialogProps {
   isOpen: boolean;
@@ -56,7 +56,7 @@ const formSchema = z.object({
   name: z.string().trim().min(1, {
     message: "O nome é obrigatório.",
   }),
-  descripiton: z.string().trim().min(1, {
+  description: z.string().trim().min(1, {
     message: "A Descrição é obrigatória.",
   }),
   amount: z
@@ -88,7 +88,7 @@ const UpsertTransactionDialog = ({
   transactionId,
   setIsOpen,
 }: UpsertTransactionDialogProps) => {
-  const [image, setImage] = useState<File | null>(null);
+  const [images, setImages] = useState<File[]>([]);
 
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
@@ -97,7 +97,7 @@ const UpsertTransactionDialog = ({
       category: TransactionCategory.OTHER,
       date: new Date(),
       name: "",
-      descripiton: "",
+      description: "",
       paymentMethod: TransactionPaymentMethod.CASH,
       type: TransactionType.EXPENSE,
     },
@@ -105,29 +105,27 @@ const UpsertTransactionDialog = ({
 
   const onSubmit = async (data: FormSchema) => {
     try {
-      // Converte o arquivo da imagem para base64, se fornecido
-      let imageBase64: string | undefined = undefined;
-      if (image) {
-        imageBase64 = await fileToBase64(image);
-      }
+      const imagesBase64 = await Promise.all(
+        images.map((file) => fileToBase64(file)),
+      );
 
       await upsertTransaction({
         ...data,
         id: transactionId,
-        imageBase64, // Adiciona a imagem no payload
+        imagesBase64,
       });
       setIsOpen(false);
       form.reset();
-      setImage(null); // Limpa o estado da imagem
+      setImages([]);
       toast.success("Transação criada com sucesso!");
     } catch (error) {
       console.error(error);
+      toast.error("Erro ao criar transação. Tente novamente.");
     }
   };
 
   const isUpdate = Boolean(transactionId);
 
-  // Função para converter o arquivo em Base64
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -143,7 +141,7 @@ const UpsertTransactionDialog = ({
         setIsOpen(open);
         if (!open) {
           form.reset();
-          setImage(null);
+          setImages([]);
         }
       }}
     >
@@ -177,7 +175,7 @@ const UpsertTransactionDialog = ({
               />
               <FormField
                 control={form.control}
-                name="descripiton"
+                name="description"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Descrição</FormLabel>
@@ -189,28 +187,28 @@ const UpsertTransactionDialog = ({
                 )}
               />
             </div>
-            <FormField
-              control={form.control}
-              name="amount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Valor</FormLabel>
-                  <FormControl>
-                    <MoneyInput
-                      placeholder="Digite o valor..."
-                      value={field.value}
-                      onValueChange={({ floatValue }) =>
-                        field.onChange(floatValue)
-                      }
-                      onBlur={field.onBlur}
-                      disabled={field.disabled}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="grid grid-cols-2 items-center justify-center space-x-8">
+            <div className="grid grid-cols-3 items-center justify-center space-x-8">
+              <FormField
+                control={form.control}
+                name="amount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Valor</FormLabel>
+                    <FormControl>
+                      <MoneyInput
+                        placeholder="Digite o valor..."
+                        value={field.value}
+                        onValueChange={({ floatValue }) =>
+                          field.onChange(floatValue)
+                        }
+                        onBlur={field.onBlur}
+                        disabled={field.disabled}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="type"
@@ -293,38 +291,25 @@ const UpsertTransactionDialog = ({
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 items-center justify-center space-x-8">
-              <FormField
-                control={form.control}
-                name="date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Data</FormLabel>
-                    <DatePicker value={field.value} onChange={field.onChange} />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormItem>
-                <FormLabel>Imagem</FormLabel>
-                <FormControl>
-                  <div>
-                    <div className="w-10 rounded-md border p-2">
-                      <label htmlFor="file-upload">
-                        <FileImage size={24} />
-                      </label>
-                    </div>
-                    <input id="file-upload" type="file" className="hidden" />
-                  </div>
-                </FormControl>
-                {image && (
-                  <p className="text-sm text-gray-600">
-                    Arquivo selecionado: {image.name}
-                  </p>
-                )}
-                <FormMessage />
-              </FormItem>
-            </div>
+            <FormField
+              control={form.control}
+              name="date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Data</FormLabel>
+                  <DatePicker value={field.value} onChange={field.onChange} />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormItem>
+              <FormLabel>Imagens</FormLabel>
+              <FormControl>
+                <ImageUpload onChange={setImages} value={images} maxFiles={3} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
             <DialogFooter>
               <DialogClose asChild>
                 <Button type="button" variant="outline">

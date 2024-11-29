@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use server";
 
 import { db } from "@/app/_lib/prisma";
@@ -11,20 +12,26 @@ import {
 import { upsertTransactionSchema } from "./schema";
 import { revalidatePath } from "next/cache";
 
-// Configura o Cloudinary
+// Cloudinary configuration
 if (
-  !process.env.CLOUDINARY_CLOUD_NAME ||
+  !process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ||
   !process.env.CLOUDINARY_API_KEY ||
   !process.env.CLOUDINARY_API_SECRET
 ) {
-  throw new Error("Cloudinary credentials are missing");
+  console.error("Cloudinary credentials are missing");
+  throw new Error("Server configuration error");
 }
 
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+try {
+  cloudinary.config({
+    cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+} catch (error) {
+  console.error("Error configuring Cloudinary:", error);
+  throw new Error("Server configuration error");
+}
 
 interface UpsertTransactionParams {
   id?: string;
@@ -32,73 +39,70 @@ interface UpsertTransactionParams {
   amount: number;
   type: TransactionType;
   category: TransactionCategory;
-  descripiton?: string;
+  description?: string;
   paymentMethod: TransactionPaymentMethod;
-  imageBase64?: string; // Adiciona a imagem no formato base64
+  imagesBase64?: string[];
   date: Date;
 }
 
 export const upsertTransaction = async (params: UpsertTransactionParams) => {
-  // Valida os parâmetros usando o schema
-  upsertTransactionSchema.parse(params);
+  try {
+    // Validate parameters using the schema
+    upsertTransactionSchema.parse(params);
 
-  // Obtém o userId a partir da autenticação
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
-
-  // Variável para armazenar a URL da imagem
-  let imageUrl: string | undefined = undefined;
-
-  // Se a imagem em base64 for fornecida, tenta fazer o upload para o Cloudinary
-  if (params.imageBase64) {
-    try {
-      // Verifica se a string da imagem base64 já contém o prefixo necessário
-      const base64Image = params.imageBase64.startsWith("data:image")
-        ? params.imageBase64
-        : `data:image/jpeg;base64,${params.imageBase64}`;
-
-      // Realiza o upload da imagem para o Cloudinary
-      const uploadResult = await cloudinary.uploader.upload(base64Image, {
-        folder: "transactions", // Pasta no Cloudinary para organizar as imagens
-        resource_type: "image", // Define o tipo de recurso como imagem
-      });
-
-      // Obtém a URL segura da imagem enviada
-      imageUrl = uploadResult.secure_url;
-    } catch (error) {
-      console.error("Erro ao fazer upload da imagem:", error);
-      throw new Error(
-        "Não foi possível fazer o upload da imagem para o Cloudinary. Por favor, tente novamente.",
-      );
+    const { userId } = await auth();
+    if (!userId) {
+      throw new Error("Unauthorized");
     }
+
+    let imageUrls: string[] = [];
+
+    if (params.imagesBase64 && params.imagesBase64.length > 0) {
+      try {
+        const uploadPromises = params.imagesBase64.map(async (base64Image) => {
+          const imageData = base64Image.startsWith("data:image")
+            ? base64Image
+            : `data:image/jpeg;base64,${base64Image}`;
+
+          const uploadResult = await cloudinary.uploader.upload(imageData, {
+            folder: "transactions",
+            resource_type: "image",
+          });
+
+          return uploadResult.secure_url;
+        });
+
+        imageUrls = await Promise.all(uploadPromises);
+      } catch (error) {
+        console.error("Error uploading images:", error);
+        throw new Error("Unable to upload images. Please try again.");
+      }
+    }
+
+    await db.transaction.upsert({
+      update: {
+        ...filterParams(params),
+        imageUrl: imageUrls,
+        userId,
+      },
+      create: {
+        ...filterParams(params),
+        imageUrl: imageUrls,
+        userId,
+      },
+      where: {
+        id: params?.id ?? "",
+      },
+    });
+
+    revalidatePath("/transactions");
+  } catch (error) {
+    console.error("Error in upsertTransaction:", error);
+    throw error; // Re-throw the error to be handled by the client
   }
-
-  // Realiza o upsert na base de dados sem passar o campo imageBase64
-  await db.transaction.upsert({
-    update: {
-      ...filterParams(params),
-      imageUrl,
-      userId,
-    },
-    create: {
-      ...filterParams(params),
-      imageUrl,
-      userId,
-    },
-    where: {
-      id: params?.id ?? "", // Verifica o id ou cria um novo
-    },
-  });
-
-  // Revalida o caminho para atualizar a UI, se necessário
-  revalidatePath("/transactions");
 };
 
-// Função para filtrar os parâmetros e remover imageBase64
 function filterParams(params: UpsertTransactionParams) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { imageBase64, ...rest } = params;
+  const { imagesBase64, ...rest } = params;
   return rest;
 }

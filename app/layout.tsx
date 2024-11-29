@@ -10,8 +10,33 @@ const mulish = Mulish({
 });
 
 export const metadata: Metadata = {
-  title: "Finance App",
-  description: "Esducação Financeira",
+  title: "Painel Criativa",
+  description: "Painel de prestação de contas",
+  icons: {
+    icon: [
+      { rel: "icon", url: "/logo.png" },
+      {
+        rel: "icon",
+        type: "image/png",
+        sizes: "32x32",
+        url: "/favicon-32x32.png",
+      },
+      {
+        rel: "icon",
+        type: "image/png",
+        sizes: "16x16",
+        url: "/favicon-16x16.png",
+      },
+      {
+        rel: "apple-touch-icon",
+        sizes: "180x180",
+        url: "/apple-touch-icon.png",
+      },
+      { rel: "manifest", url: "/site.webmanifest" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({
