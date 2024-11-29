@@ -15,14 +15,10 @@ export const TRANSACTION_PAYMENT_METHOD_ICONS = {
 };
 
 export const TRANSACTION_CATEGORY_LABELS = {
-  EDUCATION: "Educação",
-  ENTERTAINMENT: "Entretenimento",
   FOOD: "Alimentação",
-  HEALTH: "Saúde",
-  HOUSING: "Moradia",
   OTHER: "Outros",
-  SALARY: "Salário",
-  TRANSPORTATION: "Transporte",
+  ADVANCE: "Adiantamento",
+  GASOLINE: "Gasolina da Locação",
   UTILITY: "Utilidades",
 };
 
@@ -44,10 +40,6 @@ export const TRANSACTION_TYPE_OPTIONS = [
   {
     value: TransactionType.DEPOSIT,
     label: "Depósito",
-  },
-  {
-    value: TransactionType.INVESTMENT,
-    label: "Investimento",
   },
 ];
 
@@ -88,36 +80,20 @@ export const TRANSACTION_PAYMENT_METHOD_OPTIONS = [
 
 export const TRANSACTION_CATEGORY_OPTIONS = [
   {
-    value: TransactionCategory.EDUCATION,
-    label: TRANSACTION_CATEGORY_LABELS[TransactionCategory.EDUCATION],
-  },
-  {
-    value: TransactionCategory.ENTERTAINMENT,
-    label: TRANSACTION_CATEGORY_LABELS[TransactionCategory.ENTERTAINMENT],
-  },
-  {
     value: TransactionCategory.FOOD,
     label: TRANSACTION_CATEGORY_LABELS[TransactionCategory.FOOD],
   },
   {
-    value: TransactionCategory.HEALTH,
-    label: TRANSACTION_CATEGORY_LABELS[TransactionCategory.HEALTH],
+    value: TransactionCategory.ADVANCE,
+    label: TRANSACTION_CATEGORY_LABELS[TransactionCategory.ADVANCE],
   },
   {
-    value: TransactionCategory.HOUSING,
-    label: TRANSACTION_CATEGORY_LABELS[TransactionCategory.HOUSING],
+    value: TransactionCategory.GASOLINE,
+    label: TRANSACTION_CATEGORY_LABELS[TransactionCategory.GASOLINE],
   },
   {
     value: TransactionCategory.OTHER,
     label: TRANSACTION_CATEGORY_LABELS[TransactionCategory.OTHER],
-  },
-  {
-    value: TransactionCategory.SALARY,
-    label: TRANSACTION_CATEGORY_LABELS[TransactionCategory.SALARY],
-  },
-  {
-    value: TransactionCategory.TRANSPORTATION,
-    label: TRANSACTION_CATEGORY_LABELS[TransactionCategory.TRANSPORTATION],
   },
   {
     value: TransactionCategory.UTILITY,

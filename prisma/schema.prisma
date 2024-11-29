@@ -16,6 +16,7 @@ datasource db {
 model Transaction {
   id            String                   @id @default(uuid())
   name          String
+  description   String?
   type          TransactionType
   amount        Decimal                  @db.Decimal(10, 2)
   category      TransactionCategory
@@ -24,24 +25,20 @@ model Transaction {
   createdAt     DateTime                 @default(now())
   updatedAt     DateTime                 @updatedAt
   userId        String
+  imageUrl      String?                  // Adiciona o campo para a URL da imagem
 }
 
 enum TransactionType {
   DEPOSIT
   EXPENSE
-  INVESTMENT
-}
+} 
 
 enum TransactionCategory {
-  HOUSING
-  TRANSPORTATION
   FOOD
-  ENTERTAINMENT
-  HEALTH
   UTILITY
-  SALARY
-  EDUCATION
   OTHER
+  GASOLINE
+  ADVANCE 
 }
 
 enum TransactionPaymentMethod {

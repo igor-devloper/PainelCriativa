@@ -11,15 +11,11 @@ import {
 } from "@/app/_components/ui/chart";
 import { TransactionType } from "@prisma/client";
 import { TransactionPercentagePerType } from "@/app/_data/get-dashboard/types";
-import { PiggyBankIcon, TrendingDownIcon, TrendingUpIcon } from "lucide-react";
+import { TrendingDownIcon, TrendingUpIcon } from "lucide-react";
 import PercentageItem from "./percentage-item";
 import { ScrollArea } from "@/app/_components/ui/scroll-area";
 
 const chartConfig = {
-  [TransactionType.INVESTMENT]: {
-    label: "Investido",
-    color: "#FFFFFF",
-  },
   [TransactionType.DEPOSIT]: {
     label: "Receita",
     color: "#55B02E",
@@ -33,19 +29,16 @@ const chartConfig = {
 interface TransactionsPieChartProps {
   typesPercentage: TransactionPercentagePerType;
   depositsTotal: number;
-  investmentsTotal: number;
   expensesTotal: number;
 }
 
 const TransactionsPieChart = ({
   depositsTotal,
-  investmentsTotal,
   expensesTotal,
   typesPercentage,
 }: TransactionsPieChartProps) => {
   // Verifica se todos os valores são zero
-  const hasNoData =
-    depositsTotal === 0 && investmentsTotal === 0 && expensesTotal === 0;
+  const hasNoData = depositsTotal === 0 && expensesTotal === 0;
 
   // Configuração de dados do gráfico
   const chartData = hasNoData
@@ -60,11 +53,6 @@ const TransactionsPieChart = ({
           type: TransactionType.EXPENSE,
           amount: expensesTotal,
           fill: "#E93030",
-        },
-        {
-          type: TransactionType.INVESTMENT,
-          amount: investmentsTotal,
-          fill: "#FFFFFF",
         },
       ];
 
@@ -104,13 +92,6 @@ const TransactionsPieChart = ({
               icon={<TrendingDownIcon size={16} className="text-red-500" />}
               title="Despesas"
               value={hasNoData ? 0 : typesPercentage[TransactionType.EXPENSE]}
-            />
-            <PercentageItem
-              icon={<PiggyBankIcon size={16} />}
-              title="Investido"
-              value={
-                hasNoData ? 0 : typesPercentage[TransactionType.INVESTMENT]
-              }
             />
           </div>
         </CardContent>

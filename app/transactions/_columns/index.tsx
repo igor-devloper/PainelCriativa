@@ -1,6 +1,7 @@
 "use client";
 
 import { Transaction } from "@prisma/client";
+import { CldImage } from "next-cloudinary";
 import { ColumnDef } from "@tanstack/react-table";
 import TransactionTypeBadge from "../_components/type-badge";
 import {
@@ -52,6 +53,30 @@ export const transactionColumns: ColumnDef<Transaction>[] = [
         style: "currency",
         currency: "BRL",
       }).format(Number(transaction.amount)),
+  },
+  {
+    accessorKey: "image",
+    header: "Comprovantes",
+    cell: ({ row: { original: transaction } }) => {
+      const imageUrl = transaction.imageUrl;
+
+      // Condicionar a renderização da imagem
+      return (
+        <div className="space-x-1">
+          {imageUrl ? (
+            <CldImage
+              src={imageUrl}
+              width="50"
+              height="50"
+              crop={{ type: "auto", source: true }}
+              alt="Comprovante"
+            />
+          ) : (
+            <div>Sem imagem disponível</div> // Exibe uma mensagem caso a imagem não esteja disponível
+          )}
+        </div>
+      );
+    },
   },
   {
     accessorKey: "actions",

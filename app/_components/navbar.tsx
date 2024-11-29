@@ -19,7 +19,7 @@ const Navbar = () => {
       {/* ESQUERDA */}
       <div className="flex items-center gap-4 md:gap-10">
         <Image
-          src="/logo.svg"
+          src="/logo.png"
           width={120}
           height={27}
           alt="Finance AI"
@@ -45,16 +45,6 @@ const Navbar = () => {
             }
           >
             Transações
-          </Link>
-          <Link
-            href="/subscription"
-            className={
-              pathname === "/subscription"
-                ? "font-bold text-primary"
-                : "text-muted-foreground"
-            }
-          >
-            Assinatura
           </Link>
         </div>
       </div>
