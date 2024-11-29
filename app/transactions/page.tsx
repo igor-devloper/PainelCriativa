@@ -4,7 +4,7 @@ import { transactionColumns } from "./_columns";
 import AddTransactionButton from "../_components/add-transaction-button";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { ScrollArea } from "../_components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "../_components/ui/scroll-area";
 import { canUserAddTransaction } from "../_data/can-user-add-transaction";
 import {
   SidebarInset,
@@ -56,6 +56,7 @@ const TransactionsPage = async () => {
                 columns={transactionColumns}
                 data={JSON.parse(JSON.stringify(transactions))}
               />
+              <ScrollBar orientation="horizontal" />
             </ScrollArea>
           </div>
         </main>
