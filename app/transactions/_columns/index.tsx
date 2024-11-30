@@ -10,6 +10,13 @@ import {
 import EditTransactionButton from "../_components/edit-transaction-button";
 import DeleteTransactionButton from "../_components/delete-transaction-button";
 import { ImageGallery } from "../_components/image-gallery";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/app/_components/ui/dropdown-menu";
+import { MoreHorizontal } from "lucide-react";
+import { Button } from "@/app/_components/ui/button";
 
 export const transactionColumns: ColumnDef<Transaction>[] = [
   {
@@ -67,9 +74,25 @@ export const transactionColumns: ColumnDef<Transaction>[] = [
     header: "Ações",
     cell: ({ row: { original: transaction } }) => {
       return (
-        <div className="space-x-1">
-          <EditTransactionButton transaction={transaction} />
-          <DeleteTransactionButton transactionId={transaction.id} />
+        <div className="">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 p-0 hover:bg-muted focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                <MoreHorizontal
+                  className="h-4 w-4 text-muted-foreground"
+                  size={10}
+                />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="flex w-full flex-col items-center justify-center space-y-4">
+              <EditTransactionButton transaction={transaction} />
+              <DeleteTransactionButton transactionId={transaction.id} />
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       );
     },

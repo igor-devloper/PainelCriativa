@@ -1,16 +1,24 @@
 "use client";
 
 import { Transaction } from "@prisma/client";
-import { CldImage } from "next-cloudinary";
 import { ColumnDef } from "@tanstack/react-table";
 import TransactionTypeBadge from "../../transactions/_components/type-badge";
 import {
   TRANSACTION_CATEGORY_LABELS,
   TRANSACTION_PAYMENT_METHOD_LABELS,
 } from "@/app/_constants/transactions";
-import EditTransactionButton from "../../transactions/_components/edit-transaction-button";
 import DeleteTransactionButton from "../../transactions/_components/delete-transaction-button";
 import UserInfo from "@/app/_components/user-info";
+import { ImageGallery } from "@/app/transactions/_components/image-gallery";
+import TransactionStatusBadge from "../_components/status-badge";
+import UpdateTransactionAdmin from "../_components/upadated-transaction-admin";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/app/_components/ui/dropdown-menu";
+import { Button } from "@/app/_components/ui/button";
+import { MoreHorizontal } from "lucide-react";
 
 export const adminColumns: ColumnDef<Transaction>[] = [
   {
@@ -56,26 +64,11 @@ export const adminColumns: ColumnDef<Transaction>[] = [
       }).format(Number(transaction.amount)),
   },
   {
-    accessorKey: "image",
+    accessorKey: "imageUrl",
     header: "Comprovantes",
-    cell: ({ row: { original: transaction } }) => {
-      const imageUrl = transaction.imageUrl;
-
-      return (
-        <div className="space-x-1">
-          {imageUrl ? (
-            <CldImage
-              src={Array.isArray(imageUrl) ? imageUrl[0] : imageUrl}
-              width="50"
-              height="50"
-              crop={{ type: "auto", source: true }}
-              alt="Comprovante"
-            />
-          ) : (
-            <div>Sem imagem disponível</div>
-          )}
-        </div>
-      );
+    cell: ({ row }) => {
+      const imageUrls = row.original.imageUrl;
+      return <ImageGallery images={imageUrls} />;
     },
   },
   {
@@ -86,13 +79,36 @@ export const adminColumns: ColumnDef<Transaction>[] = [
     ),
   },
   {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row: { original: transaction } }) => (
+      <TransactionStatusBadge transaction={transaction} />
+    ),
+  },
+  {
     accessorKey: "actions",
     header: "Ações",
     cell: ({ row: { original: transaction } }) => {
       return (
-        <div className="space-x-1">
-          <EditTransactionButton transaction={transaction} />
-          <DeleteTransactionButton transactionId={transaction.id} />
+        <div className="">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 p-0 hover:bg-muted focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                <MoreHorizontal
+                  className="h-4 w-4 text-muted-foreground"
+                  size={10}
+                />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="flex w-full flex-col items-center justify-center space-y-4">
+              <UpdateTransactionAdmin transaction={transaction} />
+              <DeleteTransactionButton transactionId={transaction.id} />
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       );
     },

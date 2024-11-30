@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -18,6 +12,7 @@ model Transaction {
   name          String
   description   String?
   type          TransactionType
+  status        TransactionStatus?              @default(WAITING)     
   amount        Decimal                  @db.Decimal(10, 2)
   category      TransactionCategory
   paymentMethod TransactionPaymentMethod
@@ -31,6 +26,12 @@ model Transaction {
 enum TransactionType {
   DEPOSIT
   EXPENSE
+  REFUND
+} 
+
+enum TransactionStatus {
+  WAITING
+  FINISHED
 } 
 
 enum TransactionCategory {

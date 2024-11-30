@@ -6,7 +6,7 @@ export const userAdmin = async () => {
     throw new Error("Unauthorized");
   }
   const user = await clerkClient().users.getUser(userId);
-  if (user.publicMetadata.subscriptionPlan === "admin") {
+  if (user.publicMetadata.role === "admin") {
     return true;
   }
 };

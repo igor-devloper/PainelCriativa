@@ -11,19 +11,11 @@ import {
   TooltipTrigger,
 } from "./ui/tooltip";
 
-interface AddTransactionButtonProps {
-  userCanAddTransaction?: boolean;
-}
-
-const AddTransactionButton = ({
-  userCanAddTransaction,
-}: AddTransactionButtonProps) => {
+const AddTransactionButton = () => {
   const [dialogIsOpen, setDialogIsOpen] = useState(false);
 
   const handleClick = () => {
-    if (userCanAddTransaction) {
-      setDialogIsOpen(true);
-    }
+    setDialogIsOpen(true);
   };
 
   return (
@@ -32,9 +24,7 @@ const AddTransactionButton = ({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              className={`h-9 rounded-full px-3 md:rounded-full md:font-bold ${
-                userCanAddTransaction ? "" : "cursor-not-allowed opacity-50"
-              }`}
+              className="h-9 rounded-full px-3 md:rounded-full md:font-bold"
               onClick={handleClick}
             >
               Adicionar transação
@@ -42,8 +32,7 @@ const AddTransactionButton = ({
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            {!userCanAddTransaction &&
-              "Você atingiu o limite de transações. Atualize seu plano para criar transações ilimitadas."}
+            Adicione prestações de contas e controle seus gastos
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>

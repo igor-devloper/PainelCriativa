@@ -8,7 +8,12 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
-  },
+   },
+   experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb' // Set this to whatever limit you need
+    }
+  }
 };
 
 export default nextConfig;

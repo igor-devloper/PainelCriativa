@@ -11,6 +11,7 @@ import {
 } from "@prisma/client";
 import { upsertTransactionSchema } from "./schema";
 import { revalidatePath } from "next/cache";
+import { sendDepositNotificationEmail } from "@/app/_lib/send-email";
 
 // Cloudinary configuration
 if (
@@ -34,6 +35,7 @@ try {
 }
 
 interface UpsertTransactionParams {
+  userId?: string;
   id?: string;
   name: string;
   amount: number;
@@ -79,11 +81,9 @@ export const upsertTransaction = async (params: UpsertTransactionParams) => {
       }
     }
 
-    await db.transaction.upsert({
+    const transaction = await db.transaction.upsert({
       update: {
         ...filterParams(params),
-        imageUrl: imageUrls,
-        userId,
       },
       create: {
         ...filterParams(params),
@@ -95,7 +95,16 @@ export const upsertTransaction = async (params: UpsertTransactionParams) => {
       },
     });
 
+    // Send email notification for deposit transactions
+    if (
+      transaction.type === TransactionType.DEPOSIT &&
+      TransactionType.REFUND
+    ) {
+      await sendDepositNotificationEmail(transaction);
+    }
+
     revalidatePath("/transactions");
+    return transaction;
   } catch (error) {
     console.error("Error in upsertTransaction:", error);
     throw error; // Re-throw the error to be handled by the client

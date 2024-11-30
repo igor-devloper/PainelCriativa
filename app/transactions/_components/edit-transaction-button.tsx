@@ -18,10 +18,11 @@ const EditTransactionButton = ({ transaction }: EditTransactionButtonProps) => {
       <Button
         variant="ghost"
         size="icon"
-        className="text-muted-foreground"
+        className="flex w-full items-center justify-center text-muted-foreground"
         onClick={() => setDialogIsOpen(true)}
       >
         <PencilIcon />
+        Editar
       </Button>
       <UpsertTransactionDialog
         isOpen={dialogIsOpen}

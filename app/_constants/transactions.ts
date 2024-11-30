@@ -2,6 +2,7 @@ import {
   TransactionCategory,
   TransactionPaymentMethod,
   TransactionType,
+  TransactionStatus,
 } from "@prisma/client";
 
 export const TRANSACTION_PAYMENT_METHOD_ICONS = {
@@ -21,6 +22,17 @@ export const TRANSACTION_CATEGORY_LABELS = {
   GASOLINE: "Gasolina da Locação",
   UTILITY: "Utilidades",
 };
+
+export const TRANSACTION_STATUS_OPTIONS = [
+  {
+    value: TransactionStatus.WAITING,
+    label: "Aguardando",
+  },
+  {
+    value: TransactionStatus.FINISHED,
+    label: "Prestação Aceita",
+  },
+];
 
 export const TRANSACTION_PAYMENT_METHOD_LABELS = {
   BANK_TRANSFER: "Transferência Bancária",

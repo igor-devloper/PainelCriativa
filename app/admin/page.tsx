@@ -20,7 +20,7 @@ const AdminPage = async () => {
   if (!userId) {
     redirect("/login");
   }
-  if (usuarioAdm) {
+  if (!usuarioAdm) {
     redirect("/");
   }
 
@@ -29,7 +29,6 @@ const AdminPage = async () => {
       date: "desc",
     },
   });
-  console.log(transactions);
   return (
     <SidebarProvider>
       <AppSidebar />

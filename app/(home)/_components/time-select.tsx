@@ -22,7 +22,7 @@ const MONTH_OPTIONS = [
   { value: "10", label: "Outubro" },
   { value: "11", label: "Novembro" },
   { value: "12", label: "Dezembro" },
-  { value: "todos", label: "Todos" },
+  { value: "all", label: "Todos" },
 ];
 
 const TimeSelect = () => {
@@ -35,7 +35,7 @@ const TimeSelect = () => {
   return (
     <Select
       onValueChange={(value) => handleMonthChange(value)}
-      defaultValue={month ?? "13"}
+      defaultValue={month ?? "all"}
     >
       <SelectTrigger className="w-[150px] rounded-full">
         <SelectValue placeholder="Mês" />

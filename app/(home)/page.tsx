@@ -1,14 +1,13 @@
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { isMatch } from "date-fns";
 import SummaryCards from "./_components/summary-cards";
 import TimeSelect from "./_components/time-select";
-import { isMatch } from "date-fns";
 import TransactionsPieChart from "./_components/transactions-pie-chart";
-import { getDashboard } from "../_data/get-dashboard";
+import { getDashboard } from "@/app/_data/get-dashboard";
 import ExpensesPerCategory from "./_components/expenses-per-category";
 import LastTransactions from "./_components/last-transactions";
 import { canUserAddTransaction } from "../_data/can-user-add-transaction";
-import AiReportButton from "./_components/ai-report-button";
 import { ScrollArea } from "../_components/ui/scroll-area";
 import {
   SidebarInset,
@@ -18,7 +17,7 @@ import {
 import { AppSidebar } from "../_components/app-sidebar";
 import { Separator } from "../_components/ui/separator";
 import { StyleBread } from "../_components/stily-bread";
-import { ChartLine } from "lucide-react";
+import { LineChartIcon as ChartLine } from "lucide-react";
 
 interface HomeProps {
   searchParams: {
@@ -31,13 +30,22 @@ const Home = async ({ searchParams: { month } }: HomeProps) => {
   if (!userId) {
     redirect("/login");
   }
-  const monthIsInvalid = !month || !isMatch(month, "MM");
+
+  const isValidMonth = (month: string) => {
+    return (
+      month === "all" ||
+      (isMatch(month, "MM") && parseInt(month) >= 1 && parseInt(month) <= 12)
+    );
+  };
+
+  const monthIsInvalid = !month || !isValidMonth(month);
   if (monthIsInvalid) {
     redirect(`?month=${new Date().getMonth() + 1}`);
   }
+
   const dashboard = await getDashboard(month);
   const userCanAddTransaction = await canUserAddTransaction();
-  const user = await clerkClient().users.getUser(userId);
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -50,7 +58,7 @@ const Home = async ({ searchParams: { month } }: HomeProps) => {
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4">
-          <ScrollArea className="mb-20 max-h-svh">
+          <ScrollArea className="mb-20 max-h-[700px]">
             <div className="flex h-full flex-col space-y-6 overflow-hidden p-6">
               <div className="flex flex-col items-center justify-center gap-4 md:flex md:flex-row md:items-center md:justify-between md:gap-4">
                 <div className="flex items-center justify-center gap-2">
@@ -58,12 +66,6 @@ const Home = async ({ searchParams: { month } }: HomeProps) => {
                   <h1 className="text-lg font-bold md:text-2xl">Dashboard</h1>
                 </div>
                 <div className="flex items-center gap-2">
-                  <AiReportButton
-                    month={month}
-                    hasPremiumPlan={
-                      user.publicMetadata.subscriptionPlan === "premium"
-                    }
-                  />
                   <TimeSelect />
                 </div>
               </div>
