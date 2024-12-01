@@ -86,7 +86,7 @@ export const DepositNotificationEmail: React.FC<DepositEmailProps> = ({
     </div>
     <div style={{ textAlign: "center", marginTop: "20px" }}>
       <a
-        href="http://localhost:3000/admin"
+        href="https://painel-criativa.vercel.app/admin"
         style={{
           display: "inline-block",
           padding: "10px 20px",
