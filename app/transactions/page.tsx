@@ -17,7 +17,7 @@ import { userAdmin } from "../_data/user-admin";
 
 const TransactionsPage = async () => {
   const { userId } = await auth();
-  const idAdmin = await userAdmin();
+  const isAdmin = await userAdmin();
   if (!userId) {
     redirect("/login");
   }
@@ -49,11 +49,11 @@ const TransactionsPage = async () => {
                   <HandCoins />
                   <h1 className="text-2xl font-bold">Transações</h1>
                 </div>
-                <AddTransactionButton isAdmin={idAdmin ?? false} />
+                <AddTransactionButton isAdmin={isAdmin ?? false} />
               </div>
               <ScrollArea className="h-full">
                 <DataTable
-                  columns={transactionColumns}
+                  columns={transactionColumns({ isAdmin: isAdmin ?? false })}
                   data={JSON.parse(JSON.stringify(transactions))}
                 />
                 <ScrollBar orientation="horizontal" />

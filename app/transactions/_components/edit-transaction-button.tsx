@@ -8,9 +8,13 @@ import { useState } from "react";
 
 interface EditTransactionButtonProps {
   transaction: Transaction;
+  isAdmin: boolean;
 }
 
-const EditTransactionButton = ({ transaction }: EditTransactionButtonProps) => {
+const EditTransactionButton = ({
+  transaction,
+  isAdmin,
+}: EditTransactionButtonProps) => {
   const [dialogIsOpen, setDialogIsOpen] = useState(false);
 
   return (
@@ -25,6 +29,7 @@ const EditTransactionButton = ({ transaction }: EditTransactionButtonProps) => {
         Editar
       </Button>
       <UpsertTransactionDialog
+        isAdmin={isAdmin ?? false}
         isOpen={dialogIsOpen}
         setIsOpen={setDialogIsOpen}
         defaultValues={{

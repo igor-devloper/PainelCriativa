@@ -18,7 +18,13 @@ import {
 import { MoreHorizontal } from "lucide-react";
 import { Button } from "@/app/_components/ui/button";
 
-export const transactionColumns: ColumnDef<Transaction>[] = [
+interface transactionColumnsProps {
+  isAdmin: boolean;
+}
+
+export const transactionColumns = ({
+  isAdmin,
+}: transactionColumnsProps): ColumnDef<Transaction>[] => [
   {
     accessorKey: "index",
     header: "#",
@@ -94,7 +100,10 @@ export const transactionColumns: ColumnDef<Transaction>[] = [
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="flex w-full flex-col items-center justify-center space-y-4">
-              <EditTransactionButton transaction={transaction} />
+              <EditTransactionButton
+                transaction={transaction}
+                isAdmin={isAdmin ?? false}
+              />
               <DeleteTransactionButton transactionId={transaction.id} />
             </DropdownMenuContent>
           </DropdownMenu>
