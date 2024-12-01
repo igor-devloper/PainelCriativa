@@ -7,6 +7,7 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Decimal } from "@prisma/client/runtime/library";
+import { TRANSACTION_PAYMENT_METHOD_LABELS } from "@/app/_constants/transactions";
 
 interface DepositEmailProps {
   transaction: {
@@ -70,7 +71,8 @@ export const DepositNotificationEmail: React.FC<DepositEmailProps> = ({
           {transaction.description || "Não informada"}
         </li>
         <li>
-          <strong>Categoria:</strong> {transaction.category}
+          <strong>Categoria:</strong>{" "}
+          {TRANSACTION_PAYMENT_METHOD_LABELS[transaction.paymentMethod]}
         </li>
         <li>
           <strong>Método de Pagamento:</strong>{" "}
