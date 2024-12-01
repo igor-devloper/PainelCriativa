@@ -8,7 +8,7 @@ import { useState } from "react";
 
 interface EditTransactionButtonProps {
   transaction: Transaction;
-  isAdmin: boolean;
+  isAdmin?: boolean;
 }
 
 const EditTransactionButton = ({
