@@ -53,6 +53,11 @@ export const TRANSACTION_TYPE_OPTIONS = [
     value: TransactionType.DEPOSIT,
     label: "Depósito",
   },
+
+  {
+    value: TransactionType.REFUND,
+    label: "Reembolso",
+  },
 ];
 
 export const TRANSACTION_PAYMENT_METHOD_OPTIONS = [

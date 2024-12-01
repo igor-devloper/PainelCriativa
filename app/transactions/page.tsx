@@ -12,6 +12,7 @@ import {
 import { AppSidebar } from "../_components/app-sidebar";
 import { Separator } from "../_components/ui/separator";
 import { HandCoins } from "lucide-react";
+import AddTransactionButton from "../_components/add-transaction-button";
 
 const TransactionsPage = async () => {
   const { userId } = await auth();
@@ -46,8 +47,9 @@ const TransactionsPage = async () => {
                   <HandCoins />
                   <h1 className="text-2xl font-bold">Transações</h1>
                 </div>
+                <AddTransactionButton />
               </div>
-              <ScrollArea className="h-full">
+              <ScrollArea className="h-full max-w-[100px] md:w-full">
                 <DataTable
                   columns={transactionColumns}
                   data={JSON.parse(JSON.stringify(transactions))}

@@ -23,12 +23,14 @@ const TransactionTypeBadge = ({ transaction }: TransactionTypeBadgeProps) => {
       </Badge>
     );
   }
-  return (
-    <Badge className="font bold bg-white bg-opacity-10 text-white">
-      <CircleIcon className="mr-2 fill-white" size={10} />
-      Investimento
-    </Badge>
-  );
+  if (transaction.type === TransactionType.REFUND) {
+    return (
+      <Badge className="font bold bg-yellow-400 bg-opacity-10 text-yellow-400 hover:bg-yellow-400">
+        <CircleIcon className="mr-2 fill-yellow-400" size={10} />
+        Reembolso
+      </Badge>
+    );
+  }
 };
 
 export default TransactionTypeBadge;

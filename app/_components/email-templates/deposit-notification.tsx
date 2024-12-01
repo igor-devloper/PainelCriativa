@@ -38,7 +38,7 @@ export const DepositNotificationEmail: React.FC<DepositEmailProps> = ({
   >
     <div style={{ textAlign: "center", marginBottom: "20px" }}>
       <img
-        src="https://ci3.googleusercontent.com/mail-img-att/AGAZnRp_bbcIi_mxGpEsxA4873u0ihKBToGhG4CnJQQEkvC9PiBhNc7Phccv42Gy7ke-rVKOW0PGpuWW3MO_cSq5MsoPpsgCx1J4GkDOS3N545sLcmbeaMinOnPLNettoOAKyhfZSS12YhPS-9ZwEGiX6QljZkNUykBvIHAt5CVGMW6RVL6XO8ghyn_yIHomFyXKMtKu8mWhLJ4P7GzcD54vDrQ3Re4NXRbis-ukuyJMCizIrvZtmziDtxWgcErxPmoazIQXTRDyzSJWviXAn2bbYmn0aWYnaMo74DKxPWoITriQZcO94aBv4AvTYWhzYgOtKkE9bRz-hcb53R1nbjdNIc0Pqk7KoQ--695aWhkahuAT-J_ZoNYP4t_p6Ym07lgfI1kPY43X3uXlt8ny_tGLJUdgbWZ_aFuiZgsnFFgAxQ2YVl7Xkb65VvMBf6mNMl86HiZ2lI8tfG8ydtmPKUewZ2Vv_GdcziNfKfob02emkZKUY72fhR7mnRsjlqlkpyC5-1_ObERaUXDKsXTbVYrZiQveQCyxAwo9G7iiYvfr2mpXzVi3OFrJ8V8-f7bC6_c0LqUoW46MWw0F9zehtK-UdEpA0xHXGkVEa2emtOxWHQBopQdf5O_EsR9WcHg759JkgbZeRCr-ykT9r3R7-Ntc2a2Vz8M_q_BiZihCwsqPSkHxMsqB5q6IpILzYOJAagXDYc7-0qnhD725Ky_bpY-y51TWVDjzjkLs7OS5nP5wq5o6UGqPDuL3Y3sUvLvFfwqOPreaVT-XVd1kIPTRClaNdE6bLemEkf5fcdF3HavdgVYRp43K-3GMDr99hKcToCgITewZ7JCswgzI4dOrXpvRVluLPtHqD0kC6MRtuAFw9B1Yd6ITRvVXU7d3LdApkE2TpKFbOWYWOLH_5PfKjT56haRq9rObvolhVPjO36kmC9TZfup-cVnsjHK11yIuTjzLv6I9S-OWRQJXWZyxezvi5BLEQHxT3t93oH6zmg1ikfb2pdVarsqwjjcFADuPoeNJPj5s_IznFlbukSetbdpsMfolaN8=s0-l75-ft"
+        src="https://cdn.discordapp.com/attachments/793229166962802719/1312641712681648158/logo_Criativa-removebg-preview-raio.png?ex=674d3c5c&is=674beadc&hm=d7338fe91de2f42c048a6b5dc15c9d2f81ac44231390cd4267af61273f4a38a0&.png"
         alt="Logo"
         style={{ maxWidth: "150px" }}
       />

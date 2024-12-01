@@ -48,13 +48,26 @@ export const getDashboard = async (month: string) => {
   const expensesTotal = Number(
     (
       await db.transaction.aggregate({
-        where: { ...where, type: TransactionType.EXPENSE },
+        where: {
+          ...where,
+          type: TransactionType.EXPENSE,
+        },
         _sum: { amount: true },
       })
     )?._sum?.amount ?? 0,
   );
 
-  const balance = depositsTotal - expensesTotal;
+  const refound = Number(
+    (
+      await db.transaction.aggregate({
+        where: { ...where, type: TransactionType.REFUND },
+
+        _sum: { amount: true },
+      })
+    )?._sum?.amount ?? 0,
+  );
+
+  const balance = depositsTotal - expensesTotal + refound;
 
   const transactionsTotal = depositsTotal + expensesTotal;
 
@@ -92,7 +105,6 @@ export const getDashboard = async (month: string) => {
   const lastTransactions = await db.transaction.findMany({
     where,
     orderBy: { date: "desc" },
-    take: 15,
   });
 
   return {

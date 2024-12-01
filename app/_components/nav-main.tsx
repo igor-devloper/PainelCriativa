@@ -7,6 +7,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/app/_components/ui/sidebar";
+import Link from "next/link";
 
 export function NavMain({
   items,
@@ -19,14 +20,20 @@ export function NavMain({
   }[];
 }) {
   return (
-    <SidebarMenu className="mt-10 space-y-3">
+    <SidebarMenu>
       {items.map((item) => (
         <SidebarMenuItem key={item.title}>
-          <SidebarMenuButton asChild isActive={item.isActive}>
-            <a href={item.url}>
-              <item.icon />
+          <SidebarMenuButton
+            asChild
+            isActive={item.isActive}
+            className={`transition-colors hover:bg-accent hover:text-accent-foreground dark:text-foreground ${
+              item.isActive ? "btn-green" : ""
+            }`}
+          >
+            <Link href={item.url}>
+              <item.icon className="mr-2 h-4 w-4" />
               <span>{item.title}</span>
-            </a>
+            </Link>
           </SidebarMenuButton>
         </SidebarMenuItem>
       ))}

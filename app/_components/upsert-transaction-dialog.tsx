@@ -44,6 +44,7 @@ import { upsertTransaction } from "../_actions/upsert-transaction";
 import { toast } from "sonner";
 import { useState } from "react";
 import { ImageUpload } from "./image-upload";
+import { LoaderCircle } from "lucide-react";
 
 interface UpsertTransactionDialogProps {
   isOpen: boolean;
@@ -88,6 +89,7 @@ const UpsertTransactionDialog = ({
   transactionId,
   setIsOpen,
 }: UpsertTransactionDialogProps) => {
+  const [isLoading, setIsLoading] = useState(false);
   const [images, setImages] = useState<File[]>([]);
 
   const form = useForm<FormSchema>({
@@ -105,6 +107,7 @@ const UpsertTransactionDialog = ({
 
   const onSubmit = async (data: FormSchema) => {
     try {
+      setIsLoading(true);
       const imagesBase64 = await Promise.all(
         images.map((file) => fileToBase64(file)),
       );
@@ -117,6 +120,7 @@ const UpsertTransactionDialog = ({
       setIsOpen(false);
       form.reset();
       setImages([]);
+      setIsLoading(false);
       toast.success("Transação criada com sucesso!");
     } catch (error) {
       console.error(error);
@@ -316,8 +320,14 @@ const UpsertTransactionDialog = ({
                   Cancelar
                 </Button>
               </DialogClose>
-              <Button type="submit">
-                {isUpdate ? "Atualizar" : "Adicionar"}
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? (
+                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                ) : isUpdate ? (
+                  "Atualizar"
+                ) : (
+                  "Adicionar"
+                )}
               </Button>
             </DialogFooter>
           </form>

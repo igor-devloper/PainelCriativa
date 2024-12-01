@@ -3,7 +3,11 @@ import { CardContent, CardHeader, CardTitle } from "@/app/_components/ui/card";
 import { ScrollArea } from "@/app/_components/ui/scroll-area";
 import { TRANSACTION_PAYMENT_METHOD_ICONS } from "@/app/_constants/transactions";
 import { formatCurrency } from "@/app/_utils/currency";
-import { Transaction, TransactionType } from "@prisma/client";
+import {
+  Transaction,
+  TransactionStatus,
+  TransactionType,
+} from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -19,6 +23,10 @@ const LastTransactions = ({ lastTransactions }: LastTransactionsProps) => {
     if (transaction.type === TransactionType.DEPOSIT) {
       return "text-primary";
     }
+    if (transaction.type === TransactionType.REFUND) {
+      return "text-yellow-500";
+    }
+
     return "text-white";
   };
   const getAmountPrefix = (transaction: Transaction) => {
@@ -62,8 +70,19 @@ const LastTransactions = ({ lastTransactions }: LastTransactionsProps) => {
               </div>
             </div>
             <p className={`text-sm font-bold ${getAmountColor(transaction)}`}>
-              {getAmountPrefix(transaction)}
-              {formatCurrency(Number(transaction.amount))}
+              {/* {TransactionStatus.WAITING ?? 'Aguardando Aprovação'} */}
+              {transaction.status === TransactionStatus.WAITING &&
+              transaction.type === TransactionType.DEPOSIT &&
+              TransactionType.REFUND ? (
+                <p className="flex animate-pulse items-center justify-center rounded-md bg-green-400 p-2 text-xs text-gray-300">
+                  Aguardando Aprovação
+                </p>
+              ) : (
+                <div>
+                  {getAmountPrefix(transaction)}
+                  {formatCurrency(Number(transaction.amount))}
+                </div>
+              )}
             </p>
           </div>
         ))}

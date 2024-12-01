@@ -7,7 +7,6 @@ import TransactionsPieChart from "./_components/transactions-pie-chart";
 import { getDashboard } from "@/app/_data/get-dashboard";
 import ExpensesPerCategory from "./_components/expenses-per-category";
 import LastTransactions from "./_components/last-transactions";
-import { canUserAddTransaction } from "../_data/can-user-add-transaction";
 import { ScrollArea } from "../_components/ui/scroll-area";
 import {
   SidebarInset,
@@ -44,7 +43,6 @@ const Home = async ({ searchParams: { month } }: HomeProps) => {
   }
 
   const dashboard = await getDashboard(month);
-  const userCanAddTransaction = await canUserAddTransaction();
 
   return (
     <SidebarProvider>
@@ -72,11 +70,7 @@ const Home = async ({ searchParams: { month } }: HomeProps) => {
               <>
                 <div className="hidden md:grid md:h-full md:grid-cols-[2fr,1fr] md:gap-6 md:overflow-hidden">
                   <div className="flex flex-col gap-6 overflow-hidden">
-                    <SummaryCards
-                      month={month}
-                      {...dashboard}
-                      userCanAddTransaction={userCanAddTransaction}
-                    />
+                    <SummaryCards month={month} {...dashboard} />
                     <div className="grid h-full grid-cols-3 grid-rows-1 gap-6 overflow-hidden">
                       <TransactionsPieChart {...dashboard} />
                       <ExpensesPerCategory
@@ -91,11 +85,7 @@ const Home = async ({ searchParams: { month } }: HomeProps) => {
                 <ScrollArea>
                   <div className="h-ful flex flex-col gap-10 md:hidden">
                     <div className="flex flex-col gap-10 overflow-hidden">
-                      <SummaryCards
-                        month={month}
-                        {...dashboard}
-                        userCanAddTransaction={userCanAddTransaction}
-                      />
+                      <SummaryCards month={month} {...dashboard} />
                       <div className="flex flex-col gap-10 overflow-hidden">
                         <TransactionsPieChart {...dashboard} />
                         <ExpensesPerCategory

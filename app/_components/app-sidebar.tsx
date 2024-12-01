@@ -73,12 +73,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <NavMain items={navItems} />
       </SidebarContent>
-      <SidebarFooter className="mb-4 flex items-center justify-center text-xl">
+      <SidebarFooter className="mb-4 flex items-center justify-center text-xl text-gray-700">
         <UserButton
           showName
           appearance={{
             elements: {
-              userName: "text-gray-700", // Troque 'blue-500' pela cor desejada
+              userName: "text-gray", // Troque 'blue-500' pela cor desejada
             },
           }}
         />
