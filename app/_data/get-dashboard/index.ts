@@ -2,6 +2,7 @@ import { db } from "@/app/_lib/prisma";
 import { TransactionType, TransactionStatus } from "@prisma/client";
 import { TotalExpensePerCategory, TransactionPercentagePerType } from "./types";
 import { auth } from "@clerk/nextjs/server";
+import { userAdmin } from "../user-admin";
 
 export const getDashboard = async (month: string) => {
   const { userId } = await auth();
@@ -10,6 +11,8 @@ export const getDashboard = async (month: string) => {
   }
 
   const currentYear = new Date().getFullYear();
+  const today = new Date();
+  today.setHours(23, 59, 59, 999);
 
   // Create date range based on month selection
   const startDate =
@@ -22,11 +25,13 @@ export const getDashboard = async (month: string) => {
       ? new Date(currentYear + 1, 0, 1) // January 1st of next year
       : new Date(currentYear, parseInt(month), 0); // Last day of selected month
 
+  const effectiveEndDate = endDate < today ? endDate : today;
+
   const where = {
     userId,
     date: {
       gte: startDate,
-      lt: endDate,
+      lt: effectiveEndDate,
     },
   };
 
@@ -34,11 +39,14 @@ export const getDashboard = async (month: string) => {
     (
       await db.transaction.aggregate({
         where: {
-          ...where,
-          type: TransactionType.DEPOSIT,
-          status: {
-            not: TransactionStatus.WAITING,
+          date: {
+            gte: startDate,
+            lt: effectiveEndDate,
           },
+          type: TransactionType.DEPOSIT,
+          // status: {
+          //   not: TransactionStatus.WAITING,
+          // },
         },
         _sum: { amount: true },
       })
@@ -101,8 +109,16 @@ export const getDashboard = async (month: string) => {
       : 0,
   }));
 
+  const isAdmin = await userAdmin();
   const lastTransactions = await db.transaction.findMany({
     where,
+    orderBy: { date: "desc" },
+  });
+  const lastTransactionsDeposit = await db.transaction.findMany({
+    where: {
+      ...where,
+      type: TransactionType.DEPOSIT,
+    },
     orderBy: { date: "desc" },
   });
 
@@ -117,10 +133,12 @@ export const getDashboard = async (month: string) => {
       JSON.stringify(
         lastTransactions.map((transaction) => ({
           ...transaction,
+          lastTransactionsDeposit,
           amount:
             (transaction.type === TransactionType.DEPOSIT ||
               transaction.type === TransactionType.REFUND) &&
-            transaction.status === TransactionStatus.WAITING
+            transaction.status === TransactionStatus.WAITING &&
+            !isAdmin
               ? 0
               : Number(transaction.amount),
         })),

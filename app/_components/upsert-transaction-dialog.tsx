@@ -30,6 +30,7 @@ import {
   TRANSACTION_CATEGORY_OPTIONS,
   TRANSACTION_PAYMENT_METHOD_OPTIONS,
   TRANSACTION_TYPE_OPTIONS,
+  TRANSACTION_TYPE_OPTIONS_SECOND,
 } from "../_constants/transactions";
 import { DatePicker } from "./ui/date-picker";
 import { z } from "zod";
@@ -50,6 +51,7 @@ interface UpsertTransactionDialogProps {
   isOpen: boolean;
   defaultValues?: FormSchema;
   transactionId?: string;
+  isAdmin: boolean;
   setIsOpen: (isOpen: boolean) => void;
 }
 
@@ -88,6 +90,7 @@ const UpsertTransactionDialog = ({
   defaultValues,
   transactionId,
   setIsOpen,
+  isAdmin,
 }: UpsertTransactionDialogProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [images, setImages] = useState<File[]>([]);
@@ -123,6 +126,7 @@ const UpsertTransactionDialog = ({
       setIsLoading(false);
       toast.success("Transação criada com sucesso!");
     } catch (error) {
+      setIsLoading(false);
       console.error(error);
       toast.error("Erro ao criar transação. Tente novamente.");
     }
@@ -228,13 +232,23 @@ const UpsertTransactionDialog = ({
                           <SelectValue placeholder="Select a verified email to display" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
-                        {TRANSACTION_TYPE_OPTIONS.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
+                      {isAdmin ? (
+                        <SelectContent>
+                          {TRANSACTION_TYPE_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      ) : (
+                        <SelectContent>
+                          {TRANSACTION_TYPE_OPTIONS_SECOND.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      )}
                     </Select>
                     <FormMessage />
                   </FormItem>

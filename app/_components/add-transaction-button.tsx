@@ -11,7 +11,11 @@ import {
   TooltipTrigger,
 } from "./ui/tooltip";
 
-const AddTransactionButton = () => {
+interface AddTransactionButtonProps {
+  isAdmin?: boolean;
+}
+
+export function AddTransactionButton({ isAdmin }: AddTransactionButtonProps) {
   const [dialogIsOpen, setDialogIsOpen] = useState(false);
 
   const handleClick = () => {
@@ -37,11 +41,10 @@ const AddTransactionButton = () => {
         </Tooltip>
       </TooltipProvider>
       <UpsertTransactionDialog
+        isAdmin={isAdmin ?? false}
         isOpen={dialogIsOpen}
         setIsOpen={setDialogIsOpen}
       />
     </>
   );
-};
-
-export default AddTransactionButton;
+}

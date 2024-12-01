@@ -13,9 +13,13 @@ import Link from "next/link";
 
 interface LastTransactionsProps {
   lastTransactions: Transaction[];
+  isAdmin: boolean;
 }
 
-const LastTransactions = ({ lastTransactions }: LastTransactionsProps) => {
+const LastTransactions = ({
+  lastTransactions,
+  isAdmin,
+}: LastTransactionsProps) => {
   const getAmountColor = (transaction: Transaction) => {
     if (transaction.type === TransactionType.EXPENSE) {
       return "text-red-500";
@@ -71,9 +75,7 @@ const LastTransactions = ({ lastTransactions }: LastTransactionsProps) => {
             </div>
             <p className={`text-sm font-bold ${getAmountColor(transaction)}`}>
               {/* {TransactionStatus.WAITING ?? 'Aguardando Aprovação'} */}
-              {transaction.status === TransactionStatus.WAITING &&
-              (transaction.type === TransactionType.DEPOSIT ||
-                transaction.type === TransactionType.REFUND) ? (
+              {transaction.status === TransactionStatus.WAITING && !isAdmin ? (
                 <p className="flex animate-pulse items-center justify-center rounded-md bg-green-400 p-2 text-xs text-gray-300">
                   Aguardando Aprovação
                 </p>

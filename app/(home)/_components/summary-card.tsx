@@ -1,4 +1,4 @@
-import AddTransactionButton from "@/app/_components/add-transaction-button";
+import { AddTransactionButton } from "@/app/_components/add-transaction-button";
 import { Card, CardContent, CardHeader } from "@/app/_components/ui/card";
 import { ReactNode } from "react";
 
@@ -6,6 +6,7 @@ interface SummaryCardProps {
   icon: ReactNode;
   title: string;
   amount: number;
+  isAdmin?: boolean;
   size?: "small" | "large";
 }
 
@@ -13,6 +14,7 @@ const SummaryCard = ({
   icon,
   title,
   amount,
+  isAdmin,
   size = "small",
 }: SummaryCardProps) => {
   return (
@@ -36,7 +38,9 @@ const SummaryCard = ({
             }).format(amount)}
           </p>
 
-          {size === "large" && <AddTransactionButton />}
+          {size === "large" && (
+            <AddTransactionButton isAdmin={isAdmin ?? false} />
+          )}
         </div>
       </CardContent>
     </Card>

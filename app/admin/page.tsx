@@ -40,8 +40,8 @@ const AdminPage = async () => {
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <>
-            <div className="flex w-[500px] flex-col space-y-6 overflow-hidden p-6 pb-10 md:w-full">
+          <ScrollArea className="max-h-[600px]">
+            <div className="flex w-[350px] flex-col space-y-6 overflow-hidden p-6 pb-10 md:w-full">
               {/* TÍTULO E BOTÃO */}
               <div className="flex flex-col items-center gap-4 md:w-full md:flex-row md:justify-between">
                 <div className="flex items-center justify-center gap-2">
@@ -57,7 +57,7 @@ const AdminPage = async () => {
                 <ScrollBar orientation="horizontal" />
               </ScrollArea>
             </div>
-          </>
+          </ScrollArea>
         </div>
       </SidebarInset>
     </SidebarProvider>

@@ -21,9 +21,7 @@ export async function createTransaction(formData: FormData) {
       },
     });
 
-    if (transaction.type === "DEPOSIT") {
-      await sendDepositNotificationEmail(transaction);
-    }
+    await sendDepositNotificationEmail(transaction);
 
     revalidatePath("/transactions");
     return { success: true, data: transaction };

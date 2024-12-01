@@ -53,12 +53,36 @@ export const TRANSACTION_TYPE_OPTIONS = [
     value: TransactionType.DEPOSIT,
     label: "Depósito",
   },
-
   {
     value: TransactionType.REFUND,
     label: "Reembolso",
   },
 ];
+
+export const TRANSACTION_TYPE_OPTIONS_SECOND = [
+  {
+    value: TransactionType.EXPENSE,
+    label: "Despesa",
+  },
+  {
+    value: TransactionType.REFUND,
+    label: "Reembolso",
+  },
+];
+
+// Create a new type for the options
+export type TransactionTypeOption = (typeof TRANSACTION_TYPE_OPTIONS)[number];
+
+// Instead of an async function that directly checks admin status,
+// we'll accept the isAdmin status as a parameter
+export const getFilteredTransactionTypeOptions = (
+  isAdmin: boolean,
+): TransactionTypeOption[] => {
+  if (isAdmin) {
+    return TRANSACTION_TYPE_OPTIONS;
+  }
+  return TRANSACTION_TYPE_OPTIONS_SECOND;
+};
 
 export const TRANSACTION_PAYMENT_METHOD_OPTIONS = [
   {

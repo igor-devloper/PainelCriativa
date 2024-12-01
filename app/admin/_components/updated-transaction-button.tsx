@@ -45,6 +45,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { upsertTransaction } from "@/app/_actions/upsert-transaction";
 import { toast } from "sonner";
 import { useState } from "react";
+import { LoaderCircle } from "lucide-react";
 
 interface UpsertTransactionDialogProps {
   isOpen: boolean;
@@ -96,6 +97,7 @@ const UpsertTransactionAdminDialog = ({
   setIsOpen,
 }: UpsertTransactionDialogProps) => {
   const [images, setImages] = useState<File[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
@@ -115,6 +117,7 @@ const UpsertTransactionAdminDialog = ({
 
   const onSubmit = async (data: FormSchema) => {
     try {
+      setIsLoading(true);
       const imagesBase64 = await Promise.all(
         images.map((file) => fileToBase64(file)),
       );
@@ -128,6 +131,7 @@ const UpsertTransactionAdminDialog = ({
       setIsOpen(false);
       form.reset();
       setImages([]);
+      setIsLoading(false);
       toast.success("Transação criada com sucesso!");
     } catch (error) {
       console.error(error);
@@ -348,8 +352,14 @@ const UpsertTransactionAdminDialog = ({
                   Cancelar
                 </Button>
               </DialogClose>
-              <Button type="submit">
-                {isUpdate ? "Atualizar" : "Adicionar"}
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? (
+                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                ) : isUpdate ? (
+                  "Atualizar"
+                ) : (
+                  "Adicionar"
+                )}
               </Button>
             </DialogFooter>
           </form>

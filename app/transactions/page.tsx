@@ -12,10 +12,12 @@ import {
 import { AppSidebar } from "../_components/app-sidebar";
 import { Separator } from "../_components/ui/separator";
 import { HandCoins } from "lucide-react";
-import AddTransactionButton from "../_components/add-transaction-button";
+import { AddTransactionButton } from "../_components/add-transaction-button";
+import { userAdmin } from "../_data/user-admin";
 
 const TransactionsPage = async () => {
   const { userId } = await auth();
+  const idAdmin = await userAdmin();
   if (!userId) {
     redirect("/login");
   }
@@ -31,7 +33,7 @@ const TransactionsPage = async () => {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset>
+      <SidebarInset className="w-[100px] md:w-full">
         <header className="flex h-16 shrink-0 items-center gap-2">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
@@ -39,15 +41,15 @@ const TransactionsPage = async () => {
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <>
-            <div className="flex w-[500px] flex-col space-y-6 overflow-hidden p-6 pb-10 md:w-full">
+          <ScrollArea className="max-h-[600px]">
+            <div className="flex w-[350px] flex-col space-y-6 overflow-hidden p-6 pb-10 pr-10 md:w-full">
               {/* TÍTULO E BOTÃO */}
               <div className="flex flex-col items-center gap-4 md:w-full md:flex-row md:justify-between">
                 <div className="flex items-center justify-center gap-2">
                   <HandCoins />
                   <h1 className="text-2xl font-bold">Transações</h1>
                 </div>
-                <AddTransactionButton />
+                <AddTransactionButton isAdmin={idAdmin ?? false} />
               </div>
               <ScrollArea className="h-full">
                 <DataTable
@@ -57,7 +59,8 @@ const TransactionsPage = async () => {
                 <ScrollBar orientation="horizontal" />
               </ScrollArea>
             </div>
-          </>
+            <ScrollBar orientation="vertical" />
+          </ScrollArea>
         </div>
       </SidebarInset>
     </SidebarProvider>
