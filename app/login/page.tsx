@@ -5,6 +5,11 @@ import { SignInButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
+export const metadata = {
+  title: "Login - Painel Criativa",
+  description: "Faça login para acessar o Painel Criativa.",
+};
+
 const LoginPage = async () => {
   const { userId } = await auth();
   if (userId) {

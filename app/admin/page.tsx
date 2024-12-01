@@ -14,6 +14,9 @@ import { Separator } from "../_components/ui/separator";
 import { userAdmin } from "../_data/user-admin";
 import { FileSliders } from "lucide-react";
 
+export const metadata = {
+  title: "Admin - Painel Criativa",
+};
 const AdminPage = async () => {
   const { userId } = await auth();
   const usuarioAdm = await userAdmin();

@@ -19,6 +19,10 @@ import { StyleBread } from "../_components/stily-bread";
 import { LineChartIcon as ChartLine } from "lucide-react";
 import { userAdmin } from "../_data/user-admin";
 
+export const metadata = {
+  title: "Dashboard - Painel Criativa",
+};
+
 interface HomeProps {
   searchParams: {
     month: string;

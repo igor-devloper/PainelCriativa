@@ -15,6 +15,10 @@ import { HandCoins } from "lucide-react";
 import { AddTransactionButton } from "../_components/add-transaction-button";
 import { userAdmin } from "../_data/user-admin";
 
+export const metadata = {
+  title: "Transações - Painel Criativa",
+};
+
 const TransactionsPage = async () => {
   const { userId } = await auth();
   const isAdmin = await userAdmin();
