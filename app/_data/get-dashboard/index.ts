@@ -44,9 +44,6 @@ export const getDashboard = async (month: string) => {
             lt: effectiveEndDate,
           },
           type: TransactionType.DEPOSIT,
-          // status: {
-          //   not: TransactionStatus.WAITING,
-          // },
         },
         _sum: { amount: true },
       })
