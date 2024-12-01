@@ -22,7 +22,7 @@ import { Button } from "@/app/_components/ui/button";
 //   isAdmin: boolean;
 // }
 
-export const transactionColumns = (): ColumnDef<Transaction>[] => [
+export const transactionColumns: ColumnDef<Transaction>[] = [
   {
     accessorKey: "index",
     header: "#",

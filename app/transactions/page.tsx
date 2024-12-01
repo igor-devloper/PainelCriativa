@@ -53,7 +53,7 @@ const TransactionsPage = async () => {
               </div>
               <ScrollArea className="h-full">
                 <DataTable
-                  columns={transactionColumns({ isAdmin: isAdmin ?? false })}
+                  columns={transactionColumns}
                   data={JSON.parse(JSON.stringify(transactions))}
                 />
                 <ScrollBar orientation="horizontal" />
@@ -68,3 +68,5 @@ const TransactionsPage = async () => {
 };
 
 export default TransactionsPage;
+
+// ({ isAdmin: isAdmin ?? false })
