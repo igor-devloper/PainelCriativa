@@ -20,6 +20,11 @@ import { Button } from "@/app/_components/ui/button";
 
 export const transactionColumns: ColumnDef<Transaction>[] = [
   {
+    accessorKey: "index",
+    header: "#",
+    cell: ({ row }) => <div className="text-center">{row.index + 1}</div>,
+  },
+  {
     accessorKey: "name",
     header: "Nome",
   },
