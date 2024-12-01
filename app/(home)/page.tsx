@@ -70,9 +70,16 @@ const Home = async ({ searchParams: { month } }: HomeProps) => {
               <>
                 <div className="hidden md:grid md:h-full md:grid-cols-[2fr,1fr] md:gap-6 md:overflow-hidden">
                   <div className="flex flex-col gap-6 overflow-hidden">
-                    <SummaryCards month={month} {...dashboard} />
+                    <SummaryCards
+                      month={month}
+                      {...dashboard}
+                      refoundTotal={dashboard.refundTotal}
+                    />
                     <div className="grid h-full grid-cols-3 grid-rows-1 gap-6 overflow-hidden">
-                      <TransactionsPieChart {...dashboard} />
+                      <TransactionsPieChart
+                        {...dashboard}
+                        refounTotal={dashboard.refundTotal}
+                      />
                       <ExpensesPerCategory
                         expensesPerCategory={dashboard.totalExpensePerCategory}
                       />
@@ -85,9 +92,16 @@ const Home = async ({ searchParams: { month } }: HomeProps) => {
                 <ScrollArea>
                   <div className="h-ful flex flex-col gap-10 md:hidden">
                     <div className="flex flex-col gap-10 overflow-hidden">
-                      <SummaryCards month={month} {...dashboard} />
+                      <SummaryCards
+                        month={month}
+                        {...dashboard}
+                        refoundTotal={dashboard.refundTotal}
+                      />
                       <div className="flex flex-col gap-10 overflow-hidden">
-                        <TransactionsPieChart {...dashboard} />
+                        <TransactionsPieChart
+                          {...dashboard}
+                          refounTotal={dashboard.refundTotal}
+                        />
                         <ExpensesPerCategory
                           expensesPerCategory={
                             dashboard.totalExpensePerCategory

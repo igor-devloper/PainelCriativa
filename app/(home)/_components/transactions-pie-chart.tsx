@@ -11,7 +11,7 @@ import {
 } from "@/app/_components/ui/chart";
 import { TransactionType } from "@prisma/client";
 import { TransactionPercentagePerType } from "@/app/_data/get-dashboard/types";
-import { TrendingDownIcon, TrendingUpIcon } from "lucide-react";
+import { TrendingDownIcon, TrendingUpIcon, Undo } from "lucide-react";
 import PercentageItem from "./percentage-item";
 import { ScrollArea } from "@/app/_components/ui/scroll-area";
 
@@ -24,18 +24,24 @@ const chartConfig = {
     label: "Despesas",
     color: "#E93030",
   },
+  [TransactionType.REFUND]: {
+    label: "Despesas",
+    color: "#eab308",
+  },
 } satisfies ChartConfig;
 
 interface TransactionsPieChartProps {
   typesPercentage: TransactionPercentagePerType;
   depositsTotal: number;
   expensesTotal: number;
+  refounTotal: number;
 }
 
 const TransactionsPieChart = ({
   depositsTotal,
   expensesTotal,
   typesPercentage,
+  refounTotal,
 }: TransactionsPieChartProps) => {
   // Verifica se todos os valores são zero
   const hasNoData = depositsTotal === 0 && expensesTotal === 0;
@@ -53,6 +59,11 @@ const TransactionsPieChart = ({
           type: TransactionType.EXPENSE,
           amount: expensesTotal,
           fill: "#E93030",
+        },
+        {
+          type: TransactionType.REFUND,
+          amount: refounTotal,
+          fill: " #eab308",
         },
       ];
 
@@ -92,6 +103,11 @@ const TransactionsPieChart = ({
               icon={<TrendingDownIcon size={16} className="text-red-500" />}
               title="Despesas"
               value={hasNoData ? 0 : typesPercentage[TransactionType.EXPENSE]}
+            />
+            <PercentageItem
+              icon={<Undo size={16} className="text-yellow-500" />}
+              title="Despesas"
+              value={hasNoData ? 0 : typesPercentage[TransactionType.REFUND]}
             />
           </div>
         </CardContent>

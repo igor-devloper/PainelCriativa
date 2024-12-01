@@ -1,4 +1,9 @@
-import { TrendingDownIcon, TrendingUpIcon, WalletIcon } from "lucide-react";
+import {
+  TrendingDownIcon,
+  TrendingUpIcon,
+  Undo,
+  WalletIcon,
+} from "lucide-react";
 import SummaryCard from "./summary-card";
 
 interface SummaryCards {
@@ -6,12 +11,14 @@ interface SummaryCards {
   balance: number;
   depositsTotal: number;
   expensesTotal: number;
+  refoundTotal: number;
 }
 
 const SummaryCards = async ({
   balance,
   depositsTotal,
   expensesTotal,
+  refoundTotal,
 }: SummaryCards) => {
   return (
     <div className="space-y-6">
@@ -35,6 +42,11 @@ const SummaryCards = async ({
           icon={<TrendingDownIcon size={16} className="text-red-500" />}
           title="Despesas"
           amount={expensesTotal}
+        />
+        <SummaryCard
+          icon={<Undo size={16} className="text-yellow-500" />}
+          title="Reembolso"
+          amount={refoundTotal}
         />
       </div>
     </div>

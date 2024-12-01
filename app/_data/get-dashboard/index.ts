@@ -57,19 +57,18 @@ export const getDashboard = async (month: string) => {
     )?._sum?.amount ?? 0,
   );
 
-  const refound = Number(
+  const refundTotal = Number(
     (
       await db.transaction.aggregate({
         where: { ...where, type: TransactionType.REFUND },
-
         _sum: { amount: true },
       })
     )?._sum?.amount ?? 0,
   );
 
-  const balance = depositsTotal - expensesTotal + refound;
+  const balance = depositsTotal - expensesTotal + refundTotal;
 
-  const transactionsTotal = depositsTotal + expensesTotal;
+  const transactionsTotal = depositsTotal + expensesTotal + refundTotal;
 
   const typesPercentage: TransactionPercentagePerType = {
     [TransactionType.DEPOSIT]: transactionsTotal
@@ -79,7 +78,7 @@ export const getDashboard = async (month: string) => {
       ? Math.round((expensesTotal / transactionsTotal) * 100)
       : 0,
     [TransactionType.REFUND]: transactionsTotal
-      ? Math.round((expensesTotal / transactionsTotal) * 100)
+      ? Math.round((refundTotal / transactionsTotal) * 100)
       : 0,
   };
 
@@ -111,6 +110,7 @@ export const getDashboard = async (month: string) => {
     balance,
     depositsTotal,
     expensesTotal,
+    refundTotal,
     typesPercentage,
     totalExpensePerCategory,
     lastTransactions: JSON.parse(
@@ -118,7 +118,8 @@ export const getDashboard = async (month: string) => {
         lastTransactions.map((transaction) => ({
           ...transaction,
           amount:
-            transaction.type === TransactionType.DEPOSIT &&
+            (transaction.type === TransactionType.DEPOSIT ||
+              transaction.type === TransactionType.REFUND) &&
             transaction.status === TransactionStatus.WAITING
               ? 0
               : Number(transaction.amount),

@@ -72,8 +72,8 @@ const LastTransactions = ({ lastTransactions }: LastTransactionsProps) => {
             <p className={`text-sm font-bold ${getAmountColor(transaction)}`}>
               {/* {TransactionStatus.WAITING ?? 'Aguardando Aprovação'} */}
               {transaction.status === TransactionStatus.WAITING &&
-              transaction.type === TransactionType.DEPOSIT &&
-              TransactionType.REFUND ? (
+              (transaction.type === TransactionType.DEPOSIT ||
+                transaction.type === TransactionType.REFUND) ? (
                 <p className="flex animate-pulse items-center justify-center rounded-md bg-green-400 p-2 text-xs text-gray-300">
                   Aguardando Aprovação
                 </p>
