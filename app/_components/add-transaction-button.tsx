@@ -13,7 +13,7 @@ import {
 
 interface AddTransactionButtonProps {
   isAdmin?: boolean;
-  balance: number;
+  balance?: number;
 }
 
 export function AddTransactionButton({
