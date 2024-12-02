@@ -199,7 +199,7 @@ const UpsertTransactionDialog = ({
                 )}
               />
             </div>
-            <div className="grid grid-cols-3 items-center justify-center space-x-8">
+            <div className="grid grid-cols-3 items-center justify-center space-x-4">
               <FormField
                 control={form.control}
                 name="amount"
@@ -286,7 +286,7 @@ const UpsertTransactionDialog = ({
                 )}
               />
             </div>
-            <div className="grid grid-cols-2 items-center justify-center">
+            <div className="grid grid-cols-2 items-center justify-center space-x-4">
               <FormField
                 control={form.control}
                 name="paymentMethod"
