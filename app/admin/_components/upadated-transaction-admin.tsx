@@ -8,10 +8,12 @@ import UpsertTransactionAdminDialog from "./updated-transaction-button";
 
 interface EditTransactionButtonProps {
   transaction: Transaction;
+  balance?: number;
 }
 
 const UpdateTransactionAdmin = ({
   transaction,
+  balance,
 }: EditTransactionButtonProps) => {
   const [dialogIsOpen, setDialogIsOpen] = useState(false);
 
@@ -27,6 +29,7 @@ const UpdateTransactionAdmin = ({
         Atualizar
       </Button>
       <UpsertTransactionAdminDialog
+        balance={balance}
         isOpen={dialogIsOpen}
         setIsOpen={setDialogIsOpen}
         transactionId={transaction.id}
