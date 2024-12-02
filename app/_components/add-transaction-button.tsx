@@ -13,9 +13,13 @@ import {
 
 interface AddTransactionButtonProps {
   isAdmin?: boolean;
+  balance: number;
 }
 
-export function AddTransactionButton({ isAdmin }: AddTransactionButtonProps) {
+export function AddTransactionButton({
+  isAdmin,
+  balance,
+}: AddTransactionButtonProps) {
   const [dialogIsOpen, setDialogIsOpen] = useState(false);
 
   const handleClick = () => {
@@ -41,6 +45,7 @@ export function AddTransactionButton({ isAdmin }: AddTransactionButtonProps) {
         </Tooltip>
       </TooltipProvider>
       <UpsertTransactionDialog
+        balance={balance}
         isAdmin={isAdmin ?? false}
         isOpen={dialogIsOpen}
         setIsOpen={setDialogIsOpen}

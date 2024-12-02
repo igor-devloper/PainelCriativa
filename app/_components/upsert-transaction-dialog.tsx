@@ -52,6 +52,7 @@ interface UpsertTransactionDialogProps {
   isOpen: boolean;
   defaultValues?: FormSchema;
   transactionId?: string;
+  balance: number;
   isAdmin: boolean;
   setIsOpen: (isOpen: boolean) => void;
 }
@@ -96,6 +97,7 @@ const UpsertTransactionDialog = ({
   transactionId,
   setIsOpen,
   isAdmin,
+  balance,
 }: UpsertTransactionDialogProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [images, setImages] = useState<File[]>([]);
@@ -114,6 +116,10 @@ const UpsertTransactionDialog = ({
 
   const onSubmit = async (data: FormSchema) => {
     try {
+      if (data.type === TransactionType.EXPENSE && data.amount > balance) {
+        toast.error("Saldo insuficiente para realizar esta transação.");
+        return;
+      }
       setIsLoading(true);
       const imagesBase64 = await Promise.all(
         images.map((file) => fileToBase64(file)),
@@ -123,6 +129,7 @@ const UpsertTransactionDialog = ({
         ...data,
         id: transactionId,
         imagesBase64,
+        balance: balance,
       });
       setIsOpen(false);
       form.reset();
