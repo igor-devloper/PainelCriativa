@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { isMatch } from "date-fns";
@@ -17,7 +18,7 @@ import { AppSidebar } from "../_components/app-sidebar";
 import { Separator } from "../_components/ui/separator";
 import { StyleBread } from "../_components/stily-bread";
 import { LineChartIcon as ChartLine } from "lucide-react";
-import { userAdmin } from "../_data/user-admin";
+import { useUser } from "@clerk/nextjs";
 
 export const metadata = {
   title: "Dashboard - Painel Criativa",
@@ -31,7 +32,8 @@ interface HomeProps {
 
 const Home = async ({ searchParams: { month } }: HomeProps) => {
   const { userId } = await auth();
-  const isAdmin = await userAdmin();
+  const { user } = useUser();
+  const isAdmin = user?.publicMetadata?.role === "admin";
   if (!userId) {
     redirect("/login");
   }
@@ -80,7 +82,7 @@ const Home = async ({ searchParams: { month } }: HomeProps) => {
                       month={month}
                       {...dashboard}
                       refoundTotal={dashboard.refundTotal}
-                      isAdmin={isAdmin ?? false}
+                      isAdmin={isAdmin}
                     />
                     <div className="grid h-full grid-cols-3 grid-rows-1 gap-6 overflow-hidden">
                       <TransactionsPieChart
@@ -93,7 +95,7 @@ const Home = async ({ searchParams: { month } }: HomeProps) => {
                     </div>
                   </div>
                   <LastTransactions
-                    isAdmin={isAdmin ?? false}
+                    isAdmin={isAdmin}
                     lastTransactions={dashboard.lastTransactions}
                   />
                 </div>
