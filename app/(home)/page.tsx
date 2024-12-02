@@ -18,7 +18,7 @@ import { AppSidebar } from "../_components/app-sidebar";
 import { Separator } from "../_components/ui/separator";
 import { StyleBread } from "../_components/stily-bread";
 import { LineChartIcon as ChartLine } from "lucide-react";
-import { useUser } from "@clerk/nextjs";
+import { userAdmin } from "../_data/user-admin";
 
 export const metadata = {
   title: "Dashboard - Painel Criativa",
@@ -32,8 +32,7 @@ interface HomeProps {
 
 const Home = async ({ searchParams: { month } }: HomeProps) => {
   const { userId } = await auth();
-  const { user } = useUser();
-  const isAdmin = user?.publicMetadata?.role === "admin";
+  const isAdmin = await userAdmin();
   if (!userId) {
     redirect("/login");
   }
@@ -82,7 +81,7 @@ const Home = async ({ searchParams: { month } }: HomeProps) => {
                       month={month}
                       {...dashboard}
                       refoundTotal={dashboard.refundTotal}
-                      isAdmin={isAdmin}
+                      isAdmin={isAdmin ?? false}
                     />
                     <div className="grid h-full grid-cols-3 grid-rows-1 gap-6 overflow-hidden">
                       <TransactionsPieChart
@@ -95,7 +94,7 @@ const Home = async ({ searchParams: { month } }: HomeProps) => {
                     </div>
                   </div>
                   <LastTransactions
-                    isAdmin={isAdmin}
+                    isAdmin={isAdmin ?? false}
                     lastTransactions={dashboard.lastTransactions}
                   />
                 </div>
@@ -103,6 +102,7 @@ const Home = async ({ searchParams: { month } }: HomeProps) => {
                   <div className="h-ful flex flex-col gap-10 md:hidden">
                     <div className="flex flex-col gap-10 overflow-hidden">
                       <SummaryCards
+                        isAdmin={isAdmin ?? false}
                         month={month}
                         {...dashboard}
                         refoundTotal={dashboard.refundTotal}

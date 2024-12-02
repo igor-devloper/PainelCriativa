@@ -9,7 +9,7 @@ import SummaryCard from "./summary-card";
 interface SummaryCards {
   month: string;
   balance: number;
-  isAdmin: boolean;
+  isAdmin?: boolean;
   depositsTotal: number;
   expensesTotal: number;
   refoundTotal: number;
@@ -30,7 +30,7 @@ const SummaryCards = async ({
         balance={balance}
         icon={<WalletIcon size={16} />}
         title="Saldo"
-        isAdmin={isAdmin}
+        isAdmin={isAdmin ?? false}
         amount={balance}
         size="large"
       />
@@ -39,20 +39,20 @@ const SummaryCards = async ({
       <div className="flex w-full flex-col gap-4 md:grid md:grid-cols-3 md:gap-6">
         <SummaryCard
           balance={balance}
-          isAdmin={isAdmin}
+          isAdmin={isAdmin ?? false}
           icon={<TrendingUpIcon size={16} className="text-primary" />}
           title="Receita"
           amount={depositsTotal}
         />
         <SummaryCard
-          isAdmin={isAdmin}
+          isAdmin={isAdmin ?? false}
           balance={balance}
           icon={<TrendingDownIcon size={16} className="text-red-500" />}
           title="Despesas"
           amount={expensesTotal}
         />
         <SummaryCard
-          isAdmin={isAdmin}
+          isAdmin={isAdmin ?? false}
           balance={balance}
           icon={<Undo size={16} className="text-yellow-500" />}
           title="Reembolso"
