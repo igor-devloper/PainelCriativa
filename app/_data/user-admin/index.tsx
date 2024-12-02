@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 export const userAdmin = async () => {
   const { userId } = await auth();
   if (!userId) {
-    redirect("/");
+    redirect("/login");
   }
   const user = await clerkClient().users.getUser(userId);
   if (user.publicMetadata.role === "admin") {
