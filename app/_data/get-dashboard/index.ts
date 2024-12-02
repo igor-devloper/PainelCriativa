@@ -113,7 +113,6 @@ export const getDashboard = async (month: string) => {
   });
   const lastTransactionsDeposit = await db.transaction.findMany({
     where: {
-      ...where,
       type: TransactionType.DEPOSIT,
     },
     orderBy: { date: "desc" },
