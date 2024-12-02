@@ -44,6 +44,12 @@ export const TRANSACTION_PAYMENT_METHOD_LABELS = {
   PIX: "Pix",
 };
 
+export const TRANSACTION_TYPE_OPTIONS_LABELS = {
+  EXPENSE: "Despesa",
+  DEPOSIT: "Deposito",
+  REFUND: "Reembolso",
+};
+
 export const TRANSACTION_TYPE_OPTIONS = [
   {
     value: TransactionType.EXPENSE,

@@ -95,15 +95,10 @@ export const upsertTransaction = async (params: UpsertTransactionParams) => {
       },
     });
 
-    // Send email notification for deposit transactions
-    if (
-      transaction.type === TransactionType.DEPOSIT &&
-      TransactionType.REFUND
-    ) {
-      await sendDepositNotificationEmail(transaction);
-    }
+    await sendDepositNotificationEmail(transaction);
 
     revalidatePath("/transactions");
+    revalidatePath("/admin");
     return transaction;
   } catch (error) {
     console.error("Error in upsertTransaction:", error);

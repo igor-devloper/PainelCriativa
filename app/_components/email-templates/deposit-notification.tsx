@@ -7,7 +7,10 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Decimal } from "@prisma/client/runtime/library";
-import { TRANSACTION_PAYMENT_METHOD_LABELS } from "@/app/_constants/transactions";
+import {
+  TRANSACTION_PAYMENT_METHOD_LABELS,
+  TRANSACTION_TYPE_OPTIONS_LABELS,
+} from "@/app/_constants/transactions";
 
 interface DepositEmailProps {
   transaction: {
@@ -48,7 +51,8 @@ export const DepositNotificationEmail: React.FC<DepositEmailProps> = ({
       Novo Depósito Realizado
     </h1>
     <p style={{ textAlign: "center" }}>
-      Um novo depósito foi registrado em sua conta.
+      Um(a) novo(a) {TRANSACTION_TYPE_OPTIONS_LABELS[transaction.type]} foi
+      registrado(a) no site Painel Criativa.
     </p>
     <div
       style={{
