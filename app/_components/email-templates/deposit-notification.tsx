@@ -48,7 +48,7 @@ export const DepositNotificationEmail: React.FC<DepositEmailProps> = ({
       />
     </div>
     <h1 style={{ textAlign: "center", color: "#4CAF50" }}>
-      Novo Depósito Realizado
+      Novo(a) {TRANSACTION_TYPE_OPTIONS_LABELS[transaction.type]} Realizado(a)
     </h1>
     <p style={{ textAlign: "center" }}>
       Um(a) novo(a) {TRANSACTION_TYPE_OPTIONS_LABELS[transaction.type]} foi
