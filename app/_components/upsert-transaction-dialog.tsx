@@ -131,7 +131,6 @@ const UpsertTransactionDialog = ({
         ...data,
         id: transactionId,
         imagesBase64,
-        balance: balance ?? 0,
       });
       setIsOpen(false);
       form.reset();

@@ -45,7 +45,6 @@ interface UpsertTransactionParams {
   paymentMethod: TransactionPaymentMethod;
   imagesBase64?: string[];
   date: Date;
-  balance: number;
 }
 
 export const upsertTransaction = async (params: UpsertTransactionParams) => {
@@ -56,14 +55,6 @@ export const upsertTransaction = async (params: UpsertTransactionParams) => {
     const { userId } = await auth();
     if (!userId) {
       throw new Error("Unauthorized");
-    }
-
-    // Check if it's an EXPENSE transaction and if there's sufficient balance
-    if (
-      params.type === TransactionType.EXPENSE &&
-      params.balance < params.amount
-    ) {
-      throw new Error("Insufficient balance to complete this transaction");
     }
 
     let imageUrls: string[] = [];
