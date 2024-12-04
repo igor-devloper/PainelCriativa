@@ -7,6 +7,40 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Team {
+  id        String   @id @default(cuid())
+  name      String
+  adminId   String   // ID do usuário Clerk que é o administrador
+  members   TeamMember[]
+  blocks    Block[]
+  transactions Transaction[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  userId    String   // ID do usuário Clerk
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, teamId])
+}
+
+model Block {
+  id           String        @id @default(cuid())
+  name         String
+  amount       Float
+  status       BlockStatus   // Pode ser "OPEN", "CLOSED", "APPROVED", etc.
+  teamId       String
+  team         Team          @relation(fields: [teamId], references: [id])
+  transactions Transaction[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
 model Transaction {
   id            String                   @id @default(uuid())
   name          String
@@ -16,6 +50,10 @@ model Transaction {
   amount        Decimal                  @db.Decimal(10, 2)
   category      TransactionCategory
   paymentMethod TransactionPaymentMethod
+  blockId     String   
+  block       Block    @relation(fields: [blockId], references: [id])
+  teamId      String  
+  team        Team     @relation(fields: [teamId], references: [id])
   date          DateTime
   createdAt     DateTime                 @default(now())
   updatedAt     DateTime                 @updatedAt
@@ -32,6 +70,12 @@ enum TransactionType {
 enum TransactionStatus {
   WAITING
   FINISHED
+} 
+
+enum BlockStatus {
+  OPEN
+  CLOSED
+  APPROVED
 } 
 
 enum TransactionCategory {

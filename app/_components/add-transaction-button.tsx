@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDownUpIcon } from "lucide-react";
+import { ArrowDownUpIcon, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useState } from "react";
 import UpsertTransactionDialog from "./upsert-transaction-dialog";
@@ -14,13 +14,18 @@ import {
 interface AddTransactionButtonProps {
   isAdmin?: boolean;
   balance?: number;
+  blockId?: string;
+  teamId?: string;
 }
 
 export function AddTransactionButton({
   isAdmin,
   balance,
+  blockId,
+  teamId,
 }: AddTransactionButtonProps) {
   const [dialogIsOpen, setDialogIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleClick = () => {
     setDialogIsOpen(true);
@@ -34,9 +39,17 @@ export function AddTransactionButton({
             <Button
               className="h-9 rounded-full px-3 md:rounded-full md:font-bold"
               onClick={handleClick}
+              disabled={isLoading}
+              aria-label="Adicionar transação"
             >
-              Adicionar transação
-              <ArrowDownUpIcon />
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  Adicionar transação
+                  <ArrowDownUpIcon className="ml-2 h-4 w-4" />
+                </>
+              )}
             </Button>
           </TooltipTrigger>
           <TooltipContent>
@@ -49,6 +62,9 @@ export function AddTransactionButton({
         isAdmin={isAdmin ?? false}
         isOpen={dialogIsOpen}
         setIsOpen={setDialogIsOpen}
+        onLoadingChange={setIsLoading}
+        blockId={blockId ?? ""}
+        teamId={teamId ?? ""}
       />
     </>
   );

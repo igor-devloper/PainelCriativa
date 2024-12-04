@@ -45,6 +45,8 @@ interface UpsertTransactionParams {
   paymentMethod: TransactionPaymentMethod;
   imagesBase64?: string[];
   date: Date;
+  teamId: string;
+  blockId: string;
 }
 
 export const upsertTransaction = async (params: UpsertTransactionParams) => {
@@ -84,6 +86,7 @@ export const upsertTransaction = async (params: UpsertTransactionParams) => {
     const transaction = await db.transaction.upsert({
       update: {
         ...filterParams(params),
+        imageUrl: imageUrls,
       },
       create: {
         ...filterParams(params),

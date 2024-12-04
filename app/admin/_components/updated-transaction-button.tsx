@@ -53,6 +53,8 @@ interface UpsertTransactionDialogProps {
   transactionId?: string;
   userId?: string;
   balance?: number;
+  blockId: string;
+  teamId: string;
   setIsOpen: (isOpen: boolean) => void;
 }
 
@@ -96,6 +98,8 @@ const UpsertTransactionAdminDialog = ({
   defaultValues,
   transactionId,
   setIsOpen,
+  blockId,
+  teamId,
 }: UpsertTransactionDialogProps) => {
   const [images, setImages] = useState<File[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -127,6 +131,8 @@ const UpsertTransactionAdminDialog = ({
         ...data,
         id: transactionId,
         imagesBase64,
+        blockId: blockId,
+        teamId: teamId,
         userId: defaultValues?.userId,
       });
       setIsOpen(false);

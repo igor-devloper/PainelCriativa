@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "./ui/button";
 import {
   Dialog,
@@ -7,7 +9,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "./ui/dialog";
 import {
   Form,
@@ -43,9 +44,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { upsertTransaction } from "../_actions/upsert-transaction";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { ImageUpload } from "./image-upload";
-import { LoaderCircle } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 
 interface UpsertTransactionDialogProps {
@@ -54,7 +55,10 @@ interface UpsertTransactionDialogProps {
   transactionId?: string;
   balance?: number;
   isAdmin: boolean;
+  blockId: string;
+  teamId: string;
   setIsOpen: (isOpen: boolean) => void;
+  onLoadingChange: (isLoading: boolean) => void;
 }
 
 const formSchema = z.object({
@@ -98,8 +102,10 @@ const UpsertTransactionDialog = ({
   setIsOpen,
   isAdmin,
   balance,
+  blockId,
+  teamId,
+  onLoadingChange,
 }: UpsertTransactionDialogProps) => {
-  const [isLoading, setIsLoading] = useState(false);
   const [images, setImages] = useState<File[]>([]);
 
   const form = useForm<FormSchema>({
@@ -111,38 +117,53 @@ const UpsertTransactionDialog = ({
       description: "",
       paymentMethod: TransactionPaymentMethod.CASH,
       type: TransactionType.EXPENSE,
+      date: new Date(),
     },
   });
 
-  const onSubmit = async (data: FormSchema) => {
-    try {
-      if (data.type === TransactionType.EXPENSE) {
-        if (!balance || data.amount > balance) {
-          toast.error("Saldo insuficiente para realizar esta transação.");
-          return;
+  const onSubmit = useCallback(
+    async (data: FormSchema) => {
+      try {
+        if (data.type === TransactionType.EXPENSE) {
+          if (!balance || data.amount > balance) {
+            toast.error("Saldo insuficiente para realizar esta transação.");
+            return;
+          }
         }
-      }
-      setIsLoading(true);
-      const imagesBase64 = await Promise.all(
-        images.map((file) => fileToBase64(file)),
-      );
+        onLoadingChange(true);
+        const imagesBase64 = await Promise.all(
+          images.map((file) => fileToBase64(file)),
+        );
 
-      await upsertTransaction({
-        ...data,
-        id: transactionId,
-        imagesBase64,
-      });
-      setIsOpen(false);
-      form.reset();
-      setImages([]);
-      setIsLoading(false);
-      toast.success("Transação criada com sucesso!");
-    } catch (error) {
-      setIsLoading(false);
-      console.error(error);
-      toast.error("Erro ao criar transação. Tente novamente.");
-    }
-  };
+        await upsertTransaction({
+          ...data,
+          id: transactionId,
+          imagesBase64,
+          teamId: teamId,
+          blockId: blockId,
+        });
+        setIsOpen(false);
+        form.reset();
+        setImages([]);
+        toast.success("Transação criada com sucesso!");
+      } catch (error) {
+        console.error(error);
+        toast.error("Erro ao criar transação. Tente novamente.");
+      } finally {
+        onLoadingChange(false);
+      }
+    },
+    [
+      form,
+      images,
+      onLoadingChange,
+      setIsOpen,
+      transactionId,
+      balance,
+      blockId,
+      teamId,
+    ],
+  );
 
   const isUpdate = Boolean(transactionId);
 
@@ -154,33 +175,33 @@ const UpsertTransactionDialog = ({
       reader.onerror = reject;
     });
   };
-  return (
-    <ScrollArea className="max-h-">
-      <Dialog
-        open={isOpen}
-        onOpenChange={(open) => {
-          setIsOpen(open);
-          if (!open) {
-            form.reset();
-            setImages([]);
-          }
-        }}
-      >
-        <DialogTrigger asChild></DialogTrigger>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {isUpdate ? "Atualizar" : "Criar"} transação
-            </DialogTitle>
-            <DialogDescription>Insira as informações abaixo</DialogDescription>
-          </DialogHeader>
 
+  return (
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        setIsOpen(open);
+        if (!open) {
+          form.reset();
+          setImages([]);
+        }
+      }}
+    >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>
+            {isUpdate ? "Atualizar" : "Criar"} transação
+          </DialogTitle>
+          <DialogDescription>Insira as informações abaixo</DialogDescription>
+        </DialogHeader>
+
+        <ScrollArea className="max-h-[80vh]">
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
               className="space-y-4 md:space-y-8"
             >
-              <div className="grid grid-cols-2 space-x-2">
+              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="name"
@@ -208,7 +229,7 @@ const UpsertTransactionDialog = ({
                   )}
                 />
               </div>
-              <div className="grid grid-cols-3 items-center justify-center space-x-4">
+              <div className="grid grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
                   name="amount"
@@ -242,32 +263,19 @@ const UpsertTransactionDialog = ({
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a verified email to display" />
+                            <SelectValue placeholder="Selecione o tipo..." />
                           </SelectTrigger>
                         </FormControl>
-                        {isAdmin ? (
-                          <SelectContent>
-                            {TRANSACTION_TYPE_OPTIONS.map((option) => (
-                              <SelectItem
-                                key={option.value}
-                                value={option.value}
-                              >
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        ) : (
-                          <SelectContent>
-                            {TRANSACTION_TYPE_OPTIONS_SECOND.map((option) => (
-                              <SelectItem
-                                key={option.value}
-                                value={option.value}
-                              >
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        )}
+                        <SelectContent>
+                          {(isAdmin
+                            ? TRANSACTION_TYPE_OPTIONS
+                            : TRANSACTION_TYPE_OPTIONS_SECOND
+                          ).map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
                       </Select>
                       <FormMessage />
                     </FormItem>
@@ -301,7 +309,7 @@ const UpsertTransactionDialog = ({
                   )}
                 />
               </div>
-              <div className="grid grid-cols-2 items-center justify-center space-x-4">
+              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="paymentMethod"
@@ -362,9 +370,9 @@ const UpsertTransactionDialog = ({
                     Cancelar
                   </Button>
                 </DialogClose>
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading ? (
-                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                <Button type="submit" disabled={form.formState.isSubmitting}>
+                  {form.formState.isSubmitting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
                   ) : isUpdate ? (
                     "Atualizar"
                   ) : (
@@ -374,9 +382,9 @@ const UpsertTransactionDialog = ({
               </DialogFooter>
             </form>
           </Form>
-        </DialogContent>
-      </Dialog>
-    </ScrollArea>
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
   );
 };
 

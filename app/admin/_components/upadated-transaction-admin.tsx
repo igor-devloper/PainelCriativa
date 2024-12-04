@@ -8,12 +8,16 @@ import UpsertTransactionAdminDialog from "./updated-transaction-button";
 
 interface EditTransactionButtonProps {
   transaction: Transaction;
+  blockId: string;
+  teamId: string;
   balance?: number;
 }
 
 const UpdateTransactionAdmin = ({
   transaction,
   balance,
+  blockId,
+  teamId,
 }: EditTransactionButtonProps) => {
   const [dialogIsOpen, setDialogIsOpen] = useState(false);
 
@@ -33,6 +37,8 @@ const UpdateTransactionAdmin = ({
         isOpen={dialogIsOpen}
         setIsOpen={setDialogIsOpen}
         transactionId={transaction.id}
+        blockId={blockId}
+        teamId={teamId}
         defaultValues={{
           userId: transaction.userId,
           amount: Number(transaction.amount),

@@ -110,7 +110,11 @@ export const adminColumns: ColumnDef<Transaction>[] = [
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="flex w-full flex-col items-center justify-center space-y-4">
-              <UpdateTransactionAdmin transaction={transaction} />
+              <UpdateTransactionAdmin
+                transaction={transaction}
+                blockId=""
+                teamId=""
+              />
               <DeleteTransactionButton transactionId={transaction.id} />
             </DropdownMenuContent>
           </DropdownMenu>

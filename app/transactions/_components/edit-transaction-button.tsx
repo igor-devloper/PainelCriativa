@@ -32,6 +32,9 @@ const EditTransactionButton = ({
         isAdmin={isAdmin ?? false}
         isOpen={dialogIsOpen}
         setIsOpen={setDialogIsOpen}
+        blockId=""
+        teamId=""
+        onLoadingChange={() => null}
         defaultValues={{
           ...transaction,
           amount: Number(transaction.amount),
