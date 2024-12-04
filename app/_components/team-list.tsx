@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getUserTeams } from "@/app/_actions/get-user-team";
 import {
   Card,
@@ -5,22 +6,39 @@ import {
   CardHeader,
   CardTitle,
 } from "@/app/_components/ui/card";
+import { Badge } from "@/app/_components/ui/badge";
+import { Users, ArrowRight } from "lucide-react";
 
 export async function TeamList() {
   const teams = await getUserTeams();
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {teams.map((team) => (
-        <Card key={team.id}>
-          <CardHeader>
-            <CardTitle>{team.name}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>{team._count.members} membros</p>
-            {/* Adicione mais informações da equipe conforme necessário */}
-          </CardContent>
-        </Card>
+        <Link href={`/teams/${team.id}`} key={team.id} className="group">
+          <Card className="transition-all duration-300 hover:shadow-lg">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-xl font-bold">{team.name}</CardTitle>
+              <Badge variant="secondary" className="text-sm">
+                {team._count.members}{" "}
+                {team._count.members === 1 ? "membro" : "membros"}
+              </Badge>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <Users size={16} />
+                <span>Equipe ativa</span>
+              </div>
+              <div className="mt-4 flex items-center justify-between">
+                <span className="text-sm font-medium">Ver detalhes</span>
+                <ArrowRight
+                  size={16}
+                  className="transition-transform duration-300 group-hover:translate-x-1"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
       ))}
     </div>
   );

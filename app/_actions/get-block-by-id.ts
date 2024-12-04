@@ -3,15 +3,15 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/app/_lib/prisma";
 
-export async function getTeamBlocks(teamId: string) {
+export async function getBlockById(blockId: string) {
   const { userId } = auth();
   if (!userId) {
     throw new Error("Unauthorized");
   }
 
-  const blocks = await db.block.findMany({
+  const block = await db.block.findFirst({
     where: {
-      teamId: teamId,
+      id: blockId,
       team: {
         members: {
           some: {
@@ -20,10 +20,11 @@ export async function getTeamBlocks(teamId: string) {
         },
       },
     },
-    orderBy: {
-      createdAt: "desc",
+    select: {
+      id: true,
+      name: true,
     },
   });
 
-  return blocks;
+  return block;
 }

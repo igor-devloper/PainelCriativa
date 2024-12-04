@@ -1,8 +1,10 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 "use client";
 
 import { Transaction } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import TransactionTypeBadge from "../../transactions/_components/type-badge";
+import { getBlockById } from "@/app/_actions/get-block-by-id";
 import {
   TRANSACTION_CATEGORY_LABELS,
   TRANSACTION_PAYMENT_METHOD_LABELS,
@@ -10,7 +12,7 @@ import {
 import DeleteTransactionButton from "../../transactions/_components/delete-transaction-button";
 import UserInfo from "@/app/_components/user-info";
 import { ImageGallery } from "@/app/transactions/_components/image-gallery";
-import TransactionStatusBadge from "../_components/status-badge";
+// import TransactionStatusBadge from "../_components/status-badge";
 import UpdateTransactionAdmin from "../_components/upadated-transaction-admin";
 import {
   DropdownMenu,
@@ -19,6 +21,7 @@ import {
 } from "@/app/_components/ui/dropdown-menu";
 import { Button } from "@/app/_components/ui/button";
 import { MoreHorizontal } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export const adminColumns: ColumnDef<Transaction>[] = [
   {
@@ -84,11 +87,25 @@ export const adminColumns: ColumnDef<Transaction>[] = [
     ),
   },
   {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row: { original: transaction } }) => (
-      <TransactionStatusBadge transaction={transaction} />
-    ),
+    accessorKey: "blockId",
+    header: "Referente a",
+    cell: ({ row: { original: transaction } }) => {
+      const [blockName, setBlockName] = useState<string>("Carregando...");
+
+      useEffect(() => {
+        async function fetchBlockName() {
+          if (transaction.blockId) {
+            const block = await getBlockById(transaction.blockId);
+            setBlockName(block?.name || "Bloco não encontrado");
+          } else {
+            setBlockName("Não associado a um bloco");
+          }
+        }
+        fetchBlockName();
+      }, [transaction.blockId]);
+
+      return <div>{blockName}</div>;
+    },
   },
   {
     accessorKey: "actions",
