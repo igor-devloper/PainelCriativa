@@ -37,7 +37,24 @@ export async function inviteMember(
   const existingUser = existingUsersResponse.data[0];
 
   if (existingUser) {
-    // User exists, add them to the team
+    // User exists, check if they're already a member of the team
+    const existingMember = await db.teamMember.findUnique({
+      where: {
+        teamId_userId: {
+          teamId: teamId,
+          userId: existingUser.id,
+        },
+      },
+    });
+
+    if (existingMember) {
+      return {
+        success: false,
+        message: "User is already a member of this team",
+      };
+    }
+
+    // Add user to the team
     try {
       await db.teamMember.create({
         data: {
@@ -48,30 +65,43 @@ export async function inviteMember(
       revalidatePath(`/teams/${teamId}`);
       return { success: true, message: "Member added successfully" };
     } catch (error) {
-      if (error) {
-        return {
-          success: false,
-          message: "User is already a member of this team",
-        };
-      }
-      throw error;
+      console.error("Failed to add member:", error);
+      return { success: false, message: "Failed to add member to the team" };
     }
   } else {
-    // User doesn't exist, create an invitation
-    const invitation = await db.teamInvitation.create({
-      data: {
-        teamId: teamId,
-        email: email,
-        token: generateInvitationToken(),
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+    // User doesn't exist, check for existing invitation
+    const existingInvitation = await db.teamInvitation.findUnique({
+      where: {
+        email_teamId: {
+          email: email,
+          teamId: teamId,
+        },
       },
     });
 
-    const inviter = await clerkClient.users.getUser(userId);
-    const invitationLink = `${process.env.NEXT_PUBLIC_APP_URL}/invitations/${invitation.token}`;
+    if (existingInvitation) {
+      // Invitation already exists, you might want to resend it or update its expiration
+      return {
+        success: false,
+        message: "An invitation has already been sent to this email",
+      };
+    }
 
-    // Send invitation email
+    // Create a new invitation
     try {
+      const invitation = await db.teamInvitation.create({
+        data: {
+          teamId: teamId,
+          email: email,
+          token: generateInvitationToken(),
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+        },
+      });
+
+      const inviter = await clerkClient.users.getUser(userId);
+      const invitationLink = `${process.env.NEXT_PUBLIC_APP_URL}/invitations/${invitation.token}`;
+
+      // Send invitation email
       await resend.emails.send({
         from: "Your App <noreply@yourapp.com>",
         to: email,
@@ -86,8 +116,11 @@ export async function inviteMember(
       revalidatePath(`/teams/${teamId}`);
       return { success: true, message: "Invitation sent successfully" };
     } catch (error) {
-      console.error("Failed to send invitation email:", error);
-      return { success: false, message: "Failed to send invitation email" };
+      console.error("Failed to create invitation or send email:", error);
+      return {
+        success: false,
+        message: "Failed to create invitation or send email",
+      };
     }
   }
 }

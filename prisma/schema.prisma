@@ -33,11 +33,10 @@ model TeamMember {
 model TeamInvitation {
   id        String   @id @default(cuid())
   email     String
-  token     String   @unique
   teamId    String
-  team      Team     @relation(fields: [teamId], references: [id])
-  createdAt DateTime @default(now())
+  token     String   @unique
   expiresAt DateTime
+  team      Team     @relation(fields: [teamId], references: [id])
 
   @@unique([email, teamId])
 }
