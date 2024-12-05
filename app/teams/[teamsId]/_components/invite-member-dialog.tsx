@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { UserPlus } from "lucide-react";
+import { Loader2, UserPlus } from "lucide-react";
 
 import { Button } from "@/app/_components/ui/button";
 import {
@@ -37,6 +37,7 @@ type InviteFormValues = z.infer<typeof inviteFormSchema>;
 
 export function InviteMemberDialog({ teamId }: { teamId: string }) {
   const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<InviteFormValues>({
@@ -47,20 +48,36 @@ export function InviteMemberDialog({ teamId }: { teamId: string }) {
   });
 
   async function onSubmit(data: InviteFormValues) {
+    setIsLoading(true);
     try {
-      await inviteMember(teamId, data.email);
-      toast({
-        title: "Convite enviado",
-        description: "O membro foi convidado para a equipe.",
-      });
-      setOpen(false);
-      form.reset();
+      const result = await inviteMember(teamId, data.email);
+      if (result.success) {
+        toast({
+          title: "Convite enviado",
+          description: "O membro foi convidado para a equipe.",
+        });
+        setOpen(false);
+        form.reset();
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description:
+            result.message ||
+            "Não foi possível enviar o convite. Tente novamente.",
+        });
+      }
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Erro",
-        description: "Não foi possível enviar o convite. Tente novamente.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Ocorreu um erro inesperado. Tente novamente.",
       });
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -95,7 +112,13 @@ export function InviteMemberDialog({ teamId }: { teamId: string }) {
               )}
             />
             <DialogFooter>
-              <Button type="submit">Enviar Convite</Button>
+              <Button type="submit" disabled={isLoading}>
+                {!isLoading ? (
+                  "Enviar Convite"
+                ) : (
+                  <Loader2 className="animate-spin" />
+                )}
+              </Button>
             </DialogFooter>
           </form>
         </Form>

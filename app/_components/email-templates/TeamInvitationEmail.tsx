@@ -62,6 +62,9 @@ export const TeamInvitationEmail: React.FC<TeamInvitationEmailProps> = ({
       </div>
     </div>
     <p style={{ textAlign: "center", marginTop: "20px" }}>
+      Este link expirará em 7 dias.
+    </p>
+    <p style={{ textAlign: "center", marginTop: "20px" }}>
       Se você não esperava este convite, por favor, ignore este email.
     </p>
   </div>
