@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, HandCoins, Settings, Users } from "lucide-react";
+import { Home, HandCoins, Settings, Users, Mail } from "lucide-react";
 import {
   Sidebar,
   SidebarFooter,
@@ -29,6 +29,11 @@ const defaultNavItems = [
     title: "Transações",
     url: "/transactions",
     icon: HandCoins,
+  },
+  {
+    title: "Convites",
+    url: "/invitations",
+    icon: Mail,
   },
 ];
 
@@ -78,9 +83,6 @@ export function AppSidebar({ isAdmin, userTeams, ...props }: AppSidebarProps) {
       <SidebarFooter className="mb-4 flex items-center justify-center">
         <UserButton
           showName={true}
-          afterSignOutUrl="/"
-          userProfileMode="navigation"
-          userProfileUrl="/user-profile"
           appearance={{
             elements: {
               userButtonBox: "flex items-center gap-2",

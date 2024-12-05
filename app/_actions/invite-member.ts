@@ -1,16 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/app/_lib/prisma";
 import { revalidatePath } from "next/cache";
-import { Resend } from "resend";
-import { TeamInvitationEmail } from "../_components/email-templates/TeamInvitationEmail";
 import { clerkClient } from "@clerk/nextjs/server";
-import { isAllowedTestEmail } from "@/app/_lib/email-config";
 import * as crypto from "crypto";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function inviteMember(
   teamId: string,
@@ -18,16 +12,14 @@ export async function inviteMember(
 ): Promise<{ success: boolean; message: string }> {
   const { userId } = auth();
   if (!userId) {
-    return { success: false, message: "Authentication required" };
+    return { success: false, message: "Autenticação necessária" };
   }
 
   try {
     const user = await clerkClient.users.getUser(userId);
     if (!user) {
-      return { success: false, message: "Inviter not found" };
+      return { success: false, message: "Convidador não encontrado" };
     }
-
-    const inviterName = user.firstName || user.fullName || "Inviter";
 
     const team = await db.team.findUnique({
       where: { id: teamId },
@@ -35,11 +27,14 @@ export async function inviteMember(
     });
 
     if (!team) {
-      return { success: false, message: "Team not found" };
+      return { success: false, message: "Equipe não encontrada" };
     }
 
     if (team.adminId !== userId) {
-      return { success: false, message: "Only team admin can invite members" };
+      return {
+        success: false,
+        message: "Apenas o administrador da equipe pode convidar membros",
+      };
     }
 
     const existingInvitation = await db.teamInvitation.findUnique({
@@ -54,49 +49,86 @@ export async function inviteMember(
     if (existingInvitation) {
       return {
         success: false,
-        message:
-          "An invitation has already been sent to this email for this team",
+        message: "Um convite já foi enviado para este e-mail para esta equipe",
       };
     }
 
-    const invitation = await db.teamInvitation.create({
+    await db.teamInvitation.create({
       data: {
         teamId: teamId,
         email: email,
         token: generateInvitationToken(),
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 dias
       },
     });
 
-    const invitationLink = `${process.env.NEXT_PUBLIC_APP_URL}/invitations/${invitation.token}`;
-
-    const emailContent = TeamInvitationEmail({
-      teamName: team.name,
-      inviterName: inviterName,
-      invitationLink: invitationLink,
-    });
-
-    const emailResult = await resend.emails.send({
-      from: process.env.EMAIL_FROM || "Seu App <noreply@seudominio.com>",
-      to:
-        process.env.NODE_ENV === "production" || isAllowedTestEmail(email)
-          ? email
-          : "seu-email-principal@exemplo.com",
-      subject: `Convite para se juntar à equipe ${team.name}`,
-      react: emailContent,
-    });
-
     revalidatePath(`/teams/${teamId}`);
-    return { success: true, message: "Invitation sent successfully" };
+    return { success: true, message: "Convite criado com sucesso" };
   } catch (error) {
-    console.error("Invitation error:", error);
+    console.error("Erro no convite:", error);
     return {
       success: false,
-      message: "Failed to create invitation or send email",
+      message: "Falha ao criar o convite",
     };
   }
 }
 
 function generateInvitationToken(): string {
   return crypto.randomUUID();
+}
+
+export async function acceptInvitation(
+  token: string,
+): Promise<{ success: boolean; message: string; teamId?: string }> {
+  const { userId } = auth();
+  if (!userId) {
+    return { success: false, message: "Autenticação necessária" };
+  }
+
+  try {
+    const invitation = await db.teamInvitation.findUnique({
+      where: { token },
+      include: { team: true },
+    });
+
+    if (!invitation) {
+      return { success: false, message: "Convite não encontrado ou expirado" };
+    }
+
+    if (invitation.expiresAt < new Date()) {
+      await db.teamInvitation.delete({ where: { id: invitation.id } });
+      return { success: false, message: "O convite expirou" };
+    }
+
+    const user = await clerkClient.users.getUser(userId);
+    if (
+      user.emailAddresses.every(
+        (email) => email.emailAddress !== invitation.email,
+      )
+    ) {
+      return {
+        success: false,
+        message: "O e-mail do convite não corresponde à sua conta",
+      };
+    }
+
+    await db.teamMember.create({
+      data: {
+        userId,
+        teamId: invitation.teamId,
+      },
+    });
+
+    await db.teamInvitation.delete({ where: { id: invitation.id } });
+
+    revalidatePath(`/teams/${invitation.teamId}`);
+    return {
+      success: true,
+      message: "Você foi adicionado à equipe com sucesso",
+      teamId: invitation.teamId,
+    };
+  } catch (error) {
+    console.error("Erro ao aceitar convite:", error);
+    return { success: false, message: "Falha ao aceitar o convite" };
+  }
 }
