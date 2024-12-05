@@ -7,6 +7,7 @@ import { ChevronDown } from "lucide-react";
 import {
   SidebarContent,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
@@ -18,6 +19,7 @@ interface NavItem {
   title: string;
   url: string;
   icon: React.ElementType;
+  badgeCount?: number; // New property for badge count
 }
 
 interface Team {
@@ -79,6 +81,9 @@ export function ClientSidebarContent({
                 <Link href={item.url} className="flex items-center">
                   <item.icon className="mr-2 h-4 w-4" />
                   <span>{item.title}</span>
+                  {item.badgeCount !== undefined && item.badgeCount > 0 && (
+                    <SidebarMenuBadge>{item.badgeCount}</SidebarMenuBadge>
+                  )}
                 </Link>
               </SidebarMenuButton>
             )}

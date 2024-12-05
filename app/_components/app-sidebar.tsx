@@ -51,12 +51,23 @@ interface Team {
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   userTeams: Team[];
   isAdmin: boolean;
+  invitationCount: number; // New prop for invitation count
 }
 
-export function AppSidebar({ isAdmin, userTeams, ...props }: AppSidebarProps) {
+export function AppSidebar({
+  isAdmin,
+  userTeams,
+  invitationCount,
+  ...props
+}: AppSidebarProps) {
   const navItems = isAdmin
     ? [...defaultNavItems, adminNavItem]
     : defaultNavItems;
+
+  // Update the "Convites" nav item to include the invitation count
+  const updatedNavItems = navItems.map((item) =>
+    item.title === "Convites" ? { ...item, badgeCount: invitationCount } : item,
+  );
 
   return (
     <Sidebar variant="inset" {...props}>
@@ -79,7 +90,7 @@ export function AppSidebar({ isAdmin, userTeams, ...props }: AppSidebarProps) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <ClientSidebarContent navItems={navItems} userTeams={userTeams} />
+      <ClientSidebarContent navItems={updatedNavItems} userTeams={userTeams} />
       <SidebarFooter className="mb-4 flex items-center justify-center">
         <UserButton
           showName={true}
