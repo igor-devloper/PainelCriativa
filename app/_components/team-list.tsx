@@ -6,9 +6,24 @@ import {
   CardTitle,
 } from "@/app/_components/ui/card";
 import { Badge } from "@/app/_components/ui/badge";
-import { Users, ArrowRight, AlertCircle, Trash } from "lucide-react";
+import {
+  Users,
+  ArrowRight,
+  AlertCircle,
+  Trash,
+  MoreVertical,
+  Pencil,
+} from "lucide-react";
 import { Button } from "./ui/button";
 import { deleteTeam } from "../_actions/delete-team";
+import { toast } from "../_hooks/use-toast";
+import { useState } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/app/_components/ui/dropdown-menu";
 
 interface Team {
   id: string;
@@ -23,13 +38,51 @@ interface TeamListProps {
 }
 
 export function TeamList({ userTeams }: TeamListProps) {
-  const DeleteTeam = async (teamId: string, e: React.MouseEvent) => {
+  const [deletingTeams, setDeletingTeams] = useState<Set<string>>(new Set());
+
+  const handleDeleteTeam = async (teamId: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    await deleteTeam({
-      teamId: teamId,
+
+    setDeletingTeams((prev) => new Set(prev).add(teamId));
+
+    try {
+      await deleteTeam({
+        teamId: teamId,
+      });
+
+      toast({
+        title: "Time deletado",
+        description: "A equipe foi excluída com sucesso.",
+        variant: "destructive",
+      });
+    } catch (error) {
+      console.error("Error deleting team:", error);
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingTeams((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(teamId);
+        return newSet;
+      });
+    }
+  };
+
+  const handleEditTeam = (teamId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Placeholder for edit functionality
+    toast({
+      title: "Editar time",
+      description: `Funcionalidade de edição para o time ${teamId} será implementada em breve.`,
     });
   };
+
   if (!userTeams || userTeams.length === 0) {
     return (
       <Card className="w-full">
@@ -66,21 +119,40 @@ export function TeamList({ userTeams }: TeamListProps) {
                 <Users size={16} />
                 <span>Equipe ativa</span>
               </div>
-              <div className="flex flex-col gap-2">
-                <div className="mt-4 flex items-center justify-between">
-                  <span className="text-sm font-medium">Ver detalhes</span>
+              <div className="mt-4 flex items-center justify-between">
+                <span className="text-sm font-medium">Ver detalhes</span>
+                <div className="flex items-center space-x-2">
                   <ArrowRight
                     size={16}
                     className="transition-transform duration-300 group-hover:translate-x-1"
                   />
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={(e) => handleEditTeam(team.id, e)}
+                      >
+                        <Pencil className="mr-2 h-4 w-4" />
+                        <span>Editar nome</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => handleDeleteTeam(team.id, e)}
+                        disabled={deletingTeams.has(team.id)}
+                      >
+                        {deletingTeams.has(team.id) ? (
+                          <span className="loading loading-spinner loading-xs mr-2"></span>
+                        ) : (
+                          <Trash className="mr-2 h-4 w-4" />
+                        )}
+                        <span>Deletar time</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
-                <Button
-                  className="flex w-10 items-center"
-                  variant="ghost"
-                  onClick={(e) => DeleteTeam(team.id, e)}
-                >
-                  <Trash size={16} className="text-muted-foreground" />
-                </Button>
               </div>
             </CardContent>
           </Card>
