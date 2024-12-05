@@ -35,6 +35,11 @@ export const deleteTeam = async ({ teamId }: deleteTeamSchema) => {
           id: teamId,
         },
       });
+      await tx.teamInvitation.deleteMany({
+        where: {
+          id: teamId,
+        },
+      });
     });
 
     revalidatePath("/");
