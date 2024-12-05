@@ -4,12 +4,6 @@ import { ArrowDownUpIcon, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useState } from "react";
 import UpsertTransactionDialog from "./upsert-transaction-dialog";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "./ui/tooltip";
 
 interface AddTransactionButtonProps {
   isAdmin?: boolean;
@@ -33,30 +27,21 @@ export function AddTransactionButton({
 
   return (
     <>
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              className="h-9 rounded-full px-3 md:rounded-full md:font-bold"
-              onClick={handleClick}
-              disabled={isLoading}
-              aria-label="Adicionar transação"
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  Adicionar transação
-                  <ArrowDownUpIcon className="ml-2 h-4 w-4" />
-                </>
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            Adicione prestações de contas e controle seus gastos
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <Button
+        className="h-9 rounded-full px-3 md:rounded-full md:font-bold"
+        onClick={handleClick}
+        disabled={isLoading}
+        aria-label="Adicionar transação"
+      >
+        {isLoading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <>
+            Adicionar transação
+            <ArrowDownUpIcon className="ml-2 h-4 w-4" />
+          </>
+        )}
+      </Button>
       <UpsertTransactionDialog
         balance={balance}
         isAdmin={isAdmin ?? false}

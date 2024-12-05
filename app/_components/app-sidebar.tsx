@@ -76,7 +76,16 @@ export async function AppSidebar({
       </SidebarHeader>
       <ClientSidebarContent navItems={navItems} userTeams={userTeams} />
       <SidebarFooter className="mb-4 flex items-center justify-center text-xl text-gray-700">
-        <UserButton showName />
+        <UserButton
+          showName={true}
+          appearance={{
+            elements: {
+              userButtonBox: "flex items-center gap-2",
+              userButtonOuterIdentifier: "text-black font-semibold",
+              userButtonTrigger: "focus:shadow-none focus:outline-none",
+            },
+          }}
+        />
       </SidebarFooter>
     </Sidebar>
   );
