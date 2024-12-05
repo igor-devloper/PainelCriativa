@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { useState } from "react";
 import Link from "next/link";
 import {
   Card,
@@ -9,8 +7,8 @@ import {
 } from "@/app/_components/ui/card";
 import { Badge } from "@/app/_components/ui/badge";
 import { Users, ArrowRight, AlertCircle, Trash } from "lucide-react";
-import { Button } from "@/app/_components/ui/button";
-import { deleteTeam } from "@/app/_actions/delete-team";
+import { Button } from "./ui/button";
+import { deleteTeam } from "../_actions/delete-team";
 
 interface Team {
   id: string;
@@ -21,12 +19,10 @@ interface Team {
 }
 
 interface TeamListProps {
-  initialTeams: Team[];
+  userTeams: Team[];
 }
 
-export function TeamList({ initialTeams }: TeamListProps) {
-  const [teams, setTeams] = useState<Team[]>(initialTeams);
-
+export function TeamList({ userTeams }: TeamListProps) {
   const DeleteTeam = async (teamId: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -34,8 +30,7 @@ export function TeamList({ initialTeams }: TeamListProps) {
       teamId: teamId,
     });
   };
-
-  if (teams.length === 0) {
+  if (!userTeams || userTeams.length === 0) {
     return (
       <Card className="w-full">
         <CardHeader>
@@ -56,7 +51,7 @@ export function TeamList({ initialTeams }: TeamListProps) {
 
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      {teams.map((team) => (
+      {userTeams.map((team) => (
         <Link href={`/teams/${team.id}`} key={team.id} className="group">
           <Card className="transition-all duration-300 hover:shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

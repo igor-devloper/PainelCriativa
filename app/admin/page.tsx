@@ -28,6 +28,7 @@ const AdminPage = async () => {
     redirect("/");
   }
   const userTeams = await getUserTeams();
+  const isAdmin = await userAdmin();
   const transactions = await db.transaction.findMany({
     orderBy: {
       date: "desc",
@@ -35,7 +36,7 @@ const AdminPage = async () => {
   });
   return (
     <SidebarProvider>
-      <AppSidebar userTeams={userTeams} />
+      <AppSidebar userTeams={userTeams} isAdmin={isAdmin ?? false} />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2">
           <div className="flex items-center gap-2 px-4">
