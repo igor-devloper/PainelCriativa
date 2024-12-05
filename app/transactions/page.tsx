@@ -12,9 +12,8 @@ import {
 import { AppSidebar } from "../_components/app-sidebar";
 import { Separator } from "../_components/ui/separator";
 import { HandCoins } from "lucide-react";
-import { AddTransactionButton } from "../_components/add-transaction-button";
-import { userAdmin } from "../_data/user-admin";
 import { getUserTeams } from "../_actions/get-user-team";
+import { userAdmin } from "../_data/user-admin";
 
 export const metadata = {
   title: "Transações - Painel Criativa",
@@ -22,7 +21,6 @@ export const metadata = {
 
 const TransactionsPage = async () => {
   const { userId } = await auth();
-  const isAdmin = await userAdmin();
   if (!userId) {
     redirect("/login");
   }
@@ -35,9 +33,10 @@ const TransactionsPage = async () => {
     },
   });
   const userTeams = await getUserTeams();
+  const isAdmin = await userAdmin();
   return (
     <SidebarProvider>
-      <AppSidebar userTeams={userTeams} />
+      <AppSidebar userTeams={userTeams} isAdmin={isAdmin ?? false} />
       <SidebarInset className="w-[100px] md:w-full">
         <header className="flex h-16 shrink-0 items-center gap-2">
           <div className="flex items-center gap-2 px-4">
@@ -54,7 +53,6 @@ const TransactionsPage = async () => {
                   <HandCoins />
                   <h1 className="text-2xl font-bold">Transações</h1>
                 </div>
-                <AddTransactionButton isAdmin={isAdmin ?? false} />
               </div>
               <ScrollArea className="h-full">
                 <DataTable

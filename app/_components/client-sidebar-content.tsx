@@ -61,22 +61,6 @@ export function ClientSidebarContent({
                 </SidebarMenuButton>
                 {isTeamsOpen && (
                   <SidebarMenuSub>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton
-                        asChild
-                        isActive={pathname === "/teams"}
-                      >
-                        <Link href="/teams">Todos os Times</Link>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton
-                        asChild
-                        isActive={pathname === "/teams/new"}
-                      >
-                        <Link href="/teams/new">Criar Time</Link>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
                     {userTeams.map((team) => (
                       <SidebarMenuSubItem key={team.id}>
                         <SidebarMenuSubButton

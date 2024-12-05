@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import {
@@ -11,19 +10,28 @@ import { StyleBread } from "@/app/_components/stily-bread";
 import { ScrollArea } from "@/app/_components/ui/scroll-area";
 import { CreateTeamButton } from "@/app/_components/create-team-button";
 import { TeamList } from "@/app/_components/team-list";
+import { AppSidebar } from "./app-sidebar";
+
+interface Team {
+  id: string;
+  name: string;
+  _count?: {
+    members: number;
+  };
+}
 
 interface ClientHomeWrapperProps {
-  children: React.ReactNode;
-  userTeams: any[]; // Replace 'any' with the correct type for your teams
+  userTeams: Team[];
+  isAdmin: boolean;
 }
 
 export function ClientHomeWrapper({
-  children,
   userTeams,
+  isAdmin,
 }: ClientHomeWrapperProps) {
   return (
     <SidebarProvider>
-      {children}
+      <AppSidebar userTeams={userTeams} isAdmin={isAdmin} />
       <SidebarInset>
         <header className="flex h-14 shrink-0 items-center gap-2">
           <div className="flex flex-1 items-center gap-2 px-3">

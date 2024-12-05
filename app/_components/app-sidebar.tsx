@@ -1,4 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
+
 import { Home, HandCoins, Settings, Users } from "lucide-react";
 import {
   Sidebar,
@@ -37,13 +38,17 @@ const adminNavItem = {
   icon: Settings,
 };
 
-interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
-  userTeams: any[]; // Replace 'any' with the correct type for your teams
+interface Team {
+  id: string;
+  name: string;
 }
 
-export function AppSidebar({ userTeams, ...props }: AppSidebarProps) {
-  const isAdmin = false; // You'll need to implement the logic to check if the user is admin
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  userTeams: Team[];
+  isAdmin: boolean;
+}
 
+export function AppSidebar({ isAdmin, userTeams, ...props }: AppSidebarProps) {
   const navItems = isAdmin
     ? [...defaultNavItems, adminNavItem]
     : defaultNavItems;

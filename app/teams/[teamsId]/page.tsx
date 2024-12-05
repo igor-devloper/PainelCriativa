@@ -15,6 +15,7 @@ import {
 import { AppSidebar } from "@/app/_components/app-sidebar";
 import { Separator } from "@/app/_components/ui/separator";
 import { getUserTeams } from "@/app/_actions/get-user-team";
+import { userAdmin } from "@/app/_data/user-admin";
 
 export default async function TeamPage({
   params,
@@ -33,10 +34,11 @@ export default async function TeamPage({
 
   const isAdmin = team.adminId === userId;
   const userTeams = await getUserTeams();
+  const isAdminG = await userAdmin();
 
   return (
     <SidebarProvider>
-      <AppSidebar userTeams={userTeams} />
+      <AppSidebar userTeams={userTeams} isAdmin={isAdminG ?? false} />
       <SidebarInset>
         <header className="flex h-14 shrink-0 items-center gap-2">
           <div className="flex flex-1 items-center gap-2 px-3">
