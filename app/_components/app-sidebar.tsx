@@ -1,7 +1,5 @@
-"use client";
-
-import { Home, Sparkles, HandCoins, Settings } from "lucide-react";
-import { NavMain } from "@/app/_components/nav-main";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { Home, HandCoins, Settings, Users, ChevronDown } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -10,11 +8,15 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
 } from "@/app/_components/ui/sidebar";
 import Link from "next/link";
 import Image from "next/image";
-import { UserButton, useUser } from "@clerk/nextjs";
-import { usePathname } from "next/navigation"; // Importando o hook para obter o pathname atual
+import { UserButton } from "@clerk/nextjs";
+import { getUserTeams } from "@/app/_actions/get-user-team";
+import { ClientSidebarContent } from "./client-sidebar-content";
 
 const defaultNavItems = [
   {
@@ -23,14 +25,14 @@ const defaultNavItems = [
     icon: Home,
   },
   {
+    title: "Times",
+    url: "/teams",
+    icon: Users,
+  },
+  {
     title: "Transações",
     url: "/transactions",
     icon: HandCoins,
-  },
-  {
-    title: "Ask AI",
-    url: "#",
-    icon: Sparkles,
   },
 ];
 
@@ -40,21 +42,16 @@ const adminNavItem = {
   icon: Settings,
 };
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { user } = useUser();
-  const pathname = usePathname(); // Obtendo o pathname atual
+export async function AppSidebar({
+  ...props
+}: React.ComponentProps<typeof Sidebar>) {
+  const userTeams = await getUserTeams();
 
-  const isAdmin = user?.publicMetadata?.role === "admin";
+  const isAdmin = false; // Você precisará implementar a lógica para verificar se o usuário é admin
 
   const navItems = isAdmin
     ? [...defaultNavItems, adminNavItem]
     : defaultNavItems;
-
-  // Atualizar a propriedade isActive com base no pathname atual
-  const navItemsWithActive = navItems.map((item) => ({
-    ...item,
-    isActive: pathname === item.url,
-  }));
 
   return (
     <Sidebar variant="inset" {...props}>
@@ -77,9 +74,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent>
-        <NavMain items={navItemsWithActive} />
-      </SidebarContent>
+      <ClientSidebarContent navItems={navItems} userTeams={userTeams} />
       <SidebarFooter className="mb-4 flex items-center justify-center text-xl text-gray-700">
         <UserButton showName />
       </SidebarFooter>

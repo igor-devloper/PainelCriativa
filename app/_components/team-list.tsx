@@ -7,10 +7,29 @@ import {
   CardTitle,
 } from "@/app/_components/ui/card";
 import { Badge } from "@/app/_components/ui/badge";
-import { Users, ArrowRight } from "lucide-react";
+import { Users, ArrowRight, AlertCircle } from "lucide-react";
 
 export async function TeamList() {
   const teams = await getUserTeams();
+
+  if (teams.length === 0) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="flex items-center text-xl font-bold text-muted-foreground">
+            <AlertCircle className="mr-2 h-5 w-5" />
+            Nenhuma equipe encontrada
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            Você ainda não faz parte de nenhuma equipe. Crie uma nova equipe ou
+            peça para ser convidado para uma equipe existente.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
