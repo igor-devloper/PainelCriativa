@@ -51,7 +51,7 @@ interface Team {
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   userTeams: Team[];
   isAdmin: boolean;
-  invitationCount: number; // New prop for invitation count
+  invitationCount?: number; // New prop for invitation count
 }
 
 export function AppSidebar({
