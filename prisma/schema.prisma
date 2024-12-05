@@ -8,14 +8,15 @@ datasource db {
 }
 
 model Team {
-  id        String   @id @default(cuid())
-  name      String
-  adminId   String   // ID do usuário Clerk que é o administrador
-  members   TeamMember[]
-  blocks    Block[]
+  id           String          @id @default(cuid())
+  name         String
+  adminId      String          // ID do usuário Clerk que é o administrador
+  members      TeamMember[]
+  blocks       Block[]
   transactions Transaction[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  invitations  TeamInvitation[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
 }
 
 model TeamMember {
@@ -27,6 +28,18 @@ model TeamMember {
   updatedAt DateTime @updatedAt
 
   @@unique([userId, teamId])
+}
+
+model TeamInvitation {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id])
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@unique([email, teamId])
 }
 
 model Block {
@@ -46,19 +59,19 @@ model Transaction {
   name          String
   description   String?
   type          TransactionType
-  status        TransactionStatus?              @default(WAITING)     
+  status        TransactionStatus?       @default(WAITING)     
   amount        Decimal                  @db.Decimal(10, 2)
   category      TransactionCategory
   paymentMethod TransactionPaymentMethod
-  blockId     String   
-  block       Block    @relation(fields: [blockId], references: [id])
-  teamId      String  
-  team        Team     @relation(fields: [teamId], references: [id])
+  blockId       String   
+  block         Block                    @relation(fields: [blockId], references: [id])
+  teamId        String  
+  team          Team                     @relation(fields: [teamId], references: [id])
   date          DateTime
   createdAt     DateTime                 @default(now())
   updatedAt     DateTime                 @updatedAt
   userId        String
-  imageUrl      String[]                  // Adiciona o campo para a URL da imagem
+  imageUrl      String[]                 // Adiciona o campo para a URL da imagem
 }
 
 enum TransactionType {
