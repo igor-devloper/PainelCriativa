@@ -13,6 +13,7 @@ import { AppSidebar } from "../_components/app-sidebar";
 import { Separator } from "../_components/ui/separator";
 import { userAdmin } from "../_data/user-admin";
 import { FileSliders } from "lucide-react";
+import { getUserTeams } from "../_actions/get-user-team";
 
 export const metadata = {
   title: "Admin - Painel Criativa",
@@ -26,7 +27,7 @@ const AdminPage = async () => {
   if (!usuarioAdm) {
     redirect("/");
   }
-
+  const userTeams = await getUserTeams();
   const transactions = await db.transaction.findMany({
     orderBy: {
       date: "desc",
@@ -34,7 +35,7 @@ const AdminPage = async () => {
   });
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar userTeams={userTeams} />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2">
           <div className="flex items-center gap-2 px-4">

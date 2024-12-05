@@ -14,6 +14,7 @@ import { Separator } from "../_components/ui/separator";
 import { HandCoins } from "lucide-react";
 import { AddTransactionButton } from "../_components/add-transaction-button";
 import { userAdmin } from "../_data/user-admin";
+import { getUserTeams } from "../_actions/get-user-team";
 
 export const metadata = {
   title: "Transações - Painel Criativa",
@@ -33,10 +34,10 @@ const TransactionsPage = async () => {
       date: "desc",
     },
   });
-
+  const userTeams = await getUserTeams();
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar userTeams={userTeams} />
       <SidebarInset className="w-[100px] md:w-full">
         <header className="flex h-16 shrink-0 items-center gap-2">
           <div className="flex items-center gap-2 px-4">
