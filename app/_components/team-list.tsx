@@ -1,5 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Link from "next/link";
-import { getUserTeams } from "@/app/_actions/get-user-team";
 import {
   Card,
   CardContent,
@@ -9,10 +9,12 @@ import {
 import { Badge } from "@/app/_components/ui/badge";
 import { Users, ArrowRight, AlertCircle } from "lucide-react";
 
-export async function TeamList() {
-  const teams = await getUserTeams();
+interface TeamListProps {
+  userTeams: any[]; // Replace 'any' with the correct type for your teams
+}
 
-  if (teams.length === 0) {
+export function TeamList({ userTeams }: TeamListProps) {
+  if (userTeams.length === 0) {
     return (
       <Card className="w-full">
         <CardHeader>
@@ -33,7 +35,7 @@ export async function TeamList() {
 
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      {teams.map((team) => (
+      {userTeams.map((team) => (
         <Link href={`/teams/${team.id}`} key={team.id} className="group">
           <Card className="transition-all duration-300 hover:shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

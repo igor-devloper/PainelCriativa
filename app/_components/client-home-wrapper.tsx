@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import {
@@ -11,7 +12,15 @@ import { ScrollArea } from "@/app/_components/ui/scroll-area";
 import { CreateTeamButton } from "@/app/_components/create-team-button";
 import { TeamList } from "@/app/_components/team-list";
 
-export function ClientHomeWrapper({ children }: { children: React.ReactNode }) {
+interface ClientHomeWrapperProps {
+  children: React.ReactNode;
+  userTeams: any[]; // Replace 'any' with the correct type for your teams
+}
+
+export function ClientHomeWrapper({
+  children,
+  userTeams,
+}: ClientHomeWrapperProps) {
   return (
     <SidebarProvider>
       {children}
@@ -32,7 +41,7 @@ export function ClientHomeWrapper({ children }: { children: React.ReactNode }) {
                   <CreateTeamButton />
                 </div>
               </div>
-              <TeamList />
+              <TeamList userTeams={userTeams} />
             </div>
           </ScrollArea>
         </div>

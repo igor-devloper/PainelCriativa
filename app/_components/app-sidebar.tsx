@@ -1,21 +1,16 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { Home, HandCoins, Settings, Users, ChevronDown } from "lucide-react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Home, HandCoins, Settings, Users } from "lucide-react";
 import {
   Sidebar,
-  SidebarContent,
   SidebarFooter,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
 } from "@/app/_components/ui/sidebar";
 import Link from "next/link";
 import Image from "next/image";
 import { UserButton } from "@clerk/nextjs";
-import { getUserTeams } from "@/app/_actions/get-user-team";
 import { ClientSidebarContent } from "./client-sidebar-content";
 
 const defaultNavItems = [
@@ -42,12 +37,12 @@ const adminNavItem = {
   icon: Settings,
 };
 
-export async function AppSidebar({
-  ...props
-}: React.ComponentProps<typeof Sidebar>) {
-  const userTeams = await getUserTeams();
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  userTeams: any[]; // Replace 'any' with the correct type for your teams
+}
 
-  const isAdmin = false; // Você precisará implementar a lógica para verificar se o usuário é admin
+export function AppSidebar({ userTeams, ...props }: AppSidebarProps) {
+  const isAdmin = false; // You'll need to implement the logic to check if the user is admin
 
   const navItems = isAdmin
     ? [...defaultNavItems, adminNavItem]
@@ -75,9 +70,12 @@ export async function AppSidebar({
         </SidebarMenu>
       </SidebarHeader>
       <ClientSidebarContent navItems={navItems} userTeams={userTeams} />
-      <SidebarFooter className="mb-4 flex items-center justify-center text-xl text-gray-700">
+      <SidebarFooter className="mb-4 flex items-center justify-center">
         <UserButton
           showName={true}
+          afterSignOutUrl="/"
+          userProfileMode="navigation"
+          userProfileUrl="/user-profile"
           appearance={{
             elements: {
               userButtonBox: "flex items-center gap-2",
