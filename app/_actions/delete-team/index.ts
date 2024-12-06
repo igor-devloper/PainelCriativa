@@ -28,6 +28,11 @@ export const deleteTeam = async ({ teamId }: deleteTeamSchema) => {
           teamId: teamId,
         },
       });
+      await tx.teamMember.deleteMany({
+        where: {
+          teamId: teamId,
+        },
+      });
 
       await tx.teamInvitation.deleteMany({
         where: {

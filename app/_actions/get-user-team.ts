@@ -1,33 +1,42 @@
-"use server";
-
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/app/_lib/prisma";
+import { Team } from "@/app/types/team";
+// import { revalidatePath } from "next/cache";
 
-export async function getUserTeams() {
+export async function getUserTeams(): Promise<Team[]> {
   const { userId } = auth();
   if (!userId) {
-    throw new Error("Unauthorized");
+    return [];
   }
 
-  try {
-    const teams = await db.team.findMany({
-      where: {
-        members: {
-          some: {
-            userId: userId,
-          },
+  const userTeams = await db.team.findMany({
+    where: {
+      members: {
+        some: {
+          userId: userId,
         },
       },
-      include: {
-        _count: {
-          select: { members: true },
-        },
+    },
+    select: {
+      id: true,
+      name: true,
+      adminId: true,
+      createdAt: true,
+      updatedAt: true,
+      _count: {
+        select: { members: true },
       },
-    });
+    },
+  });
 
-    return teams;
-  } catch (error) {
-    console.error("[GET_USER_TEAMS_ERROR]", error);
-    throw new Error("Erro ao buscar equipes");
-  }
+  return userTeams.map((team) => ({
+    id: team.id,
+    name: team.name,
+    adminId: team.adminId,
+    createdAt: team.createdAt,
+    updatedAt: team.updatedAt,
+    _count: {
+      members: team._count?.members ?? 0,
+    },
+  }));
 }

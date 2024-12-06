@@ -15,7 +15,7 @@ import { ArrowRight, Wallet } from "lucide-react";
 
 interface BlockListProps {
   teamId: string;
-  isAdmin: boolean;
+  isAdmin?: boolean;
 }
 
 export function BlockList({ teamId, isAdmin }: BlockListProps) {
@@ -32,15 +32,15 @@ export function BlockList({ teamId, isAdmin }: BlockListProps) {
       {blocks.map((block) => (
         <Sheet key={block.id}>
           <SheetTrigger asChild>
-            <Card className="cursor-pointer transition-all duration-300 hover:shadow-lg">
-              <CardHeader className="flex w-full flex-row items-center justify-center space-y-0 pb-2">
-                <CardTitle className="text-lg font-bold">
+            <Card className="flex cursor-pointer flex-col items-center justify-center transition-all duration-300 hover:shadow-lg">
+              <CardHeader className="flex w-full flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-base font-bold">
                   {block.name}
                 </CardTitle>
                 <Wallet className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-xl font-bold">
+                <div className="text-sm font-bold">
                   {formatCurrency(block.amount)}
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -54,7 +54,11 @@ export function BlockList({ teamId, isAdmin }: BlockListProps) {
             </Card>
           </SheetTrigger>
           <SheetContent>
-            <BlockDetails block={block} isAdmin={isAdmin} teamId={teamId} />
+            <BlockDetails
+              block={block}
+              isAdmin={isAdmin ?? false}
+              teamId={teamId}
+            />
           </SheetContent>
         </Sheet>
       ))}

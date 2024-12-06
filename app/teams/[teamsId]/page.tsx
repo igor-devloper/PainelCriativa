@@ -1,12 +1,15 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+import { Suspense } from "react";
 import { auth } from "@clerk/nextjs/server";
 import { notFound, redirect } from "next/navigation";
-
 import { getTeamById } from "@/app/_actions/get-team-by-id";
 import { TeamHeader } from "./_components/team-header";
 import { MemberList } from "./_components/member-list";
 import { InviteMemberDialog } from "./_components/invite-member-dialog";
-import { CreateBlockDialog } from "./_components/create-block-dialog";
 import { BlockList } from "./_components/block-list";
+import { CreateBlockDialog } from "./_components/create-block-dialog";
 import {
   SidebarInset,
   SidebarProvider,
@@ -16,25 +19,29 @@ import { AppSidebar } from "@/app/_components/app-sidebar";
 import { Separator } from "@/app/_components/ui/separator";
 import { getUserTeams } from "@/app/_actions/get-user-team";
 import { userAdmin } from "@/app/_data/user-admin";
+import { Loader2 } from "lucide-react";
 
-export default async function TeamPage({
-  params,
-}: {
+interface PageProps {
   params: { teamId: string };
-}) {
+}
+
+async function TeamPageContent({ teamId }: { teamId: string }) {
   const { userId } = auth();
   if (!userId) {
     redirect("/login");
   }
 
-  const team = await getTeamById(params.teamId);
+  const [team, userTeams, isAdminG] = await Promise.all([
+    getTeamById(teamId),
+    getUserTeams(),
+    userAdmin(),
+  ]);
+
   if (!team) {
     notFound();
   }
 
   const isAdmin = team.adminId === userId;
-  const userTeams = await getUserTeams();
-  const isAdminG = await userAdmin();
 
   return (
     <SidebarProvider>
@@ -58,7 +65,7 @@ export default async function TeamPage({
             </div>
             <div>
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold">Prestações de Contas</h2>
+                <h2 className="text-2xl font-bold">Blocos Financeiros</h2>
                 {isAdmin && <CreateBlockDialog teamId={team.id} />}
               </div>
               <BlockList teamId={team.id} isAdmin={isAdmin} />
@@ -67,5 +74,19 @@ export default async function TeamPage({
         </div>
       </SidebarInset>
     </SidebarProvider>
+  );
+}
+
+export default function TeamPage({ params }: PageProps) {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center">
+          <Loader2 size={12} />
+        </div>
+      }
+    >
+      <TeamPageContent teamId={params.teamId} />
+    </Suspense>
   );
 }

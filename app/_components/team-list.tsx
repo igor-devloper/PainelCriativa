@@ -1,4 +1,7 @@
-import Link from "next/link";
+"use client";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 import {
   Card,
   CardContent,
@@ -8,11 +11,11 @@ import {
 import { Badge } from "@/app/_components/ui/badge";
 import {
   Users,
-  ArrowRight,
   AlertCircle,
   Trash,
   MoreVertical,
   Pencil,
+  Loader2,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { deleteTeam } from "../_actions/delete-team";
@@ -24,6 +27,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/app/_components/ui/dropdown-menu";
+import { CreateTeamButton } from "./create-team-button";
+import { useRouter } from "next/navigation";
+import { revalidateTeam } from "../_actions/revalidate-team";
 
 interface Team {
   id: string;
@@ -34,11 +40,18 @@ interface Team {
 }
 
 interface TeamListProps {
-  userTeams: Team[];
+  userTeams?: Team[];
 }
 
-export function TeamList({ userTeams }: TeamListProps) {
+export function TeamList({ userTeams = [] }: TeamListProps) {
   const [deletingTeams, setDeletingTeams] = useState<Set<string>>(new Set());
+  const router = useRouter();
+
+  const handleTeamClick = async (teamId: string) => {
+    await revalidateTeam(teamId);
+    router.push(`/teams/${teamId}`);
+    router.refresh();
+  };
 
   const handleDeleteTeam = async (teamId: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -76,7 +89,6 @@ export function TeamList({ userTeams }: TeamListProps) {
   const handleEditTeam = (teamId: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // Placeholder for edit functionality
     toast({
       title: "Editar time",
       description: `Funcionalidade de edição para o time ${teamId} será implementada em breve.`,
@@ -97,6 +109,7 @@ export function TeamList({ userTeams }: TeamListProps) {
             Você ainda não faz parte de nenhuma equipe. Crie uma nova equipe ou
             peça para ser convidado para uma equipe existente.
           </p>
+          <CreateTeamButton />
         </CardContent>
       </Card>
     );
@@ -105,58 +118,66 @@ export function TeamList({ userTeams }: TeamListProps) {
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {userTeams.map((team) => (
-        <Link href={`/teams/${team.id}`} key={team.id} className="group">
-          <Card className="transition-all duration-300 hover:shadow-lg">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xl font-bold">{team.name}</CardTitle>
-              <Badge variant="secondary" className="text-sm">
-                {team._count?.members ?? 0}{" "}
-                {(team._count?.members ?? 0) === 1 ? "membro" : "membros"}
-              </Badge>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                <Users size={16} />
-                <span>Equipe ativa</span>
+        <Card
+          key={team.id}
+          className="transition-all duration-300 hover:shadow-lg"
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xl font-bold">{team.name}</CardTitle>
+            <Badge variant="secondary" className="text-sm">
+              {team._count?.members ?? 0}{" "}
+              {(team._count?.members ?? 0) === 1 ? "membro" : "membros"}
+            </Badge>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+              <Users size={16} />
+              <span>Equipe ativa</span>
+            </div>
+            <div className="mt-4 flex items-center justify-between">
+              <Button
+                variant="link"
+                onClick={() => handleTeamClick(team.id)}
+                className="text-sm font-medium hover:underline"
+              >
+                Ver detalhes
+              </Button>
+              <div className="flex items-center space-x-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="h-8 w-8 p-0"
+                      onClick={(e) => e.preventDefault()}
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onClick={(e) => handleEditTeam(team.id, e)}
+                    >
+                      <Pencil className="mr-2 h-4 w-4" />
+                      <span>Editar nome</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={(e) => handleDeleteTeam(team.id, e)}
+                      disabled={deletingTeams.has(team.id)}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      {deletingTeams.has(team.id) ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash className="mr-2 h-4 w-4" />
+                      )}
+                      <span>Deletar time</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
-              <div className="mt-4 flex items-center justify-between">
-                <span className="text-sm font-medium">Ver detalhes</span>
-                <div className="flex items-center space-x-2">
-                  <ArrowRight
-                    size={16}
-                    className="transition-transform duration-300 group-hover:translate-x-1"
-                  />
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={(e) => handleEditTeam(team.id, e)}
-                      >
-                        <Pencil className="mr-2 h-4 w-4" />
-                        <span>Editar nome</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={(e) => handleDeleteTeam(team.id, e)}
-                        disabled={deletingTeams.has(team.id)}
-                      >
-                        {deletingTeams.has(team.id) ? (
-                          <span className="loading loading-spinner loading-xs mr-2"></span>
-                        ) : (
-                          <Trash className="mr-2 h-4 w-4" />
-                        )}
-                        <span>Deletar time</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
+            </div>
+          </CardContent>
+        </Card>
       ))}
     </div>
   );
