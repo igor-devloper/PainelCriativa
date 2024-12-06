@@ -1,4 +1,5 @@
 "use client";
+export const revalidate = 0;
 
 import { useState, useEffect } from "react";
 import { getTeamBlocks } from "@/app/_actions/get-team-blocks";

@@ -1,3 +1,4 @@
+export const revalidate = 0;
 import { Team } from "@prisma/client";
 
 interface TeamHeaderProps {

@@ -1,4 +1,5 @@
 "use client";
+export const revalidate = 0;
 
 import { usePathname } from "next/navigation";
 import {

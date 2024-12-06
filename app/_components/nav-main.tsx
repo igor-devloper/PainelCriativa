@@ -1,5 +1,6 @@
 "use client";
 
+export const revalidate = 0;
 import { type LucideIcon } from "lucide-react";
 
 import {

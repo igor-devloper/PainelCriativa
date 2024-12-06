@@ -2,28 +2,42 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/app/_lib/prisma";
+import { unstable_cache } from "next/cache";
 
-export async function getTeamBlocks(teamId: string) {
+export async function getBlockNameById(blockId: string) {
   const { userId } = auth();
   if (!userId) {
     throw new Error("Unauthorized");
   }
 
-  const blocks = await db.block.findMany({
-    where: {
-      teamId: teamId,
-      team: {
-        members: {
-          some: {
-            userId: userId,
+  return unstable_cache(
+    async () => {
+      const block = await db.block.findFirst({
+        where: {
+          id: blockId,
+          team: {
+            members: {
+              some: {
+                userId: userId,
+              },
+            },
           },
         },
-      },
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+        select: {
+          name: true,
+        },
+      });
 
-  return blocks;
+      if (!block) {
+        throw new Error("Block not found or access denied");
+      }
+
+      return block.name;
+    },
+    [`block-name-${blockId}-${userId}`],
+    {
+      revalidate: 0,
+      tags: [`block-${blockId}`],
+    },
+  )();
 }

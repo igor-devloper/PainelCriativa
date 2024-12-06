@@ -1,5 +1,6 @@
 "use client";
 
+export const revalidate = 0;
 import { Plus } from "lucide-react";
 import { Button } from "./ui/button";
 import { useState } from "react";

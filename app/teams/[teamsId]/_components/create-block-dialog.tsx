@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
+export const revalidate = 0;
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";

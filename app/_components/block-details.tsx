@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
+export const revalidate = 0;
 
 import { useState, useEffect } from "react";
 import { getBlockTransactions } from "@/app/_actions/get-block-transactions";

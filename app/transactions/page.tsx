@@ -1,3 +1,4 @@
+export const revalidate = 0;
 import { db } from "../_lib/prisma";
 import { DataTable } from "../_components/ui/data-table";
 import { transactionColumns } from "./_columns";

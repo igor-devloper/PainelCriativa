@@ -1,5 +1,5 @@
 "use client";
-
+export const revalidate = 0;
 import { Home, HandCoins, Settings, Users, Mail } from "lucide-react";
 import {
   Sidebar,

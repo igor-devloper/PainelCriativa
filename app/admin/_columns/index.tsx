@@ -4,7 +4,7 @@
 import { Transaction } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import TransactionTypeBadge from "../../transactions/_components/type-badge";
-import { getBlockById } from "@/app/_actions/get-block-by-id";
+import { getBlockNameById } from "@/app/_actions/get-block-by-id";
 import {
   TRANSACTION_CATEGORY_LABELS,
   TRANSACTION_PAYMENT_METHOD_LABELS,
@@ -95,8 +95,13 @@ export const adminColumns: ColumnDef<Transaction>[] = [
       useEffect(() => {
         async function fetchBlockName() {
           if (transaction.blockId) {
-            const block = await getBlockById(transaction.blockId);
-            setBlockName(block?.name || "Bloco não encontrado");
+            try {
+              const blockName = await getBlockNameById(transaction.blockId);
+              setBlockName(blockName || "Bloco não encontrado");
+            } catch (error) {
+              console.error("Erro ao buscar o nome do bloco:", error);
+              setBlockName("Erro ao carregar o bloco");
+            }
           } else {
             setBlockName("Não associado a um bloco");
           }

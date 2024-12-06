@@ -1,3 +1,5 @@
+export const revalidate = 0;
+
 import { getTeamMembers } from "@/app/_actions/get-team-members";
 import {
   Avatar,

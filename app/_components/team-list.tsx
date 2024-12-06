@@ -1,6 +1,5 @@
 "use client";
 
-export const dynamic = "force-dynamic";
 export const revalidate = 0;
 import {
   Card,
@@ -27,7 +26,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/app/_components/ui/dropdown-menu";
-import { CreateTeamButton } from "./create-team-button";
 import { useRouter } from "next/navigation";
 import { revalidateTeam } from "../_actions/revalidate-team";
 
@@ -109,7 +107,6 @@ export function TeamList({ userTeams = [] }: TeamListProps) {
             Você ainda não faz parte de nenhuma equipe. Crie uma nova equipe ou
             peça para ser convidado para uma equipe existente.
           </p>
-          <CreateTeamButton />
         </CardContent>
       </Card>
     );

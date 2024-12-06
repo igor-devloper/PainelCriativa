@@ -1,3 +1,5 @@
+export const revalidate = 0;
+
 import React, { forwardRef } from "react";
 import { NumericFormat, NumericFormatProps } from "react-number-format";
 import { Input, InputProps } from "./ui/input";

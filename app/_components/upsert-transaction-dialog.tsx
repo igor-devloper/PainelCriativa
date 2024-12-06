@@ -1,4 +1,5 @@
 "use client";
+export const revalidate = 0;
 
 import { Button } from "./ui/button";
 import {
