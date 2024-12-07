@@ -288,6 +288,9 @@ export function AdminDashboardClient({
                                   <SelectItem value="APPROVED">
                                     Prestação aprovada
                                   </SelectItem>
+                                  <SelectItem value="REPROVED">
+                                    Prestação Reprovada
+                                  </SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
@@ -367,6 +370,9 @@ export function AdminDashboardClient({
                                           </SelectItem>
                                           <SelectItem value="FINISHED">
                                             Prestação Aceita
+                                          </SelectItem>
+                                          <SelectItem value="REPROVED">
+                                            Prestação Reprovada
                                           </SelectItem>
                                         </SelectContent>
                                       </Select>

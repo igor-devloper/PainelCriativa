@@ -95,8 +95,8 @@ export function BlockList({ teamId, isAdmin }: BlockListProps) {
                 </CardTitle>
                 <Wallet className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
-                <div className="flex flex-col items-center justify-center gap-2">
+              <CardContent className="w-full">
+                <div className="flex flex-col items-center gap-2">
                   <div className="text-sm font-bold">
                     {formatCurrency(block.amount)}
                     <p className="text-xs font-normal text-muted-foreground">
@@ -116,9 +116,11 @@ export function BlockList({ teamId, isAdmin }: BlockListProps) {
                     </Badge>
                   </div>
                 </div>
-                <div className="mt-4 flex w-full items-center justify-between gap-4">
-                  <span className="text-sm font-medium">Ver detalhes</span>
-                  <ArrowRight size={16} className="text-muted-foreground" />
+                <div className="flex w-full items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">Ver detalhes</span>
+                    <ArrowRight size={16} className="text-muted-foreground" />
+                  </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button

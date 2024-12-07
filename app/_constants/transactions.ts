@@ -32,6 +32,10 @@ export const TRANSACTION_STATUS_OPTIONS = [
     value: TransactionStatus.FINISHED,
     label: "Prestação Aceita",
   },
+  {
+    value: TransactionStatus.REPROVED,
+    label: "Prestação Reprovada",
+  },
 ];
 
 export const TRANSACTION_PAYMENT_METHOD_LABELS = {

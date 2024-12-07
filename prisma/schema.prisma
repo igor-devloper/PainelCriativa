@@ -84,12 +84,14 @@ enum TransactionType {
 enum TransactionStatus {
   WAITING
   FINISHED
+  REPROVED
 } 
 
 enum BlockStatus {
   OPEN
   CLOSED
   APPROVED
+  REPROVED
 } 
 
 enum TransactionCategory {
