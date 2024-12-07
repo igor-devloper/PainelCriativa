@@ -2,7 +2,6 @@
 "use server";
 
 import { db } from "../_lib/prisma";
-import { sendDepositNotificationEmail } from "../_lib/send-email";
 import { revalidatePath } from "next/cache";
 
 export async function createTransaction(formData: FormData) {
@@ -22,8 +21,6 @@ export async function createTransaction(formData: FormData) {
         blockId: formData.get("blockId") as string,
       },
     });
-
-    await sendDepositNotificationEmail(transaction);
 
     revalidatePath("/transactions");
     return { success: true, data: transaction };
