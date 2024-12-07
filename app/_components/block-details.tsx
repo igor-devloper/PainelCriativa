@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 export const revalidate = 0;
@@ -18,7 +17,7 @@ import {
   TableRow,
 } from "@/app/_components/ui/table";
 import { Badge } from "./ui/badge";
-import { BlockStatus, Transaction, TransactionType } from "@prisma/client";
+import { BlockStatus } from "@prisma/client";
 
 interface BlockDetailsProps {
   block: {
@@ -34,7 +33,6 @@ interface BlockDetailsProps {
 export function BlockDetails({ block, isAdmin, teamId }: BlockDetailsProps) {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [balance, setBalance] = useState(block.amount);
-  const [status, setStatus] = useState(block.status);
 
   useEffect(() => {
     getBlockTransactions(block.id).then((fetchedTransactions) => {
@@ -46,23 +44,7 @@ export function BlockDetails({ block, isAdmin, teamId }: BlockDetailsProps) {
       setBalance(block.amount - spent);
     });
   }, [block.id, block.amount]);
-  const updateBalanceAndStatus = (currentTransactions: Transaction[]) => {
-    const newBalance = currentTransactions.reduce((total, t) => {
-      const amount = Number(t.amount);
-      return t.type === TransactionType.EXPENSE
-        ? total - amount
-        : total + amount;
-    }, block.amount);
 
-    setBalance(newBalance);
-    setStatus(newBalance === 0 ? BlockStatus.CLOSED : block.status);
-  };
-
-  const handleTransactionAdded = (newTransaction: Transaction) => {
-    const updatedTransactions = [...transactions, newTransaction];
-    setTransactions(updatedTransactions);
-    updateBalanceAndStatus(updatedTransactions);
-  };
   return (
     <div className="space-y-6">
       <SheetHeader>
@@ -84,9 +66,9 @@ export function BlockDetails({ block, isAdmin, teamId }: BlockDetailsProps) {
         <div className="space-y-2">
           <h3 className="text-sm font-medium leading-none">Status</h3>
           <Badge
-            className={`animate-pulse text-sm ${status === BlockStatus.CLOSED ? "bg-red-500" : "bg-green-500"}`}
+            className={`animate-pulse text-sm ${block.status === BlockStatus.CLOSED ? "bg-red-500" : "bg-green-500"}`}
           >
-            {status}
+            {block.status}
           </Badge>
         </div>
       </div>

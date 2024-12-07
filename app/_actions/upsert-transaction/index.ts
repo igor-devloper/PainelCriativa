@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use server";
 
 import { db } from "@/app/_lib/prisma";
@@ -12,7 +11,7 @@ import {
 } from "@prisma/client";
 import { upsertTransactionSchema } from "./schema";
 import { revalidatePath } from "next/cache";
-import { sendDepositNotificationEmail } from "@/app/_lib/send-email";
+import { sendBlockClosedNotificationEmail } from "@/app/_lib/send-email";
 
 // Cloudinary configuration
 cloudinary.config({
@@ -112,7 +111,10 @@ export const upsertTransaction = async (params: UpsertTransactionParams) => {
 
     // If the block is now closed, send an email
     if (result.updatedBlock.status === BlockStatus.CLOSED) {
-      await sendDepositNotificationEmail(result.transaction);
+      await sendBlockClosedNotificationEmail(
+        result.transaction,
+        result.updatedBlock,
+      );
     }
 
     revalidatePath("/transactions");
@@ -125,6 +127,7 @@ export const upsertTransaction = async (params: UpsertTransactionParams) => {
 };
 
 function filterParams(params: UpsertTransactionParams) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { imagesBase64, ...rest } = params;
   return rest;
 }

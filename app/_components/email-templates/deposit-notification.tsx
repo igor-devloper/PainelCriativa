@@ -11,17 +11,16 @@ import {
 } from "@react-email/components";
 import { TRANSACTION_TYPE_OPTIONS_LABELS } from "../../_constants/transactions";
 
-interface DepositNotificationEmailProps {
+interface BlockClosedNotificationEmailProps {
   transaction: Transaction;
-  block?: Block;
+  block: Block;
 }
 
-export const DepositNotificationEmail: React.FC<
-  DepositNotificationEmailProps
-> = ({ transaction, block }) => {
-  const previewText = block
-    ? `O bloco ${block.name} foi fechado e requer validação da prestação de contas.`
-    : `Nova transação: ${TRANSACTION_TYPE_OPTIONS_LABELS[transaction.type]}`;
+export const BlockClosedNotificationEmail = ({
+  transaction,
+  block,
+}: BlockClosedNotificationEmailProps) => {
+  const previewText = `O bloco ${block.name} foi fechado e requer validação da prestação de contas.`;
 
   return (
     <Html>
@@ -29,10 +28,12 @@ export const DepositNotificationEmail: React.FC<
       <Preview>{previewText}</Preview>
       <Body style={main}>
         <Container style={container}>
-          <Heading style={h1}>
-            {block ? "Notificação de Fechamento de Bloco" : "Nova Transação"}
-          </Heading>
+          <Heading style={h1}>Notificação de Fechamento de Bloco</Heading>
           <Section style={boxInfos}>
+            <Text style={paragraph}>
+              O bloco <strong>{block.name}</strong> foi fechado devido à
+              seguinte transação:
+            </Text>
             <Text style={paragraph}>
               <strong>Tipo:</strong>{" "}
               {TRANSACTION_TYPE_OPTIONS_LABELS[transaction.type]}
@@ -43,25 +44,16 @@ export const DepositNotificationEmail: React.FC<
             <Text style={paragraph}>
               <strong>Descrição:</strong> {transaction.description}
             </Text>
-            {block && (
-              <Text style={paragraph}>
-                <strong>Bloco:</strong> {block.name}
-              </Text>
-            )}
           </Section>
-          {block && (
-            <>
-              <Text style={paragraph}>
-                É necessário validar a prestação de contas para este bloco. Por
-                favor, acesse o painel administrativo para revisar e aprovar as
-                transações.
-              </Text>
-              <Text style={paragraph}>
-                Lembre-se de verificar todos os documentos e comprovantes
-                associados a este bloco antes de aprovar a prestação de contas.
-              </Text>
-            </>
-          )}
+          <Text style={paragraph}>
+            É necessário validar a prestação de contas para este bloco. Por
+            favor, acesse o painel administrativo para revisar e aprovar as
+            transações.
+          </Text>
+          <Text style={paragraph}>
+            Lembre-se de verificar todos os documentos e comprovantes associados
+            a este bloco antes de aprovar a prestação de contas.
+          </Text>
         </Container>
       </Body>
     </Html>
