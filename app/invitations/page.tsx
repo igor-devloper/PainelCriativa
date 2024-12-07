@@ -21,6 +21,7 @@ import { Button } from "@/app/_components/ui/button";
 import { acceptInvitation } from "@/app/_actions/invite-member";
 import { clerkClient } from "@clerk/nextjs/server";
 import { getInvitationCount } from "../_actions/get-invitation-count";
+import { TicketSlash } from "lucide-react";
 
 async function getInvitations(userEmail: string) {
   return await db.teamInvitation.findMany({
@@ -57,7 +58,10 @@ export default async function InvitationsPage() {
           </div>
         </header>
         <div className="container mx-auto p-8">
-          <h1 className="mb-6 text-3xl font-bold">Seus Convites</h1>
+          <div className="flex h-16 items-center gap-4 px-4">
+            <TicketSlash className="h-6 w-6" />
+            <h1 className="text-xl font-semibold">Seus Convites</h1>
+          </div>
           {invitations.length === 0 ? (
             <p>Você não tem convites pendentes.</p>
           ) : (

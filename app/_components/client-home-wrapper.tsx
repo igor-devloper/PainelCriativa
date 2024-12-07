@@ -12,6 +12,7 @@ import { ScrollArea } from "@/app/_components/ui/scroll-area";
 import { CreateTeamButton } from "@/app/_components/create-team-button";
 import { TeamList } from "@/app/_components/team-list";
 import { AppSidebar } from "./app-sidebar";
+import { Users } from "lucide-react";
 
 interface Team {
   id: string;
@@ -51,11 +52,15 @@ export function ClientHomeWrapper({
           <ScrollArea className="mb-20 max-h-[700px]">
             <div className="flex h-full flex-col space-y-6 overflow-hidden p-6">
               <div className="flex flex-col items-center justify-center gap-4 md:flex md:flex-row md:items-center md:justify-between md:gap-4">
-                <h1 className="text-lg font-bold md:text-2xl">Suas Equipes</h1>
+                <div className="flex h-16 items-center gap-4 px-4">
+                  <Users className="h-6 w-6" />
+                  <h1 className="text-xl font-semibold">Suas Equipes</h1>
+                </div>
                 <div className="flex items-center gap-2">
                   <CreateTeamButton />
                 </div>
               </div>
+
               <TeamList userTeams={userTeams} />
             </div>
           </ScrollArea>

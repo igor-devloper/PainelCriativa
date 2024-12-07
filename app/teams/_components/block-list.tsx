@@ -1,6 +1,4 @@
 "use client";
-export const revalidate = 0;
-export const dynamic = "force-dynamic";
 
 import { useState, useEffect } from "react";
 import { getTeamBlocks } from "@/app/_actions/get-team-blocks";
@@ -12,7 +10,7 @@ import {
 } from "@/app/_components/ui/card";
 import { formatCurrency } from "@/app/_utils/currency";
 import { Sheet, SheetContent, SheetTrigger } from "@/app/_components/ui/sheet";
-import { BlockDetails } from "@/app/_components/block-details";
+import { BlockDetails } from "@/app/teams/_components/block-details";
 import { ArrowRight, Loader2, MoreVertical, Trash, Wallet } from "lucide-react";
 import { deleteBlock } from "@/app/_actions/delete-block";
 import { toast } from "@/app/_hooks/use-toast";
@@ -23,6 +21,10 @@ import {
   DropdownMenuTrigger,
 } from "@/app/_components/ui/dropdown-menu";
 import { Button } from "@/app/_components/ui/button";
+import { useRouter } from "next/navigation";
+import { BlockStatus } from "@prisma/client";
+import { STATUS_BLOCK_LABEL } from "@/app/types/block";
+import { Badge } from "@/app/_components/ui/badge";
 
 interface BlockListProps {
   teamId: string;
@@ -34,6 +36,7 @@ export function BlockList({ teamId, isAdmin }: BlockListProps) {
     Awaited<ReturnType<typeof getTeamBlocks>>
   >([]);
   const [deletingBlocks, setDeletingBlock] = useState<Set<string>>(new Set());
+  const router = useRouter();
 
   useEffect(() => {
     getTeamBlocks(teamId).then(setBlocks);
@@ -43,20 +46,29 @@ export function BlockList({ teamId, isAdmin }: BlockListProps) {
     e.preventDefault();
     e.stopPropagation();
 
-    setDeletingBlock((prev) => new Set(prev).add(teamId));
+    setDeletingBlock((prev) => new Set(prev).add(blockId)); // Fixed: using blockId instead of teamId
 
     try {
       await deleteBlock({
         blockId: blockId,
+        teamId: teamId,
       });
+
+      // Update local state
+      setBlocks((prevBlocks) =>
+        prevBlocks.filter((block) => block.id !== blockId),
+      );
+
+      // Use router.refresh() instead of revalidatePath
+      router.refresh();
 
       toast({
         title: "Block Deletado",
         description: "O block de prestação de conta foi excluído com sucesso.",
-        variant: "default",
+        variant: "success",
       });
     } catch (error) {
-      console.error("Error deleting team:", error);
+      console.error("Error deleting block:", error);
       toast({
         title: "Error",
         description:
@@ -66,12 +78,22 @@ export function BlockList({ teamId, isAdmin }: BlockListProps) {
     } finally {
       setDeletingBlock((prev) => {
         const newSet = new Set(prev);
-        newSet.delete(teamId);
+        newSet.delete(blockId); // Fixed: using blockId instead of teamId
         return newSet;
       });
     }
   };
-
+  const getStatusColor = (status: BlockStatus): string => {
+    switch (status) {
+      case BlockStatus.APPROVED:
+        return "bg-success text-success-foreground";
+      case BlockStatus.CLOSED:
+        return "bg-destructive text-destructive-foreground";
+      case BlockStatus.OPEN:
+      default:
+        return "bg-secondary text-secondary-foreground";
+    }
+  };
   return (
     <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {blocks.map((block) => (
@@ -85,12 +107,19 @@ export function BlockList({ teamId, isAdmin }: BlockListProps) {
                 <Wallet className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-sm font-bold">
-                  {formatCurrency(block.amount)}
+                <div className="flex flex-col items-center justify-center gap-2">
+                  <div className="text-sm font-bold">
+                    {formatCurrency(block.amount)}
+                    <p className="text-xs font-normal text-muted-foreground">
+                      Valor Disponível
+                    </p>
+                  </div>
+                  <div>
+                    <Badge className={`${getStatusColor(block.status)}`}>
+                      {STATUS_BLOCK_LABEL[block.status]}
+                    </Badge>
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Valor Disponível
-                </p>
                 <div className="mt-4 flex w-full items-center justify-between gap-4">
                   <span className="text-sm font-medium">Ver detalhes</span>
                   <ArrowRight size={16} className="text-muted-foreground" />

@@ -102,7 +102,10 @@ export const transactionColumns: ColumnDef<Transaction>[] = [
                 transaction={transaction}
                 // isAdmin={isAdmin ?? false}
               />
-              <DeleteTransactionButton transactionId={transaction.id} />
+              <DeleteTransactionButton
+                transactionId={transaction.id}
+                blockId={transaction.blockId}
+              />
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

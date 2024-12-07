@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Plus } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 
 import { Button } from "@/app/_components/ui/button";
 import {
@@ -32,20 +32,26 @@ import { useToast } from "@/app/_hooks/use-toast";
 import { createBlock } from "@/app/_actions/create-block";
 import { revalidatePath } from "next/cache";
 import { useRouter } from "next/navigation";
+import { MoneyInput } from "@/app/_components/money-input";
 
 const blockFormSchema = z.object({
   name: z
     .string()
     .min(3, { message: "O nome deve ter pelo menos 3 caracteres" }),
-  amount: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-    message: "O valor deve ser um número positivo",
-  }),
+  amount: z
+    .number({
+      required_error: "O valor é obrigatório.",
+    })
+    .positive({
+      message: "O valor deve ser positivo.",
+    }),
 });
 
 type BlockFormValues = z.infer<typeof blockFormSchema>;
 
 export function CreateBlockDialog({ teamId }: { teamId: string }) {
   const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -53,22 +59,23 @@ export function CreateBlockDialog({ teamId }: { teamId: string }) {
     resolver: zodResolver(blockFormSchema),
     defaultValues: {
       name: "",
-      amount: "",
+      amount: 0,
     },
   });
 
   async function onSubmit(data: BlockFormValues) {
     try {
+      setIsLoading(true);
       await createBlock(teamId, data.name, Number(data.amount));
       toast({
         title: "Bloco criado",
         description:
           "O novo bloco de prestação de contas foi criado com sucesso.",
       });
-      setOpen(false);
-      form.reset();
-      router.push(`/teams/${teamId}`);
       router.refresh();
+      setOpen(false);
+      setIsLoading(false);
+      form.reset();
     } catch (error) {
       toast({
         variant: "destructive",
@@ -115,11 +122,14 @@ export function CreateBlockDialog({ teamId }: { teamId: string }) {
                 <FormItem>
                   <FormLabel>Valor Disponível</FormLabel>
                   <FormControl>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="0.00"
-                      {...field}
+                    <MoneyInput
+                      placeholder="Digite o valor..."
+                      value={field.value}
+                      onValueChange={({ floatValue }) =>
+                        field.onChange(floatValue)
+                      }
+                      onBlur={field.onBlur}
+                      disabled={field.disabled}
                     />
                   </FormControl>
                   <FormMessage />
@@ -127,7 +137,16 @@ export function CreateBlockDialog({ teamId }: { teamId: string }) {
               )}
             />
             <DialogFooter>
-              <Button type="submit">Criar Bloco</Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Criando...
+                  </>
+                ) : (
+                  "Criar Bloco"
+                )}
+              </Button>
             </DialogFooter>
           </form>
         </Form>

@@ -2,7 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/app/_lib/prisma";
-import { revalidateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
 
 export async function createBlock(
   teamId: string,
@@ -31,9 +31,7 @@ export async function createBlock(
       status: "OPEN",
     },
   });
-
-  // Revalidate team cache
-  revalidateTag(`team-${teamId}`);
+  revalidatePath(`/teams/${teamId}`);
 
   return block;
 }

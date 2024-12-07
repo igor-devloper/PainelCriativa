@@ -7,6 +7,10 @@ import { getUserTeams } from "@/app/_actions/get-user-team";
 import { userAdmin } from "@/app/_data/user-admin";
 import { getInvitationCount } from "../_actions/get-invitation-count";
 
+export const metadata = {
+  title: "Home - Painel Criativa",
+};
+
 export default async function Home() {
   const { userId } = auth();
 

@@ -16,14 +16,16 @@ import { toast } from "sonner";
 
 interface DeleteTransactionButtonProps {
   transactionId: string;
+  blockId: string;
 }
 
 const DeleteTransactionButton = ({
   transactionId,
+  blockId,
 }: DeleteTransactionButtonProps) => {
   const handleConfirmDeleteClick = async () => {
     try {
-      await deleteTransaction({ transactionId });
+      await deleteTransaction({ transactionId, blockId });
       toast.success("Transação deletada com sucesso!");
     } catch (error) {
       console.error(error);

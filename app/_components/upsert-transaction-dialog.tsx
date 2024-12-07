@@ -45,18 +45,19 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { upsertTransaction } from "../_actions/upsert-transaction";
-import { toast } from "sonner";
+import { toast } from "@/app/_hooks/use-toast";
 import { useState, useCallback } from "react";
 import { ImageUpload } from "./image-upload";
 import { Loader2 } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
+import { useRouter } from "next/navigation";
 
 interface UpsertTransactionDialogProps {
   isOpen: boolean;
   defaultValues?: FormSchema;
   transactionId?: string;
   balance?: number;
-  isAdmin: boolean;
+  isAdmin?: boolean;
   blockId: string;
   teamId: string;
   setIsOpen: (isOpen: boolean) => void;
@@ -109,6 +110,7 @@ const UpsertTransactionDialog = ({
   onLoadingChange,
 }: UpsertTransactionDialogProps) => {
   const [images, setImages] = useState<File[]>([]);
+  const router = useRouter();
 
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
@@ -128,7 +130,11 @@ const UpsertTransactionDialog = ({
       try {
         if (data.type === TransactionType.EXPENSE) {
           if (!balance || data.amount > balance) {
-            toast.error("Saldo insuficiente para realizar esta transação.");
+            toast({
+              variant: "destructive",
+              title: "Saldo Insuficente para realizar essa transação!",
+              description: "Se for nescessario registre um reembolso!",
+            });
             return;
           }
         }
@@ -144,13 +150,20 @@ const UpsertTransactionDialog = ({
           teamId: teamId,
           blockId: blockId,
         });
+        router.refresh();
         setIsOpen(false);
         form.reset();
         setImages([]);
-        toast.success("Transação criada com sucesso!");
+        toast({
+          variant: "success",
+          title: "Transação criada com sucesso!",
+        });
       } catch (error) {
         console.error(error);
-        toast.error("Erro ao criar transação. Tente novamente.");
+        toast({
+          variant: "destructive",
+          title: "Erro ao criar transação. Tente novamente.",
+        });
       } finally {
         onLoadingChange(false);
       }

@@ -30,6 +30,8 @@ body {
     --accent-foreground: 222 47% 11%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 20% 98%;
+    --success: 143 72% 29%;
+    --success-foreground: 144 100% 98%;
     --border: 220 13% 75%;
     --input: 220 13% 75%;
     --ring: 142 76% 36%;
@@ -50,7 +52,6 @@ body {
   }
 }
 
-
 @layer base {
   * {
     @apply border-border;
@@ -62,4 +63,3 @@ body {
     @apply h-full bg-background text-foreground;
   }
 }
-

@@ -1,6 +1,7 @@
 import { Transaction, Block } from "@prisma/client";
 import {
   Body,
+  Button,
   Container,
   Head,
   Heading,
@@ -54,6 +55,12 @@ export const BlockClosedNotificationEmail = ({
             Lembre-se de verificar todos os documentos e comprovantes associados
             a este bloco antes de aprovar a prestação de contas.
           </Text>
+          <Button
+            style={button}
+            href="https://painel-criativa.vercel.app/admin"
+          >
+            Acessar Dashboard Admin
+          </Button>
         </Container>
       </Body>
     </Html>
@@ -91,4 +98,17 @@ const boxInfos = {
   borderRadius: "4px",
   padding: "20px",
   margin: "20px 0",
+};
+
+const button = {
+  backgroundColor: "#007bff",
+  borderRadius: "4px",
+  color: "#fff",
+  fontSize: "14px",
+  fontWeight: "bold",
+  textDecoration: "none",
+  textAlign: "center" as const,
+  display: "inline-block",
+  padding: "12px 20px",
+  marginTop: "20px",
 };

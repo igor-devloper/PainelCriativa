@@ -50,9 +50,7 @@ export const upsertTransaction = async (params: UpsertTransactionParams) => {
     if (params.imagesBase64 && params.imagesBase64.length > 0) {
       const uploadedImages = await Promise.all(
         params.imagesBase64.map(async (imageBase64) => {
-          const response = await cloudinary.uploader.upload(imageBase64, {
-            upload_preset: "ml_default",
-          });
+          const response = await cloudinary.uploader.upload(imageBase64);
           return response.secure_url;
         }),
       );
@@ -116,9 +114,10 @@ export const upsertTransaction = async (params: UpsertTransactionParams) => {
         result.updatedBlock,
       );
     }
-
+    console.log(`action upsert: teamId = ${params.teamId}`);
     revalidatePath("/transactions");
     revalidatePath("/admin");
+    revalidatePath(`/teams/${params.teamId}`);
     return result.transaction;
   } catch (error) {
     console.error("Error in upsertTransaction:", error);

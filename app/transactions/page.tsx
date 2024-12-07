@@ -56,9 +56,9 @@ const TransactionsPage = async () => {
             <div className="flex w-[350px] flex-col space-y-6 overflow-hidden p-6 pb-10 pr-10 md:w-full">
               {/* TÍTULO E BOTÃO */}
               <div className="flex justify-between">
-                <div className="flex items-center justify-center gap-2">
-                  <HandCoins />
-                  <h1 className="text-2xl font-bold">Transações</h1>
+                <div className="flex h-16 items-center gap-4 px-4">
+                  <HandCoins className="h-6 w-6" />
+                  <h1 className="text-xl font-semibold">Suas Transações</h1>
                 </div>
               </div>
               <ScrollArea className="h-full">

@@ -86,8 +86,8 @@ export default function TeamPage({ params }: PageProps) {
   return (
     <Suspense
       fallback={
-        <div className="flex items-center justify-center">
-          <Loader2 size={12} />
+        <div className="flex h-full w-full items-center justify-center">
+          <Loader2 size={50} className="animate-spin text-success" />
         </div>
       }
     >

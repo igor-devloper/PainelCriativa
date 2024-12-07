@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-export const revalidate = 0;
-export const dynamic = "force-dynamic";
 
 import { useState, useEffect } from "react";
 import { getBlockTransactions } from "@/app/_actions/get-block-transactions";
@@ -16,15 +14,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/app/_components/ui/table";
-import { Badge } from "./ui/badge";
+import { Badge } from "../../_components/ui/badge";
 import { BlockStatus } from "@prisma/client";
+import { STATUS_BLOCK_LABEL } from "../../types/block";
 
 interface BlockDetailsProps {
   block: {
     id: string;
     name: string;
     amount: number;
-    status: string;
+    status: BlockStatus;
   };
   isAdmin: boolean;
   teamId: string;
@@ -45,6 +44,18 @@ export function BlockDetails({ block, isAdmin, teamId }: BlockDetailsProps) {
     });
   }, [block.id, block.amount]);
 
+  const getStatusColor = (status: BlockStatus): string => {
+    switch (status) {
+      case BlockStatus.APPROVED:
+        return "bg-success text-success-foreground";
+      case BlockStatus.CLOSED:
+        return "bg-destructive text-destructive-foreground";
+      case BlockStatus.OPEN:
+      default:
+        return "bg-secondary text-secondary-foreground";
+    }
+  };
+
   return (
     <div className="space-y-6">
       <SheetHeader>
@@ -57,18 +68,11 @@ export function BlockDetails({ block, isAdmin, teamId }: BlockDetailsProps) {
             {formatCurrency(block.amount)}
           </p>
         </div>
-        <div className="space-y-2">
-          <h3 className="text-sm font-medium leading-none">Saldo Atual</h3>
-          <p className="text-sm text-muted-foreground">
-            {formatCurrency(balance)}
-          </p>
-        </div>
+
         <div className="space-y-2">
           <h3 className="text-sm font-medium leading-none">Status</h3>
-          <Badge
-            className={`animate-pulse text-sm ${block.status === BlockStatus.CLOSED ? "bg-red-500" : "bg-green-500"}`}
-          >
-            {block.status}
+          <Badge className={`${getStatusColor(block.status)}`}>
+            {STATUS_BLOCK_LABEL[block.status]}
           </Badge>
         </div>
       </div>
