@@ -71,6 +71,7 @@ import {
 import UserInfo from "@/app/_components/user-info";
 import { ImageGallery } from "@/app/transactions/_components/image-gallery";
 import { Separator } from "@/app/_components/ui/separator";
+import { ScrollArea, ScrollBar } from "@/app/_components/ui/scroll-area";
 
 interface TransactionWithUser extends Transaction {
   clerkUser?: User;
@@ -212,12 +213,13 @@ export function AdminDashboardClient({
               <Separator orientation="vertical" className="mr-2 h-4" />
             </div>
           </header>
-          <main className="flex-1 space-y-4 p-8">
-            <div className="flex h-16 items-center gap-4 px-4">
-              <Package2 className="h-6 w-6" />
-              <h1 className="text-xl font-semibold">Dashboard Admin</h1>
-            </div>
-            {/* <div className="flex items-center justify-between">
+          <ScrollArea>
+            <main className="flex-1 space-y-4 p-8">
+              <div className="flex h-16 items-center gap-4 px-4">
+                <Package2 className="h-6 w-6" />
+                <h1 className="text-xl font-semibold">Dashboard Admin</h1>
+              </div>
+              {/* <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="relative w-64">
                   <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -241,173 +243,180 @@ export function AdminDashboardClient({
               </Button>
             </div> */}
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Blocos de Transações</CardTitle>
-                <CardDescription>
-                  Gerencie todos os blocos e suas transações
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Accordion type="single" collapsible className="w-full">
-                  {blocks.map((block) => (
-                    <AccordionItem key={block.id} value={block.id}>
-                      <AccordionTrigger className="px-4">
-                        <div className="flex w-full items-center justify-between">
-                          <span>{block.name}</span>
-                          <div className="mr-4 flex items-center gap-4">
-                            <Badge
-                              variant={
-                                block.status === "OPEN"
-                                  ? "default"
-                                  : "secondary"
-                              }
-                            >
-                              {STATUS_BLOCK_LABEL[block.status]}
-                            </Badge>
-                            <Select
-                              onValueChange={(value) =>
-                                handleBlockStatusChange(
-                                  block.id,
-                                  value as BlockStatus,
-                                )
-                              }
-                              defaultValue={block.status}
-                            >
-                              <SelectTrigger className="w-[140px]">
-                                <SelectValue placeholder="Alterar status" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="OPEN">Ativo</SelectItem>
-                                <SelectItem value="CLOSED">Fechado</SelectItem>
-                                <SelectItem value="APPROVED">
-                                  Prestação aprovada
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Blocos de Transações</CardTitle>
+                  <CardDescription>
+                    Gerencie todos os blocos e suas transações
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Accordion type="single" collapsible className="w-full">
+                    {blocks.map((block) => (
+                      <AccordionItem key={block.id} value={block.id}>
+                        <AccordionTrigger className="px-4">
+                          <div className="flex w-full items-center justify-between">
+                            <span>{block.name}</span>
+                            <div className="mr-4 flex items-center gap-4">
+                              <Badge
+                                variant={
+                                  block.status === "OPEN" ||
+                                  block.status === "APPROVED"
+                                    ? "default"
+                                    : "destructive"
+                                }
+                              >
+                                {STATUS_BLOCK_LABEL[block.status]}
+                              </Badge>
+                              <Select
+                                onValueChange={(value) =>
+                                  handleBlockStatusChange(
+                                    block.id,
+                                    value as BlockStatus,
+                                  )
+                                }
+                                defaultValue={block.status}
+                              >
+                                <SelectTrigger className="w-[140px]">
+                                  <SelectValue placeholder="Alterar status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="OPEN">Ativo</SelectItem>
+                                  <SelectItem value="CLOSED">
+                                    Fechado
+                                  </SelectItem>
+                                  <SelectItem value="APPROVED">
+                                    Prestação aprovada
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
                           </div>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        <div className="rounded-md border">
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>Nome</TableHead>
-                                <TableHead>Tipo</TableHead>
-                                <TableHead>Categoria</TableHead>
-                                <TableHead>Método de Pagamento</TableHead>
-                                <TableHead>Data</TableHead>
-                                <TableHead>Valor</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead>Usuário</TableHead>
-                                <TableHead>Comprovantes</TableHead>
-                                <TableHead className="text-right">
-                                  Ações
-                                </TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {transactions[block.id]?.map((transaction) => (
-                                <TableRow key={transaction.id}>
-                                  <TableCell>{transaction.name}</TableCell>
-                                  <TableCell>
-                                    {
-                                      TRANSACTION_TYPE_OPTIONS_LABELS[
-                                        transaction.type
-                                      ]
-                                    }
-                                  </TableCell>
-                                  <TableCell>
-                                    {
-                                      TRANSACTION_CATEGORY_LABELS[
-                                        transaction.category
-                                      ]
-                                    }
-                                  </TableCell>
-                                  <TableCell>
-                                    {
-                                      TRANSACTION_PAYMENT_METHOD_LABELS[
-                                        transaction.paymentMethod
-                                      ]
-                                    }
-                                  </TableCell>
-                                  <TableCell>
-                                    {transaction.date.toLocaleDateString()}
-                                  </TableCell>
-                                  <TableCell>
-                                    {new Intl.NumberFormat("pt-BR", {
-                                      style: "currency",
-                                      currency: "BRL",
-                                    }).format(Number(transaction.amount))}
-                                  </TableCell>
-                                  <TableCell>
-                                    <Select
-                                      onValueChange={(value) =>
-                                        handleStatusChange(
-                                          transaction.id,
-                                          value as TransactionStatus,
-                                        )
-                                      }
-                                      defaultValue={String(transaction.status)}
-                                    >
-                                      <SelectTrigger className="w-[130px]">
-                                        <SelectValue placeholder="Status" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="WAITING">
-                                          Aguardando
-                                        </SelectItem>
-                                        <SelectItem value="FINISHED">
-                                          Prestação Aceita
-                                        </SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </TableCell>
-                                  <TableCell>
-                                    <UserInfo userId={transaction.userId} />
-                                  </TableCell>
-                                  <TableCell>
-                                    <ImageGallery
-                                      images={transaction.imageUrl}
-                                    />
-                                    ;
-                                  </TableCell>
-                                  <TableCell className="text-right">
-                                    <DropdownMenu>
-                                      <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="icon">
-                                          <MoreHorizontal className="h-4 w-4" />
-                                          <span className="sr-only">
-                                            Abrir menu
-                                          </span>
-                                        </Button>
-                                      </DropdownMenuTrigger>
-                                      <DropdownMenuContent align="end">
-                                        <DropdownMenuItem>
-                                          Ver detalhes
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem>
-                                          Editar
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem className="text-destructive">
-                                          Excluir
-                                        </DropdownMenuItem>
-                                      </DropdownMenuContent>
-                                    </DropdownMenu>
-                                  </TableCell>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="rounded-md border">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Nome</TableHead>
+                                  <TableHead>Tipo</TableHead>
+                                  <TableHead>Categoria</TableHead>
+                                  <TableHead>Método de Pagamento</TableHead>
+                                  <TableHead>Data</TableHead>
+                                  <TableHead>Valor</TableHead>
+                                  <TableHead>Status</TableHead>
+                                  <TableHead>Usuário</TableHead>
+                                  <TableHead>Comprovantes</TableHead>
+                                  <TableHead className="text-right">
+                                    Ações
+                                  </TableHead>
                                 </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-              </CardContent>
-            </Card>
-          </main>
+                              </TableHeader>
+                              <TableBody>
+                                {transactions[block.id]?.map((transaction) => (
+                                  <TableRow key={transaction.id}>
+                                    <TableCell>{transaction.name}</TableCell>
+                                    <TableCell>
+                                      {
+                                        TRANSACTION_TYPE_OPTIONS_LABELS[
+                                          transaction.type
+                                        ]
+                                      }
+                                    </TableCell>
+                                    <TableCell>
+                                      {
+                                        TRANSACTION_CATEGORY_LABELS[
+                                          transaction.category
+                                        ]
+                                      }
+                                    </TableCell>
+                                    <TableCell>
+                                      {
+                                        TRANSACTION_PAYMENT_METHOD_LABELS[
+                                          transaction.paymentMethod
+                                        ]
+                                      }
+                                    </TableCell>
+                                    <TableCell>
+                                      {transaction.date.toLocaleDateString()}
+                                    </TableCell>
+                                    <TableCell>
+                                      {new Intl.NumberFormat("pt-BR", {
+                                        style: "currency",
+                                        currency: "BRL",
+                                      }).format(Number(transaction.amount))}
+                                    </TableCell>
+                                    <TableCell>
+                                      <Select
+                                        onValueChange={(value) =>
+                                          handleStatusChange(
+                                            transaction.id,
+                                            value as TransactionStatus,
+                                          )
+                                        }
+                                        defaultValue={String(
+                                          transaction.status,
+                                        )}
+                                      >
+                                        <SelectTrigger className="w-[130px]">
+                                          <SelectValue placeholder="Status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="WAITING">
+                                            Aguardando
+                                          </SelectItem>
+                                          <SelectItem value="FINISHED">
+                                            Prestação Aceita
+                                          </SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </TableCell>
+                                    <TableCell>
+                                      <UserInfo userId={transaction.userId} />
+                                    </TableCell>
+                                    <TableCell>
+                                      <ImageGallery
+                                        images={transaction.imageUrl}
+                                      />
+                                      ;
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                          <Button variant="ghost" size="icon">
+                                            <MoreHorizontal className="h-4 w-4" />
+                                            <span className="sr-only">
+                                              Abrir menu
+                                            </span>
+                                          </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                          <DropdownMenuItem>
+                                            Ver detalhes
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem>
+                                            Editar
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem className="text-destructive">
+                                            Excluir
+                                          </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                </CardContent>
+              </Card>
+            </main>
+            <ScrollBar orientation="vertical" />
+          </ScrollArea>
 
           <UpsertTransactionAdminDialog
             onLoadingChange={setIsLoading}

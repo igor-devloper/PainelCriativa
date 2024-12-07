@@ -36,25 +36,10 @@ export function BlockDetails({ block, isAdmin, teamId }: BlockDetailsProps) {
   useEffect(() => {
     getBlockTransactions(block.id).then((fetchedTransactions) => {
       setTransactions(fetchedTransactions);
-      const spent = fetchedTransactions.reduce(
-        (total, t) => total + Number(t.amount),
-        0,
-      );
-      setBalance(block.amount - spent);
+
+      setBalance(block.amount);
     });
   }, [block.id, block.amount]);
-
-  const getStatusColor = (status: BlockStatus): string => {
-    switch (status) {
-      case BlockStatus.APPROVED:
-        return "bg-success text-success-foreground";
-      case BlockStatus.CLOSED:
-        return "bg-destructive text-destructive-foreground";
-      case BlockStatus.OPEN:
-      default:
-        return "bg-secondary text-secondary-foreground";
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -65,13 +50,20 @@ export function BlockDetails({ block, isAdmin, teamId }: BlockDetailsProps) {
         <div className="space-y-2">
           <h3 className="text-sm font-medium leading-none">Valor Disponível</h3>
           <p className="text-sm text-muted-foreground">
-            {formatCurrency(block.amount)}
+            {formatCurrency(balance)}
           </p>
         </div>
 
         <div className="space-y-2">
           <h3 className="text-sm font-medium leading-none">Status</h3>
-          <Badge className={`${getStatusColor(block.status)}`}>
+          <Badge
+            variant={
+              block.status === "OPEN" || block.status === "APPROVED"
+                ? "default"
+                : "destructive"
+            }
+            className="animate-pulse"
+          >
             {STATUS_BLOCK_LABEL[block.status]}
           </Badge>
         </div>

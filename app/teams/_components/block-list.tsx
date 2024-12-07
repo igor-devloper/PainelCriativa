@@ -22,7 +22,6 @@ import {
 } from "@/app/_components/ui/dropdown-menu";
 import { Button } from "@/app/_components/ui/button";
 import { useRouter } from "next/navigation";
-import { BlockStatus } from "@prisma/client";
 import { STATUS_BLOCK_LABEL } from "@/app/types/block";
 import { Badge } from "@/app/_components/ui/badge";
 
@@ -83,17 +82,7 @@ export function BlockList({ teamId, isAdmin }: BlockListProps) {
       });
     }
   };
-  const getStatusColor = (status: BlockStatus): string => {
-    switch (status) {
-      case BlockStatus.APPROVED:
-        return "bg-success text-success-foreground";
-      case BlockStatus.CLOSED:
-        return "bg-destructive text-destructive-foreground";
-      case BlockStatus.OPEN:
-      default:
-        return "bg-secondary text-secondary-foreground";
-    }
-  };
+
   return (
     <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {blocks.map((block) => (
@@ -115,7 +104,14 @@ export function BlockList({ teamId, isAdmin }: BlockListProps) {
                     </p>
                   </div>
                   <div>
-                    <Badge className={`${getStatusColor(block.status)}`}>
+                    <Badge
+                      variant={
+                        block.status === "OPEN" || block.status === "APPROVED"
+                          ? "default"
+                          : "destructive"
+                      }
+                      className="animate-pulse"
+                    >
                       {STATUS_BLOCK_LABEL[block.status]}
                     </Badge>
                   </div>
