@@ -20,6 +20,7 @@ import {
 import { Button } from "@/app/_components/ui/button";
 import { acceptInvitation } from "@/app/_actions/invite-member";
 import { clerkClient } from "@clerk/nextjs/server";
+import { getInvitationCount } from "../_actions/get-invitation-count";
 
 async function getInvitations(userEmail: string) {
   return await db.teamInvitation.findMany({
@@ -39,10 +40,15 @@ export default async function InvitationsPage() {
   const invitations = await getInvitations(userEmail);
   const userTeams = await getUserTeams();
   const isAdmin = await userAdmin();
+  const invitationCount = await getInvitationCount();
 
   return (
     <SidebarProvider>
-      <AppSidebar userTeams={userTeams} isAdmin={isAdmin ?? false} />
+      <AppSidebar
+        userTeams={userTeams}
+        isAdmin={isAdmin ?? false}
+        invitationCount={invitationCount}
+      />
       <SidebarInset>
         <header className="flex h-14 shrink-0 items-center gap-2">
           <div className="flex flex-1 items-center gap-2 px-3">

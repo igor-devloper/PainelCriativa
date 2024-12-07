@@ -37,6 +37,25 @@ export async function inviteMember(
       };
     }
 
+    // Verificar se o usuário convidado já faz parte de uma equipe
+    const invitedUser = await clerkClient.users.getUserList({
+      emailAddress: [email],
+    });
+
+    if (invitedUser.data.length > 0) {
+      const invitedUserId = invitedUser.data[0].id;
+      const existingMembership = await db.teamMember.findFirst({
+        where: { userId: invitedUserId },
+      });
+
+      if (existingMembership) {
+        return {
+          success: false,
+          message: "O usuário já faz parte de uma equipe.",
+        };
+      }
+    }
+
     const existingInvitation = await db.teamInvitation.findUnique({
       where: {
         email_teamId: {
@@ -109,6 +128,19 @@ export async function acceptInvitation(
       return {
         success: false,
         message: "O e-mail do convite não corresponde à sua conta",
+      };
+    }
+
+    // Verificar se o usuário já faz parte de uma equipe
+    const existingMembership = await db.teamMember.findFirst({
+      where: { userId },
+    });
+
+    if (existingMembership) {
+      return {
+        success: false,
+        message:
+          "Você já faz parte de uma equipe e não pode aceitar este convite.",
       };
     }
 

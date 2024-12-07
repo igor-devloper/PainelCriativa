@@ -1,5 +1,6 @@
 "use client";
 export const revalidate = 0;
+export const dynamic = "force-dynamic";
 import { Home, HandCoins, Settings, Users, Mail } from "lucide-react";
 import {
   Sidebar,
@@ -51,7 +52,7 @@ interface Team {
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   userTeams: Team[];
   isAdmin: boolean;
-  invitationCount?: number; // New prop for invitation count
+  invitationCount: number; // New prop for invitation count
 }
 
 export function AppSidebar({

@@ -1,10 +1,11 @@
 export const revalidate = 0;
-
+export const dynamic = "force-dynamic";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { ClientHomeWrapper } from "@/app/_components/client-home-wrapper";
 import { getUserTeams } from "@/app/_actions/get-user-team";
 import { userAdmin } from "@/app/_data/user-admin";
+import { getInvitationCount } from "../_actions/get-invitation-count";
 
 export default async function Home() {
   const { userId } = auth();
@@ -13,7 +14,17 @@ export default async function Home() {
     redirect("/login");
   }
 
-  const [userTeams, isAdmin] = await Promise.all([getUserTeams(), userAdmin()]);
+  const [userTeams, isAdmin, invitationCount] = await Promise.all([
+    getUserTeams(),
+    userAdmin(),
+    getInvitationCount(),
+  ]);
 
-  return <ClientHomeWrapper userTeams={userTeams} isAdmin={isAdmin ?? false} />;
+  return (
+    <ClientHomeWrapper
+      userTeams={userTeams}
+      isAdmin={isAdmin ?? false}
+      invitationCount={invitationCount}
+    />
+  );
 }

@@ -1,0 +1,137 @@
+"use client";
+export const revalidate = 0;
+export const dynamic = "force-dynamic";
+
+import { useState, useEffect } from "react";
+import { getTeamBlocks } from "@/app/_actions/get-team-blocks";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/app/_components/ui/card";
+import { formatCurrency } from "@/app/_utils/currency";
+import { Sheet, SheetContent, SheetTrigger } from "@/app/_components/ui/sheet";
+import { BlockDetails } from "@/app/_components/block-details";
+import { ArrowRight, Loader2, MoreVertical, Trash, Wallet } from "lucide-react";
+import { deleteBlock } from "@/app/_actions/delete-block";
+import { toast } from "@/app/_hooks/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/app/_components/ui/dropdown-menu";
+import { Button } from "@/app/_components/ui/button";
+
+interface BlockListProps {
+  teamId: string;
+  isAdmin?: boolean;
+}
+
+export function BlockList({ teamId, isAdmin }: BlockListProps) {
+  const [blocks, setBlocks] = useState<
+    Awaited<ReturnType<typeof getTeamBlocks>>
+  >([]);
+  const [deletingBlocks, setDeletingBlock] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    getTeamBlocks(teamId).then(setBlocks);
+  }, [teamId]);
+
+  const handleDeleteBlock = async (blockId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    setDeletingBlock((prev) => new Set(prev).add(teamId));
+
+    try {
+      await deleteBlock({
+        blockId: blockId,
+      });
+
+      toast({
+        title: "Block Deletado",
+        description: "O block de prestação de conta foi excluído com sucesso.",
+        variant: "destructive",
+      });
+    } catch (error) {
+      console.error("Error deleting team:", error);
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingBlock((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(teamId);
+        return newSet;
+      });
+    }
+  };
+
+  return (
+    <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {blocks.map((block) => (
+        <Sheet key={block.id}>
+          <SheetTrigger asChild>
+            <Card className="flex cursor-pointer flex-col items-center justify-center transition-all duration-300 hover:shadow-lg">
+              <CardHeader className="flex w-full flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-base font-bold">
+                  {block.name}
+                </CardTitle>
+                <Wallet className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm font-bold">
+                  {formatCurrency(block.amount)}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Valor Disponível
+                </p>
+                <div className="mt-4 flex items-center justify-between gap-4">
+                  <span className="text-sm font-medium">Ver detalhes</span>
+                  <ArrowRight size={16} className="text-muted-foreground" />
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className="h-8 w-8 p-0"
+                        onClick={(e) => e.preventDefault()}
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={(e) => handleDeleteBlock(block.id, e)}
+                        disabled={deletingBlocks.has(block.id)}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        {deletingBlocks.has(block.id) ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash className="mr-2 h-4 w-4" />
+                        )}
+                        <span>Deletar Bloco</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </CardContent>
+            </Card>
+          </SheetTrigger>
+          <SheetContent>
+            <BlockDetails
+              block={block}
+              isAdmin={isAdmin ?? false}
+              teamId={teamId}
+            />
+          </SheetContent>
+        </Sheet>
+      ))}
+    </div>
+  );
+}

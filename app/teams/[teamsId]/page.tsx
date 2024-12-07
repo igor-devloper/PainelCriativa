@@ -4,11 +4,11 @@ import { Suspense } from "react";
 import { auth } from "@clerk/nextjs/server";
 import { notFound, redirect } from "next/navigation";
 import { getTeamById } from "@/app/_actions/get-team-by-id";
-import { TeamHeader } from "./_components/team-header";
-import { MemberList } from "./_components/member-list";
-import { InviteMemberDialog } from "./_components/invite-member-dialog";
-import { BlockList } from "./_components/block-list";
-import { CreateBlockDialog } from "./_components/create-block-dialog";
+import { TeamHeader } from "../_components/team-header";
+import { MemberList } from "../_components/member-list";
+import { InviteMemberDialog } from "../_components/invite-member-dialog";
+import { BlockList } from "../_components/block-list";
+import { CreateBlockDialog } from "../_components/create-block-dialog";
 import {
   SidebarInset,
   SidebarProvider,
@@ -19,6 +19,7 @@ import { Separator } from "@/app/_components/ui/separator";
 import { getUserTeams } from "@/app/_actions/get-user-team";
 import { userAdmin } from "@/app/_data/user-admin";
 import { Loader2 } from "lucide-react";
+import { getInvitationCount } from "@/app/_actions/get-invitation-count";
 
 interface PageProps {
   params: { teamId: string };
@@ -30,10 +31,11 @@ async function TeamPageContent({ teamId }: { teamId: string }) {
     redirect("/login");
   }
 
-  const [team, userTeams, isAdminG] = await Promise.all([
+  const [team, userTeams, isAdminG, invitationCount] = await Promise.all([
     getTeamById(teamId),
     getUserTeams(),
     userAdmin(),
+    getInvitationCount(),
   ]);
 
   if (!team) {
@@ -44,7 +46,11 @@ async function TeamPageContent({ teamId }: { teamId: string }) {
 
   return (
     <SidebarProvider>
-      <AppSidebar userTeams={userTeams} isAdmin={isAdminG ?? false} />
+      <AppSidebar
+        userTeams={userTeams}
+        isAdmin={isAdminG ?? false}
+        invitationCount={invitationCount}
+      />
       <SidebarInset>
         <header className="flex h-14 shrink-0 items-center gap-2">
           <div className="flex flex-1 items-center gap-2 px-3">

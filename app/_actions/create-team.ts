@@ -7,7 +7,7 @@ import { db } from "@/app/_lib/prisma";
 export async function createTeam(formData: FormData) {
   const { userId } = await auth();
   if (!userId) {
-    throw new Error("Unauthorized");
+    throw new Error("Não autorizado");
   }
 
   const name = formData.get("name") as string;
@@ -17,6 +17,24 @@ export async function createTeam(formData: FormData) {
   }
 
   try {
+    // Verifica se o usuário já está em uma equipe
+    const existingTeam = await db.team.findFirst({
+      where: {
+        members: {
+          some: {
+            userId: userId,
+          },
+        },
+      },
+    });
+
+    if (existingTeam) {
+      throw new Error(
+        "Você já faz parte de uma equipe. Não é possível criar ou participar de outra.",
+      );
+    }
+
+    // Se o usuário não está em nenhuma equipe, cria uma nova
     const team = await db.team.create({
       data: {
         name,
@@ -33,6 +51,10 @@ export async function createTeam(formData: FormData) {
     return { success: true, team };
   } catch (error) {
     console.error("[CREATE_TEAM_ERROR]", error);
-    throw new Error("Erro ao criar equipe");
+    if (error instanceof Error) {
+      throw new Error(error.message);
+    } else {
+      throw new Error("Erro ao criar equipe");
+    }
   }
 }

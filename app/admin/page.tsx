@@ -14,6 +14,7 @@ import { Separator } from "../_components/ui/separator";
 import { userAdmin } from "../_data/user-admin";
 import { FileSliders } from "lucide-react";
 import { getUserTeams } from "../_actions/get-user-team";
+import { getInvitationCount } from "../_actions/get-invitation-count";
 
 export const metadata = {
   title: "Admin - Painel Criativa",
@@ -29,6 +30,7 @@ const AdminPage = async () => {
   }
   const userTeams = await getUserTeams();
   const isAdmin = await userAdmin();
+  const invitationCount = await getInvitationCount();
   const transactions = await db.transaction.findMany({
     orderBy: {
       date: "desc",
@@ -36,7 +38,11 @@ const AdminPage = async () => {
   });
   return (
     <SidebarProvider>
-      <AppSidebar userTeams={userTeams} isAdmin={isAdmin ?? false} />
+      <AppSidebar
+        userTeams={userTeams}
+        isAdmin={isAdmin ?? false}
+        invitationCount={invitationCount}
+      />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2">
           <div className="flex items-center gap-2 px-4">

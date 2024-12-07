@@ -2,7 +2,7 @@
 "use client";
 
 export const revalidate = 0;
-
+export const dynamic = "force-dynamic";
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -72,11 +72,24 @@ export function CreateTeamDialog({ isOpen, setIsOpen }: CreateTeamDialogProps) {
         throw new Error("Falha ao criar equipe");
       }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Erro!",
-        description: "Ocorreu um erro ao criar a equipe. Tente novamente.",
-      });
+      if (
+        error instanceof Error &&
+        error.message ===
+          "Você já faz parte de uma equipe. Não é possível criar ou participar de outra."
+      ) {
+        toast({
+          variant: "destructive",
+          title: "Erro!",
+          description: error.message,
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Erro!",
+          description: "Ocorreu um erro ao criar a equipe. Tente novamente.",
+        });
+      }
+      setIsOpen(false);
     }
   }
 

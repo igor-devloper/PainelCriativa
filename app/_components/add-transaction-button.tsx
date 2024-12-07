@@ -1,5 +1,6 @@
 "use client";
-
+export const revalidate = 0;
+export const dynamic = "force-dynamic";
 import { ArrowDownUpIcon, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useState } from "react";

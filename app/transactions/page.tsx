@@ -15,6 +15,7 @@ import { Separator } from "../_components/ui/separator";
 import { HandCoins } from "lucide-react";
 import { getUserTeams } from "../_actions/get-user-team";
 import { userAdmin } from "../_data/user-admin";
+import { getInvitationCount } from "../_actions/get-invitation-count";
 
 export const metadata = {
   title: "Transações - Painel Criativa",
@@ -35,9 +36,14 @@ const TransactionsPage = async () => {
   });
   const userTeams = await getUserTeams();
   const isAdmin = await userAdmin();
+  const invitationCount = await getInvitationCount();
   return (
     <SidebarProvider>
-      <AppSidebar userTeams={userTeams} isAdmin={isAdmin ?? false} />
+      <AppSidebar
+        userTeams={userTeams}
+        isAdmin={isAdmin ?? false}
+        invitationCount={invitationCount}
+      />
       <SidebarInset className="w-[100px] md:w-full">
         <header className="flex h-16 shrink-0 items-center gap-2">
           <div className="flex items-center gap-2 px-4">

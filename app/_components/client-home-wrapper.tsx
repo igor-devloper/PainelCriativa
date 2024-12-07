@@ -1,5 +1,6 @@
 "use client";
 export const revalidate = 0;
+export const dynamic = "force-dynamic";
 import {
   SidebarInset,
   SidebarProvider,
@@ -23,15 +24,21 @@ interface Team {
 interface ClientHomeWrapperProps {
   userTeams: Team[];
   isAdmin: boolean;
+  invitationCount: number;
 }
 
 export function ClientHomeWrapper({
   userTeams,
   isAdmin,
+  invitationCount,
 }: ClientHomeWrapperProps) {
   return (
     <SidebarProvider>
-      <AppSidebar userTeams={userTeams} isAdmin={isAdmin} />
+      <AppSidebar
+        userTeams={userTeams}
+        isAdmin={isAdmin}
+        invitationCount={invitationCount}
+      />
       <SidebarInset>
         <header className="flex h-14 shrink-0 items-center gap-2">
           <div className="flex flex-1 items-center gap-2 px-3">

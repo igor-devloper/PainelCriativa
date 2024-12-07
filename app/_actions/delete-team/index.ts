@@ -9,12 +9,6 @@ export const deleteTeam = async ({ teamId }: deleteTeamSchema) => {
     // Start a transaction
     await db.$transaction(async (tx) => {
       // Delete all related team members
-      await tx.teamMember.deleteMany({
-        where: {
-          teamId: teamId,
-        },
-      });
-
       // Delete all related transactions
       await tx.transaction.deleteMany({
         where: {

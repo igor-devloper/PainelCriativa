@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 export const revalidate = 0;
+export const dynamic = "force-dynamic";
 
 import { useState, useEffect } from "react";
 import { getBlockTransactions } from "@/app/_actions/get-block-transactions";
@@ -15,6 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/app/_components/ui/table";
+import { Badge } from "./ui/badge";
 
 interface BlockDetailsProps {
   block: {
@@ -62,7 +64,9 @@ export function BlockDetails({ block, isAdmin, teamId }: BlockDetailsProps) {
         </div>
         <div className="space-y-2">
           <h3 className="text-sm font-medium leading-none">Status</h3>
-          <p className="text-sm text-muted-foreground">{block.status}</p>
+          <Badge className="animate-pulse text-sm text-green-700">
+            {block.status}
+          </Badge>
         </div>
       </div>
       <AddTransactionButton

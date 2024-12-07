@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 export const revalidate = 0;
+export const dynamic = "force-dynamic";
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -29,6 +30,8 @@ import {
 import { Input } from "@/app/_components/ui/input";
 import { useToast } from "@/app/_hooks/use-toast";
 import { createBlock } from "@/app/_actions/create-block";
+import { revalidatePath } from "next/cache";
+import { useRouter } from "next/navigation";
 
 const blockFormSchema = z.object({
   name: z
@@ -43,6 +46,7 @@ type BlockFormValues = z.infer<typeof blockFormSchema>;
 
 export function CreateBlockDialog({ teamId }: { teamId: string }) {
   const [open, setOpen] = useState(false);
+  const router = useRouter();
   const { toast } = useToast();
 
   const form = useForm<BlockFormValues>({
@@ -63,6 +67,8 @@ export function CreateBlockDialog({ teamId }: { teamId: string }) {
       });
       setOpen(false);
       form.reset();
+      router.push(`/teams/${teamId}`);
+      router.refresh();
     } catch (error) {
       toast({
         variant: "destructive",

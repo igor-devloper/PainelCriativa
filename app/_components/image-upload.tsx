@@ -1,5 +1,5 @@
 export const revalidate = 0;
-
+export const dynamic = "force-dynamic";
 import { FileImage, X } from "lucide-react";
 import Image from "next/image";
 import { useCallback } from "react";

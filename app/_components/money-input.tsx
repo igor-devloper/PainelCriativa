@@ -1,4 +1,5 @@
 export const revalidate = 0;
+export const dynamic = "force-dynamic";
 
 import React, { forwardRef } from "react";
 import { NumericFormat, NumericFormatProps } from "react-number-format";

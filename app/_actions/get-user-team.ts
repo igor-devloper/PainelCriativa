@@ -1,7 +1,18 @@
+import { revalidatePath } from "next/cache";
+
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/app/_lib/prisma";
-import { Team } from "@/app/types/team";
-// import { revalidatePath } from "next/cache";
+
+type Team = {
+  id: string;
+  name: string;
+  adminId: string;
+  createdAt: Date;
+  updatedAt: Date;
+  _count: {
+    members: number;
+  };
+};
 
 export async function getUserTeams(): Promise<Team[]> {
   const { userId } = auth();
@@ -28,6 +39,9 @@ export async function getUserTeams(): Promise<Team[]> {
       },
     },
   });
+
+  // Adiciona revalidação para o caminho das equipes
+  revalidatePath("/teams");
 
   return userTeams.map((team) => ({
     id: team.id,

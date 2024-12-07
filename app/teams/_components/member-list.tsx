@@ -1,4 +1,5 @@
 export const revalidate = 0;
+export const dynamic = "force-dynamic";
 
 import { getTeamMembers } from "@/app/_actions/get-team-members";
 import {

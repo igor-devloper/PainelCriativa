@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 export const revalidate = 0;
-
+export const dynamic = "force-dynamic";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -60,13 +60,22 @@ export function InviteMemberDialog({ teamId }: { teamId: string }) {
         setOpen(false);
         form.reset();
       } else {
-        toast({
-          variant: "destructive",
-          title: "Erro",
-          description:
-            result.message ||
-            "Não foi possível enviar o convite. Tente novamente.",
-        });
+        if (result.message === "O usuário já faz parte de uma equipe.") {
+          toast({
+            variant: "destructive",
+            title: "Erro",
+            description:
+              "O usuário já faz parte de uma equipe e não pode ser convidado para outra.",
+          });
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Erro",
+            description:
+              result.message ||
+              "Não foi possível enviar o convite. Tente novamente.",
+          });
+        }
       }
     } catch (error) {
       toast({
