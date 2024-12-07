@@ -2,9 +2,8 @@
 
 import { db } from "@/app/_lib/prisma";
 import { deleteBlockSchema } from "./schema";
-import { revalidatePath } from "next/cache";
 
-export const deleteBlock = async ({ blockId, teamId }: deleteBlockSchema) => {
+export const deleteBlock = async ({ blockId }: deleteBlockSchema) => {
   try {
     // Start a transaction
     await db.$transaction(async (tx) => {
@@ -15,7 +14,6 @@ export const deleteBlock = async ({ blockId, teamId }: deleteBlockSchema) => {
       });
     });
 
-    revalidatePath(`/team/${teamId}`);
     return { success: true };
   } catch (error) {
     console.error("Failed to delete team:", error);

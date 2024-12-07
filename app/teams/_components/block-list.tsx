@@ -48,13 +48,12 @@ export function BlockList({ teamId, isAdmin }: BlockListProps) {
     try {
       await deleteBlock({
         blockId: blockId,
-        teamId: teamId,
       });
 
       toast({
         title: "Block Deletado",
         description: "O block de prestação de conta foi excluído com sucesso.",
-        variant: "destructive",
+        variant: "default",
       });
     } catch (error) {
       console.error("Error deleting team:", error);
