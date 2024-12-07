@@ -48,6 +48,7 @@ export function BlockList({ teamId, isAdmin }: BlockListProps) {
     try {
       await deleteBlock({
         blockId: blockId,
+        teamId: teamId,
       });
 
       toast({

@@ -8,31 +8,18 @@ import {
   TransactionCategory,
   TransactionPaymentMethod,
   TransactionType,
+  BlockStatus,
 } from "@prisma/client";
 import { upsertTransactionSchema } from "./schema";
 import { revalidatePath } from "next/cache";
 import { sendDepositNotificationEmail } from "@/app/_lib/send-email";
 
 // Cloudinary configuration
-if (
-  !process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ||
-  !process.env.CLOUDINARY_API_KEY ||
-  !process.env.CLOUDINARY_API_SECRET
-) {
-  console.error("Cloudinary credentials are missing");
-  throw new Error("Server configuration error");
-}
-
-try {
-  cloudinary.config({
-    cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-  });
-} catch (error) {
-  console.error("Error configuring Cloudinary:", error);
-  throw new Error("Server configuration error");
-}
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 interface UpsertTransactionParams {
   userId?: string;
@@ -62,47 +49,75 @@ export const upsertTransaction = async (params: UpsertTransactionParams) => {
     let imageUrls: string[] = [];
 
     if (params.imagesBase64 && params.imagesBase64.length > 0) {
-      try {
-        const uploadPromises = params.imagesBase64.map(async (base64Image) => {
-          const imageData = base64Image.startsWith("data:image")
-            ? base64Image
-            : `data:image/jpeg;base64,${base64Image}`;
-
-          const uploadResult = await cloudinary.uploader.upload(imageData, {
-            folder: "transactions",
-            resource_type: "image",
+      const uploadedImages = await Promise.all(
+        params.imagesBase64.map(async (imageBase64) => {
+          const response = await cloudinary.uploader.upload(imageBase64, {
+            upload_preset: "ml_default",
           });
-
-          return uploadResult.secure_url;
-        });
-
-        imageUrls = await Promise.all(uploadPromises);
-      } catch (error) {
-        console.error("Error uploading images:", error);
-        throw new Error("Unable to upload images. Please try again.");
-      }
+          return response.secure_url;
+        }),
+      );
+      imageUrls = uploadedImages;
     }
 
-    const transaction = await db.transaction.upsert({
-      update: {
-        ...filterParams(params),
-        imageUrl: imageUrls,
-      },
-      create: {
-        ...filterParams(params),
-        imageUrl: imageUrls,
-        userId,
-      },
-      where: {
-        id: params?.id ?? "",
-      },
+    const result = await db.$transaction(async (tx) => {
+      // Get the current block
+      const block = await tx.block.findUnique({
+        where: { id: params.blockId },
+        include: { team: true },
+      });
+
+      if (!block) {
+        throw new Error("Block not found");
+      }
+
+      // Calculate the new block amount
+      const amountChange =
+        params.type === TransactionType.EXPENSE
+          ? -params.amount
+          : params.amount;
+      const newBlockAmount = Number(block.amount) + amountChange;
+
+      if (newBlockAmount < 0) {
+        throw new Error("Insufficient funds in the block");
+      }
+
+      // Create or update the transaction
+      const transaction = await tx.transaction.upsert({
+        update: {
+          ...filterParams(params),
+          imageUrl: imageUrls,
+        },
+        create: {
+          ...filterParams(params),
+          imageUrl: imageUrls,
+          userId,
+        },
+        where: {
+          id: params?.id ?? "",
+        },
+      });
+
+      // Update the block
+      const updatedBlock = await tx.block.update({
+        where: { id: params.blockId },
+        data: {
+          amount: newBlockAmount,
+          status: newBlockAmount === 0 ? BlockStatus.CLOSED : block.status,
+        },
+      });
+
+      return { transaction, updatedBlock };
     });
 
-    await sendDepositNotificationEmail(transaction);
+    // If the block is now closed, send an email
+    if (result.updatedBlock.status === BlockStatus.CLOSED) {
+      await sendDepositNotificationEmail(result.transaction);
+    }
 
     revalidatePath("/transactions");
     revalidatePath("/admin");
-    return transaction;
+    return result.transaction;
   } catch (error) {
     console.error("Error in upsertTransaction:", error);
     throw error; // Re-throw the error to be handled by the client

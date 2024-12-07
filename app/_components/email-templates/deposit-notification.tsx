@@ -1,111 +1,102 @@
-import * as React from "react";
+import { Transaction, Block } from "@prisma/client";
 import {
-  TransactionType,
-  TransactionCategory,
-  TransactionPaymentMethod,
-} from "@prisma/client";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { Decimal } from "@prisma/client/runtime/library";
-import {
-  TRANSACTION_PAYMENT_METHOD_LABELS,
-  TRANSACTION_TYPE_OPTIONS_LABELS,
-} from "@/app/_constants/transactions";
+  Body,
+  Container,
+  Head,
+  Heading,
+  Html,
+  Preview,
+  Section,
+  Text,
+} from "@react-email/components";
+import { TRANSACTION_TYPE_OPTIONS_LABELS } from "../../_constants/transactions";
 
-interface DepositEmailProps {
-  transaction: {
-    name: string;
-    id: string;
-    description: string | null;
-    type: TransactionType;
-    amount: Decimal;
-    category: TransactionCategory;
-    paymentMethod: TransactionPaymentMethod;
-    date: Date;
-    imageUrl: string[];
-    userId: string;
-    createdAt: Date;
-    updatedAt: Date;
-  };
+interface DepositNotificationEmailProps {
+  transaction: Transaction;
+  block?: Block;
 }
 
-export const DepositNotificationEmail: React.FC<DepositEmailProps> = ({
-  transaction,
-}) => (
-  <div
-    style={{
-      fontFamily: "Arial, sans-serif",
-      maxWidth: "600px",
-      margin: "0 auto",
-      color: "#333",
-    }}
-  >
-    <div style={{ textAlign: "center", marginBottom: "20px" }}>
-      <img
-        src="https://cdn.discordapp.com/attachments/793229166962802719/1312641712681648158/logo_Criativa-removebg-preview-raio.png?ex=674d3c5c&is=674beadc&hm=d7338fe91de2f42c048a6b5dc15c9d2f81ac44231390cd4267af61273f4a38a0&.png"
-        alt="Logo"
-        style={{ maxWidth: "150px" }}
-      />
-    </div>
-    <h1 style={{ textAlign: "center", color: "#4CAF50" }}>
-      Novo(a) {TRANSACTION_TYPE_OPTIONS_LABELS[transaction.type]} Realizado(a)
-    </h1>
-    <p style={{ textAlign: "center" }}>
-      Um(a) novo(a) {TRANSACTION_TYPE_OPTIONS_LABELS[transaction.type]} foi
-      registrado(a) no site Painel Criativa.
-    </p>
-    <div
-      style={{
-        margin: "20px 0",
-        padding: "20px",
-        backgroundColor: "#f9f9f9",
-        borderRadius: "5px",
-      }}
-    >
-      <ul style={{ listStyle: "none", padding: 0, lineHeight: "1.6" }}>
-        <li>
-          <strong>Valor:</strong> R${" "}
-          {Number(transaction.amount.toFixed()).toFixed(2)}
-        </li>
-        <li>
-          <strong>Nome:</strong> {transaction.name}
-        </li>
-        <li>
-          <strong>Descrição:</strong>{" "}
-          {transaction.description || "Não informada"}
-        </li>
-        <li>
-          <strong>Categoria:</strong>{" "}
-          {TRANSACTION_PAYMENT_METHOD_LABELS[transaction.paymentMethod]}
-        </li>
-        <li>
-          <strong>Método de Pagamento:</strong>{" "}
-          {transaction.paymentMethod.replace("_", " ")}
-        </li>
-        <li>
-          <strong>Data:</strong>{" "}
-          {format(transaction.date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-        </li>
-      </ul>
-    </div>
-    <div style={{ textAlign: "center", marginTop: "20px" }}>
-      <a
-        href="https://painel-criativa.vercel.app/admin"
-        style={{
-          display: "inline-block",
-          padding: "10px 20px",
-          backgroundColor: "#4CAF50",
-          color: "#fff",
-          textDecoration: "none",
-          borderRadius: "5px",
-          fontWeight: "bold",
-        }}
-      >
-        Acessar Administração
-      </a>
-    </div>
-    <p style={{ textAlign: "center", marginTop: "20px" }}>
-      Obrigado por usar nosso serviço!
-    </p>
-  </div>
-);
+export const DepositNotificationEmail: React.FC<
+  DepositNotificationEmailProps
+> = ({ transaction, block }) => {
+  const previewText = block
+    ? `O bloco ${block.name} foi fechado e requer validação da prestação de contas.`
+    : `Nova transação: ${TRANSACTION_TYPE_OPTIONS_LABELS[transaction.type]}`;
+
+  return (
+    <Html>
+      <Head />
+      <Preview>{previewText}</Preview>
+      <Body style={main}>
+        <Container style={container}>
+          <Heading style={h1}>
+            {block ? "Notificação de Fechamento de Bloco" : "Nova Transação"}
+          </Heading>
+          <Section style={boxInfos}>
+            <Text style={paragraph}>
+              <strong>Tipo:</strong>{" "}
+              {TRANSACTION_TYPE_OPTIONS_LABELS[transaction.type]}
+            </Text>
+            <Text style={paragraph}>
+              <strong>Valor:</strong> R$ {Number(transaction.amount).toFixed(2)}
+            </Text>
+            <Text style={paragraph}>
+              <strong>Descrição:</strong> {transaction.description}
+            </Text>
+            {block && (
+              <Text style={paragraph}>
+                <strong>Bloco:</strong> {block.name}
+              </Text>
+            )}
+          </Section>
+          {block && (
+            <>
+              <Text style={paragraph}>
+                É necessário validar a prestação de contas para este bloco. Por
+                favor, acesse o painel administrativo para revisar e aprovar as
+                transações.
+              </Text>
+              <Text style={paragraph}>
+                Lembre-se de verificar todos os documentos e comprovantes
+                associados a este bloco antes de aprovar a prestação de contas.
+              </Text>
+            </>
+          )}
+        </Container>
+      </Body>
+    </Html>
+  );
+};
+
+const main = {
+  backgroundColor: "#ffffff",
+  fontFamily:
+    '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif',
+};
+
+const container = {
+  margin: "0 auto",
+  padding: "20px 0 48px",
+  width: "560px",
+};
+
+const h1 = {
+  color: "#333",
+  fontSize: "24px",
+  fontWeight: "bold",
+  padding: "17px 0 0",
+  margin: "0 0 20px",
+};
+
+const paragraph = {
+  color: "#333",
+  fontSize: "14px",
+  lineHeight: "24px",
+};
+
+const boxInfos = {
+  backgroundColor: "#f5f5f5",
+  borderRadius: "4px",
+  padding: "20px",
+  margin: "20px 0",
+};
