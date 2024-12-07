@@ -78,7 +78,7 @@ export function BlockList({ teamId, isAdmin }: BlockListProps) {
       {blocks.map((block) => (
         <Sheet key={block.id}>
           <SheetTrigger asChild>
-            <Card className="flex cursor-pointer flex-col items-center justify-center transition-all duration-300 hover:shadow-lg">
+            <Card className="flex cursor-pointer flex-col items-center transition-all duration-300 hover:shadow-lg">
               <CardHeader className="flex w-full flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-base font-bold">
                   {block.name}
@@ -92,7 +92,7 @@ export function BlockList({ teamId, isAdmin }: BlockListProps) {
                 <p className="text-xs text-muted-foreground">
                   Valor Disponível
                 </p>
-                <div className="mt-4 flex items-center justify-between gap-4">
+                <div className="mt-4 flex w-full items-center justify-between gap-4">
                   <span className="text-sm font-medium">Ver detalhes</span>
                   <ArrowRight size={16} className="text-muted-foreground" />
                   <DropdownMenu>
