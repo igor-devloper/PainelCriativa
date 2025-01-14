@@ -3,6 +3,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/app/_lib/prisma";
 import { revalidatePath } from "next/cache";
+import { ExpenseCategory, PaymentMethod } from "@prisma/client";
 
 export async function createExpense(blockId: string, formData: FormData) {
   const { userId } = auth();
@@ -11,8 +12,8 @@ export async function createExpense(blockId: string, formData: FormData) {
   const name = formData.get("name") as string;
   const description = formData.get("description") as string;
   const amount = formData.get("amount") as string;
-  const category = formData.get("category") as string;
-  const paymentMethod = formData.get("paymentMethod") as string;
+  const category = formData.get("category") as ExpenseCategory;
+  const paymentMethod = formData.get("paymentMethod") as PaymentMethod;
   const date = formData.get("date") as string;
   const imageUrls = formData.getAll("imageUrls") as string[];
 
