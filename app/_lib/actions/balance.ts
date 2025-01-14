@@ -43,7 +43,7 @@ export async function registerExpense(
   if (block.request?.userId !== userId) throw new Error("Unauthorized");
 
   const expenseAmount = new Decimal(expenseData.amount.toString());
-  const currentBalance = new Decimal(block.request?.currentBalance.toString());
+  const currentBalance = new Decimal(block.request.currentBalance.toString());
   const newBalance = currentBalance.minus(expenseAmount);
 
   await db.$transaction([
@@ -61,7 +61,7 @@ export async function registerExpense(
       },
     }),
     db.request.update({
-      where: { id: block.request?.id },
+      where: { id: block.request.id },
       data: {
         currentBalance: newBalance,
       },
@@ -69,6 +69,77 @@ export async function registerExpense(
   ]);
 
   revalidatePath("/accounting");
+}
+
+export async function closeAccountingBlock(blockId: string) {
+  const { userId } = auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  try {
+    const result = await db.$transaction(async (tx) => {
+      // Fetch the block with its request and expenses
+      const block = await tx.accountingBlock.findUnique({
+        where: { id: blockId },
+        include: { request: true, expenses: true },
+      });
+
+      if (!block) throw new Error("Block not found");
+      if (block.status !== "OPEN") throw new Error("Block is already closed");
+      if (block.request?.userId !== userId) throw new Error("Unauthorized");
+
+      // Calculate the total expenses
+      const totalExpenses = block.expenses.reduce(
+        (sum, expense) => sum.plus(expense.amount),
+        new Decimal(0),
+      );
+
+      // Calculate the remaining balance
+      const remainingBalance = new Decimal(block.request.amount).minus(
+        totalExpenses,
+      );
+
+      // Update the block status
+      await tx.accountingBlock.update({
+        where: { id: blockId },
+        data: { status: "CLOSED" },
+      });
+
+      // Update the request status
+      await tx.request.update({
+        where: { id: block.request.id },
+        data: { status: "COMPLETED", currentBalance: 0 },
+      });
+
+      // Update the user's balance
+      const userBalance = await tx.userBalance.findUnique({
+        where: { userId },
+      });
+
+      if (userBalance) {
+        await tx.userBalance.update({
+          where: { userId },
+          data: {
+            balance: userBalance.balance.plus(remainingBalance),
+          },
+        });
+      } else {
+        await tx.userBalance.create({
+          data: {
+            userId,
+            balance: remainingBalance,
+          },
+        });
+      }
+
+      return { remainingBalance: remainingBalance.toNumber() };
+    });
+
+    revalidatePath("/accounting");
+    return result;
+  } catch (error) {
+    console.error("Error closing accounting block:", error);
+    throw new Error("Failed to close accounting block");
+  }
 }
 
 export async function createNewRequest(requestData: {
