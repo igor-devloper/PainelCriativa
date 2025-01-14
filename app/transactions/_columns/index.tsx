@@ -9,6 +9,7 @@ import {
   EXPENSE_STATUS_LABELS,
 } from "@/app/_constants/transactions";
 import { Badge } from "@/app/_components/ui/badge";
+import { ImageGallery } from "../_components/image-gallery";
 
 export type Expense = {
   id: string;
@@ -61,6 +62,14 @@ export const expenseColumns: ColumnDef<Expense>[] = [
     cell: ({ row }) => {
       const method = row.getValue("paymentMethod") as PaymentMethod;
       return PAYMENT_METHOD_LABELS[method];
+    },
+  },
+  {
+    accessorKey: "imageUrls",
+    header: "Comprovantes",
+    cell: ({ row }) => {
+      const imageUrls = row.getValue("imageUrls") as string[];
+      return <ImageGallery images={imageUrls} />;
     },
   },
   {

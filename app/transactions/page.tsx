@@ -2,7 +2,7 @@ export const revalidate = 0;
 
 import { db } from "@/app/_lib/prisma";
 import { DataTable } from "@/app/_components/ui/data-table";
-import { expenseColumns } from "./_columns";
+import { expenseColumns } from "@/app/transactions/_columns";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { ScrollArea, ScrollBar } from "@/app/_components/ui/scroll-area";
