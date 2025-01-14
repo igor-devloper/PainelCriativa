@@ -1,48 +1,62 @@
 export const revalidate = 0;
-import { db } from "../_lib/prisma";
-import { DataTable } from "../_components/ui/data-table";
-import { transactionColumns } from "./_columns";
-import { auth } from "@clerk/nextjs/server";
+
+import { db } from "@/app/_lib/prisma";
+import { DataTable } from "@/app/_components/ui/data-table";
+import { expenseColumns } from "./_columns";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { ScrollArea, ScrollBar } from "../_components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/app/_components/ui/scroll-area";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
-} from "../_components/ui/sidebar";
-import { AppSidebar } from "../_components/app-sidebar";
-import { Separator } from "../_components/ui/separator";
-import { HandCoins } from "lucide-react";
-import { getUserTeams } from "../_actions/get-user-team";
-import { userAdmin } from "../_data/user-admin";
-import { getInvitationCount } from "../_actions/get-invitation-count";
+} from "@/app/_components/ui/sidebar";
+import { AppSidebar } from "@/app/_components/app-sidebar";
+import { Separator } from "@/app/_components/ui/separator";
+import { Receipt } from "lucide-react";
+import { getUserRole } from "../_lib/utils";
+import { getPendingRequestsCount } from "../_actions/get-pending-requests-count";
 
 export const metadata = {
-  title: "Transações - Painel Criativa",
+  title: "Despesas - Painel Criativa",
 };
 
-const TransactionsPage = async () => {
-  const { userId } = await auth();
+const ExpensesPage = async () => {
+  const { userId } = auth();
   if (!userId) {
     redirect("/login");
   }
-  const transactions = await db.transaction.findMany({
+
+  const expenses = await db.expense.findMany({
     where: {
       userId,
     },
     orderBy: {
       date: "desc",
     },
+    include: {
+      block: {
+        select: {
+          code: true,
+          request: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
+    },
   });
-  const userTeams = await getUserTeams();
-  const isAdmin = await userAdmin();
-  const invitationCount = await getInvitationCount();
+
+  const user = await clerkClient.users.getUser(userId);
+  const userRole = getUserRole(user.publicMetadata);
+  const pendingRequestsCount = await getPendingRequestsCount();
+
   return (
     <SidebarProvider>
       <AppSidebar
-        userTeams={userTeams}
-        isAdmin={isAdmin ?? false}
-        invitationCount={invitationCount}
+        pendingRequestsCount={pendingRequestsCount}
+        userRole={userRole}
       />
       <SidebarInset className="w-[100px] md:w-full">
         <header className="flex h-16 shrink-0 items-center gap-2">
@@ -54,17 +68,16 @@ const TransactionsPage = async () => {
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
           <ScrollArea className="max-h-[600px]">
             <div className="flex w-[350px] flex-col space-y-6 overflow-hidden p-6 pb-10 pr-10 md:w-full">
-              {/* TÍTULO E BOTÃO */}
               <div className="flex justify-between">
                 <div className="flex h-16 items-center gap-4 px-4">
-                  <HandCoins className="h-6 w-6" />
-                  <h1 className="text-xl font-semibold">Suas Transações</h1>
+                  <Receipt className="h-6 w-6" />
+                  <h1 className="text-xl font-semibold">Suas Despesas</h1>
                 </div>
               </div>
               <ScrollArea className="h-full">
                 <DataTable
-                  columns={transactionColumns}
-                  data={JSON.parse(JSON.stringify(transactions))}
+                  columns={expenseColumns}
+                  data={JSON.parse(JSON.stringify(expenses))}
                 />
                 <ScrollBar orientation="horizontal" />
               </ScrollArea>
@@ -77,6 +90,4 @@ const TransactionsPage = async () => {
   );
 };
 
-export default TransactionsPage;
-
-// ({ isAdmin: isAdmin ?? false })
+export default ExpensesPage;

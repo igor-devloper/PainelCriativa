@@ -14,7 +14,7 @@ const mulish = Mulish({
 
 export const metadata: Metadata = {
   title: "Painel Criativa",
-  description: "Painel de prestação de contas",
+  description: "Painel de solicitações e prestação de contas",
   icons: {
     icon: [
       { rel: "icon", url: "/logo.png" },
@@ -48,7 +48,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="pt-BR">
       <body className={`${mulish.className} antialiased`}>
         <ClerkProvider
           appearance={{

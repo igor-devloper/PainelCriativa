@@ -3,20 +3,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import UpsertTransactionAdminDialog from "@/app/_components/upsert-transaction-dialog";
-import { getBlockTransactions } from "@/app/_actions/get-block-transactions";
-import {
-  updateTransactionStatus,
-  updateBlockStatus,
-} from "@/app/_actions/update-statuses";
-import {
-  Block,
-  Transaction,
-  BlockStatus,
-  TransactionStatus,
-  Team,
-} from "@prisma/client";
-import { User } from "@clerk/nextjs/server";
+import UpsertTransactionAdminDialog from "@/app/_components/upsert-expense-dialog";
+// import { getBlockTransactions } from "@/app/_actions/get-block-transactions";
+// import {
+//   updateTransactionStatus,
+//   updateBlockStatus,
+// } from "@/app/_actions/update-statuses";
+// import {
+//   Block,
+//   Transaction,
+//   BlockStatus,
+//   TransactionStatus,
+//   Team,
+// } from "@prisma/client";
+import { auth, clerkClient, User } from "@clerk/nextjs/server";
 import {
   SidebarInset,
   SidebarProvider,
@@ -72,138 +72,134 @@ import UserInfo from "@/app/_components/user-info";
 import { ImageGallery } from "@/app/transactions/_components/image-gallery";
 import { Separator } from "@/app/_components/ui/separator";
 import { ScrollArea, ScrollBar } from "@/app/_components/ui/scroll-area";
+import { getUserRole } from "@/app/_lib/utils";
+import { getPendingRequestsCount } from "@/app/_actions/get-pending-requests-count";
+import { redirect } from "next/navigation";
+import Link from "next/link";
 
-interface TransactionWithUser extends Transaction {
-  clerkUser?: User;
+interface AdmProps {
+  userRole: "ADMIN" | "FINANCE" | "USER";
+  pendingRequestsCount: number;
 }
 
-interface AdminDashboardClientProps {
-  initialBlocks: Block[];
-  initialUserTeams: Team[];
-  initialIsAdmin: boolean;
-  initialInvitationCount: number;
-}
+export async function AdminDashboardClient({
+  pendingRequestsCount,
+  userRole,
+}: AdmProps) {
+  // const [isDialogOpen, setIsDialogOpen] = useState(false);
+  // const [selectedBlock, setSelectedBlock] = useState<string | null>(null);
+  // const [blocks, setBlocks] = useState<Block[]>(initialBlocks);
+  // const [transactions, setTransactions] = useState<{
+  //   [blockId: string]: TransactionWithUser[];
+  // }>({});
+  // const [balances, setBalances] = useState<{ [blockId: string]: number }>({});
+  // const [isLoading, setIsLoading] = useState(false);
 
-export function AdminDashboardClient({
-  initialBlocks,
-  initialUserTeams,
-  initialIsAdmin,
-  initialInvitationCount,
-}: AdminDashboardClientProps) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedBlock, setSelectedBlock] = useState<string | null>(null);
-  const [blocks, setBlocks] = useState<Block[]>(initialBlocks);
-  const [transactions, setTransactions] = useState<{
-    [blockId: string]: TransactionWithUser[];
-  }>({});
-  const [balances, setBalances] = useState<{ [blockId: string]: number }>({});
-  const [isLoading, setIsLoading] = useState(false);
+  // useEffect(() => {
+  //   initialBlocks.forEach((block) => {
+  //     fetchBlockTransactions(block.id);
+  //   });
+  // }, [initialBlocks]);
 
-  useEffect(() => {
-    initialBlocks.forEach((block) => {
-      fetchBlockTransactions(block.id);
-    });
-  }, [initialBlocks]);
+  // const fetchBlockTransactions = async (blockId: string) => {
+  //   try {
+  //     const fetchedTransactions = await getBlockTransactions(blockId);
+  //     setTransactions((prev) => ({ ...prev, [blockId]: fetchedTransactions }));
+  //     const spent = fetchedTransactions.reduce(
+  //       (total, t) => total + Number(t.amount),
+  //       0,
+  //     );
+  //     setBalances((prev) => ({
+  //       ...prev,
+  //       [blockId]: Number(blocks.find((b) => b.id === blockId)?.amount) - spent,
+  //     }));
+  //   } catch (error) {
+  //     console.error(
+  //       `Failed to fetch transactions for block ${blockId}:`,
+  //       error,
+  //     );
+  //     toast({
+  //       title: "Erro",
+  //       description:
+  //         "Falha ao carregar as transações. Por favor, tente novamente.",
+  //       variant: "destructive",
+  //     });
+  //   }
+  // };
 
-  const fetchBlockTransactions = async (blockId: string) => {
-    try {
-      const fetchedTransactions = await getBlockTransactions(blockId);
-      setTransactions((prev) => ({ ...prev, [blockId]: fetchedTransactions }));
-      const spent = fetchedTransactions.reduce(
-        (total, t) => total + Number(t.amount),
-        0,
-      );
-      setBalances((prev) => ({
-        ...prev,
-        [blockId]: Number(blocks.find((b) => b.id === blockId)?.amount) - spent,
-      }));
-    } catch (error) {
-      console.error(
-        `Failed to fetch transactions for block ${blockId}:`,
-        error,
-      );
-      toast({
-        title: "Erro",
-        description:
-          "Falha ao carregar as transações. Por favor, tente novamente.",
-        variant: "destructive",
-      });
-    }
-  };
+  // const handleStatusChange = async (
+  //   transactionId: string,
+  //   newStatus: TransactionStatus,
+  // ) => {
+  //   setIsLoading(true);
+  //   try {
+  //     const result = await updateTransactionStatus(transactionId, newStatus);
+  //     if (result.success) {
+  //       setTransactions((prev) => {
+  //         const updatedTransactions = { ...prev };
+  //         Object.keys(updatedTransactions).forEach((blockId) => {
+  //           updatedTransactions[blockId] = updatedTransactions[blockId].map(
+  //             (t) => (t.id === transactionId ? { ...t, status: newStatus } : t),
+  //           );
+  //         });
+  //         return updatedTransactions;
+  //       });
+  //       toast({
+  //         title: "Sucesso",
+  //         description: "Status da transação atualizado com sucesso.",
+  //       });
+  //     } else {
+  //       throw new Error(result.error);
+  //     }
+  //   } catch (error) {
+  //     console.error("Failed to update transaction status:", error);
+  //     toast({
+  //       title: "Erro",
+  //       description:
+  //         "Falha ao atualizar o status da transação. Por favor, tente novamente.",
+  //       variant: "destructive",
+  //     });
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
-  const handleStatusChange = async (
-    transactionId: string,
-    newStatus: TransactionStatus,
-  ) => {
-    setIsLoading(true);
-    try {
-      const result = await updateTransactionStatus(transactionId, newStatus);
-      if (result.success) {
-        setTransactions((prev) => {
-          const updatedTransactions = { ...prev };
-          Object.keys(updatedTransactions).forEach((blockId) => {
-            updatedTransactions[blockId] = updatedTransactions[blockId].map(
-              (t) => (t.id === transactionId ? { ...t, status: newStatus } : t),
-            );
-          });
-          return updatedTransactions;
-        });
-        toast({
-          title: "Sucesso",
-          description: "Status da transação atualizado com sucesso.",
-        });
-      } else {
-        throw new Error(result.error);
-      }
-    } catch (error) {
-      console.error("Failed to update transaction status:", error);
-      toast({
-        title: "Erro",
-        description:
-          "Falha ao atualizar o status da transação. Por favor, tente novamente.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // const handleBlockStatusChange = async (
+  //   blockId: string,
+  //   newStatus: BlockStatus,
+  // ) => {
+  //   setIsLoading(true);
+  //   try {
+  //     const result = await updateBlockStatus(blockId, newStatus);
+  //     if (result.success) {
+  //       setBlocks((prev) =>
+  //         prev.map((b) => (b.id === blockId ? { ...b, status: newStatus } : b)),
+  //       );
+  //       toast({
+  //         title: "Sucesso",
+  //         description: "Status do bloco atualizado com sucesso.",
+  //       });
+  //     } else {
+  //       throw new Error(result.error);
+  //     }
+  //   } catch (error) {
+  //     console.error("Failed to update block status:", error);
+  //     toast({
+  //       title: "Erro",
+  //       description:
+  //         "Falha ao atualizar o status do bloco. Por favor, tente novamente.",
+  //       variant: "destructive",
+  //     });
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
-  const handleBlockStatusChange = async (
-    blockId: string,
-    newStatus: BlockStatus,
-  ) => {
-    setIsLoading(true);
-    try {
-      const result = await updateBlockStatus(blockId, newStatus);
-      if (result.success) {
-        setBlocks((prev) =>
-          prev.map((b) => (b.id === blockId ? { ...b, status: newStatus } : b)),
-        );
-        toast({
-          title: "Sucesso",
-          description: "Status do bloco atualizado com sucesso.",
-        });
-      } else {
-        throw new Error(result.error);
-      }
-    } catch (error) {
-      console.error("Failed to update block status:", error);
-      toast({
-        title: "Erro",
-        description:
-          "Falha ao atualizar o status do bloco. Por favor, tente novamente.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
   return (
     <SidebarProvider>
       <AppSidebar
-        userTeams={initialUserTeams}
-        invitationCount={initialInvitationCount}
-        isAdmin={initialIsAdmin}
+        userRole={userRole}
+        pendingRequestsCount={pendingRequestsCount}
       />
       <SidebarInset>
         <div className="flex min-h-screen flex-col">
@@ -215,10 +211,16 @@ export function AdminDashboardClient({
           </header>
           <ScrollArea>
             <main className="flex-1 space-y-4 p-8">
-              <div className="flex h-16 items-center gap-4 px-4">
-                <Package2 className="h-6 w-6" />
-                <h1 className="text-xl font-semibold">Dashboard Admin</h1>
+              <div>
+                <div className="flex h-16 items-center gap-4 px-4">
+                  <Package2 className="h-6 w-6" />
+                  <h1 className="text-xl font-semibold">Dashboard Admin</h1>
+                </div>
+                <Link href="/admin/users">
+                  <Button>Gerenciar Usuarios</Button>
+                </Link>
               </div>
+
               {/* <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="relative w-64">
@@ -243,7 +245,7 @@ export function AdminDashboardClient({
               </Button>
             </div> */}
 
-              <Card>
+              {/* <Card>
                 <CardHeader>
                   <CardTitle>Blocos de Transações</CardTitle>
                   <CardDescription>
@@ -419,18 +421,18 @@ export function AdminDashboardClient({
                     ))}
                   </Accordion>
                 </CardContent>
-              </Card>
+              </Card> */}
             </main>
             <ScrollBar orientation="vertical" />
           </ScrollArea>
 
-          <UpsertTransactionAdminDialog
+          {/* <UpsertTransactionAdminDialog
             onLoadingChange={setIsLoading}
             isOpen={isDialogOpen}
             setIsOpen={setIsDialogOpen}
             blockId={selectedBlock || ""}
             teamId={initialUserTeams[0]?.id || ""}
-          />
+          /> */}
         </div>
       </SidebarInset>
     </SidebarProvider>

@@ -1,7 +1,7 @@
 "use client";
 export const revalidate = 0;
 export const dynamic = "force-dynamic";
-import { Home, HandCoins, Settings, Users, Mail } from "lucide-react";
+import { Home, HandCoins, Settings, Siren, Wallet } from "lucide-react";
 import {
   Sidebar,
   SidebarFooter,
@@ -22,19 +22,19 @@ const defaultNavItems = [
     icon: Home,
   },
   {
-    title: "Times",
-    url: "/teams",
-    icon: Users,
+    title: "Solicitações",
+    url: "/requests",
+    icon: Siren,
   },
   {
-    title: "Transações",
-    url: "/transactions",
+    title: "Prestações de Contas",
+    url: "/accounting",
     icon: HandCoins,
   },
   {
-    title: "Convites",
-    url: "/invitations",
-    icon: Mail,
+    title: "Despesas",
+    url: "/transactions",
+    icon: Wallet,
   },
 ];
 
@@ -44,30 +44,23 @@ const adminNavItem = {
   icon: Settings,
 };
 
-interface Team {
-  id: string;
-  name: string;
-}
-
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
-  userTeams: Team[];
-  isAdmin: boolean;
-  invitationCount: number; // New prop for invitation count
+  userRole: "ADMIN" | "FINANCE" | "USER";
+  pendingRequestsCount: number;
 }
 
 export function AppSidebar({
-  isAdmin,
-  userTeams,
-  invitationCount,
+  userRole,
+  pendingRequestsCount,
   ...props
 }: AppSidebarProps) {
-  const navItems = isAdmin
-    ? [...defaultNavItems, adminNavItem]
-    : defaultNavItems;
+  const navItems =
+    userRole === "ADMIN" ? [...defaultNavItems, adminNavItem] : defaultNavItems;
 
-  // Update the "Convites" nav item to include the invitation count
   const updatedNavItems = navItems.map((item) =>
-    item.title === "Convites" ? { ...item, badgeCount: invitationCount } : item,
+    item.title === "Solicitações"
+      ? { ...item, badgeCount: pendingRequestsCount }
+      : item,
   );
 
   return (
@@ -91,7 +84,7 @@ export function AppSidebar({
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <ClientSidebarContent navItems={updatedNavItems} userTeams={userTeams} />
+      <ClientSidebarContent navItems={updatedNavItems} />
       <SidebarFooter className="mb-4 flex items-center justify-center">
         <UserButton
           showName={true}

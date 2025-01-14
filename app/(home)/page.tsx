@@ -1,11 +1,10 @@
 export const revalidate = 0;
 export const dynamic = "force-dynamic";
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { ClientHomeWrapper } from "@/app/_components/client-home-wrapper";
-import { getUserTeams } from "@/app/_actions/get-user-team";
-import { userAdmin } from "@/app/_data/user-admin";
-import { getInvitationCount } from "../_actions/get-invitation-count";
+import { getUserRole } from "@/app/_lib/utils";
+import { getPendingRequestsCount } from "@/app/_actions/get-pending-requests-count";
 
 export const metadata = {
   title: "Home - Painel Criativa",
@@ -18,17 +17,15 @@ export default async function Home() {
     redirect("/login");
   }
 
-  const [userTeams, isAdmin, invitationCount] = await Promise.all([
-    getUserTeams(),
-    userAdmin(),
-    getInvitationCount(),
-  ]);
+  const user = await clerkClient.users.getUser(userId);
+  const userRole = getUserRole(user.publicMetadata);
+  const pendingRequestsCount = await getPendingRequestsCount();
 
   return (
     <ClientHomeWrapper
-      userTeams={userTeams}
-      isAdmin={isAdmin ?? false}
-      invitationCount={invitationCount}
+      userId={userId}
+      userRole={userRole}
+      pendingRequestsCount={pendingRequestsCount}
     />
   );
 }

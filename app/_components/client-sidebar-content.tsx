@@ -12,9 +12,6 @@ import {
   SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
 } from "@/app/_components/ui/sidebar";
 
 interface NavItem {
@@ -24,20 +21,11 @@ interface NavItem {
   badgeCount?: number; // New property for badge count
 }
 
-interface Team {
-  id: string;
-  name: string;
-}
-
 interface ClientSidebarContentProps {
   navItems: NavItem[];
-  userTeams: Team[];
 }
 
-export function ClientSidebarContent({
-  navItems,
-  userTeams,
-}: ClientSidebarContentProps) {
+export function ClientSidebarContent({ navItems }: ClientSidebarContentProps) {
   const pathname = usePathname();
   const [isTeamsOpen, setIsTeamsOpen] = useState(true);
 
@@ -63,20 +51,6 @@ export function ClientSidebarContent({
                     }`}
                   />
                 </SidebarMenuButton>
-                {isTeamsOpen && (
-                  <SidebarMenuSub>
-                    {userTeams.map((team) => (
-                      <SidebarMenuSubItem key={team.id}>
-                        <SidebarMenuSubButton
-                          asChild
-                          isActive={pathname === `/teams/${team.id}`}
-                        >
-                          <Link href={`/teams/${team.id}`}>{team.name}</Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    ))}
-                  </SidebarMenuSub>
-                )}
               </>
             ) : (
               <SidebarMenuButton asChild isActive={pathname === item.url}>

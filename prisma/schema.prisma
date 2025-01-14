@@ -3,106 +3,106 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url  	    = env("DATABASE_URL")
-  // uncomment next line if you use Prisma <5.10
-  // directUrl = env("DATABASE_URL_UNPOOLED")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-model Team {
-  id           String          @id @default(cuid())
-  name         String
-  adminId      String          // ID do usuário Clerk que é o administrador
-  members      TeamMember[]
-  blocks       Block[]
-  transactions Transaction[]
-  invitations  TeamInvitation[]
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
+model Request {
+  id                    String           @id @default(cuid())
+  name                  String
+  description           String
+  amount                Decimal          @db.Decimal(10, 2)
+  status                RequestStatus    @default(WAITING)
+  userId                String
+  phoneNumber           String
+  financeId             String?
+  expectedDate          DateTime?
+  denialReason          String?
+  proofUrl              String?
+  accountingBlock       AccountingBlock?
+  currentBalance        Decimal          @db.Decimal(10, 2)
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  responsibleCompany    String
+  whatsappMessageId     String?
+  whatsappMessageStatus String?
+  whatsappMessageError  String?
 }
 
-model TeamMember {
-  id        String   @id @default(cuid())
-  userId    String   // ID do usuário Clerk
-  teamId    String
-  team      Team     @relation(fields: [teamId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([userId, teamId])
+model AccountingBlock {
+  id        String      @id @default(cuid())
+  code      String      @unique // Código sequencial (01-PRC, 02-PRC, etc)
+  requestId String      @unique
+  request   Request     @relation(fields: [requestId], references: [id])
+  status    BlockStatus @default(OPEN)
+  expenses  Expense[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 }
 
-model TeamInvitation {
-  id        String   @id @default(cuid())
-  email     String
-  teamId    String
-  token     String   @unique
-  expiresAt DateTime
-  team      Team     @relation(fields: [teamId], references: [id])
-
-  @@unique([email, teamId])
-}
-
-model Block {
-  id           String        @id @default(cuid())
-  name         String
-  amount       Float
-  status       BlockStatus   // Pode ser "OPEN", "CLOSED", "APPROVED", etc.
-  teamId       String
-  team         Team          @relation(fields: [teamId], references: [id])
-  transactions Transaction[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-}
-
-model Transaction {
-  id            String                   @id @default(uuid())
+model Expense {
+  id            String          @id @default(uuid())
   name          String
   description   String?
-  type          TransactionType
-  status        TransactionStatus?       @default(WAITING)     
-  amount        Decimal                  @db.Decimal(10, 2)
-  category      TransactionCategory
-  paymentMethod TransactionPaymentMethod
-  blockId       String   
-  block         Block                    @relation(fields: [blockId], references: [id])
-  teamId        String  
-  team          Team                     @relation(fields: [teamId], references: [id])
+  amount        Decimal         @db.Decimal(10, 2)
+  category      ExpenseCategory
+  paymentMethod PaymentMethod
+  blockId       String
+  block         AccountingBlock @relation(fields: [blockId], references: [id])
   date          DateTime
-  createdAt     DateTime                 @default(now())
-  updatedAt     DateTime                 @updatedAt
-  userId        String
-  imageUrl      String[]                 // Adiciona o campo para a URL da imagem
+  status        ExpenseStatus   @default(WAITING)
+  userId        String // ID do usuário Clerk que criou
+  imageUrls     String[] // URLs dos comprovantes
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 }
 
-enum TransactionType {
-  DEPOSIT
-  EXPENSE
-  REFUND
-} 
+model UserBalance {
+  id      String  @id @default(cuid())
+  userId  String  @unique
+  balance Decimal @default(0) @db.Decimal(10, 2)
+}
 
-enum TransactionStatus {
-  WAITING
-  FINISHED
-  REPROVED
-} 
+enum RequestStatus {
+  WAITING // Aguardando análise
+  RECEIVED // Recebida pelo financeiro
+  ACCEPTED // Aceita
+  DENIED // Não aceita
+  COMPLETED // Finalizada
+}
 
 enum BlockStatus {
   OPEN
   CLOSED
   APPROVED
-  REPROVED
-} 
-
-enum TransactionCategory {
-  FOOD
-  UTILITY
-  OTHER
-  GASOLINE
-  ADVANCE 
+  DENIED
 }
 
-enum TransactionPaymentMethod {
+enum ExpenseStatus {
+  WAITING
+  APPROVED
+  DENIED
+}
+
+enum ExpenseCategory {
+  FOODANDBEVERAGE
+  ACCOMMODATION
+  TOLL
+  FREIGHT
+  POSTAGE
+  PRINTING
+  FUEL
+  VEHICLERENTAL
+  TICKET
+  AIRTICKET
+  BUSTICKET
+  VEHICLEWASH
+  ADVANCE
+  SUPPLIES
+  OTHER
+}
+
+enum PaymentMethod {
   CREDIT_CARD
   DEBIT_CARD
   BANK_TRANSFER

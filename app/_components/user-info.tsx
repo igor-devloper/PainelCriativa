@@ -3,6 +3,7 @@ export const revalidate = 0;
 export const dynamic = "force-dynamic";
 
 import { useState, useEffect } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 interface UserInfoProps {
   userId: string;
@@ -50,7 +51,11 @@ export default function UserInfo({ userId }: UserInfoProps) {
 
   return (
     <div className="flex items-center space-x-2">
-      <span>
+      <span className="flex items-center justify-center gap-2">
+        <Avatar>
+          <AvatarImage src={userData.imageUrl} />
+          <AvatarFallback>CN</AvatarFallback>
+        </Avatar>
         {userData.firstName} {userData.lastName}
       </span>
     </div>

@@ -1,27 +1,32 @@
-export const revalidate = 0;
-export const dynamic = "force-dynamic";
+"use client";
 
-import React, { forwardRef } from "react";
+import { Input } from "@/app/_components/ui/input";
 import { NumericFormat, NumericFormatProps } from "react-number-format";
-import { Input, InputProps } from "./ui/input";
 
-export const MoneyInput = forwardRef(
-  (
-    props: NumericFormatProps<InputProps>,
-    ref: React.ForwardedRef<HTMLInputElement>,
-  ) => {
-    return (
-      <NumericFormat
-        {...props}
-        thousandSeparator="."
-        decimalSeparator=","
-        prefix="R$ "
-        allowNegative={false}
-        customInput={Input}
-        getInputRef={ref}
-      />
-    );
-  },
-);
+interface MoneyInputProps extends Omit<NumericFormatProps, "value"> {
+  value?: string | number;
+  onValueChange?: (values: { floatValue?: number }) => void;
+}
 
-MoneyInput.displayName = "MoneyInput";
+export function MoneyInput({
+  value,
+  onValueChange,
+  ...props
+}: MoneyInputProps) {
+  // Convert number to string if needed
+  const stringValue = typeof value === "number" ? value.toString() : value;
+
+  return (
+    <NumericFormat
+      customInput={Input}
+      value={stringValue}
+      thousandSeparator="."
+      decimalSeparator=","
+      prefix="R$ "
+      decimalScale={2}
+      fixedDecimalScale
+      onValueChange={onValueChange}
+      {...props}
+    />
+  );
+}
