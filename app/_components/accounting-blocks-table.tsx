@@ -50,12 +50,12 @@ export function AccountingBlocksTable({ blocks }: AccountingBlocksTableProps) {
               onClick={() => handleRowClick(block)}
             >
               <TableCell>{block.code}</TableCell>
-              <TableCell>{block.request.name}</TableCell>
+              <TableCell>{block.request?.name}</TableCell>
               <TableCell>{formatDate(block.createdAt)}</TableCell>
               <TableCell>
                 {formatCurrency(
-                  Number(block.request.amount) -
-                    Number(block.request.currentBalance),
+                  Number(block.request?.amount) -
+                    Number(block.request?.currentBalance),
                 )}
               </TableCell>
               <TableCell>

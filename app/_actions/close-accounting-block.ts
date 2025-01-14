@@ -31,7 +31,7 @@ export async function closeAccountingBlock(blockId: string) {
       new Prisma.Decimal(0),
     );
 
-    const remainingBalance = new Prisma.Decimal(block.request.amount).minus(
+    const remainingBalance = new Prisma.Decimal(block.request?.amount).minus(
       totalExpenses,
     );
 
