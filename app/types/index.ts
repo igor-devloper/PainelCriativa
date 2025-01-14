@@ -1,13 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Request as PrismaRequest,
   AccountingBlock as PrismaAccountingBlock,
   Expense as PrismaExpense,
-  ExpenseCategory,
-  ExpenseStatus,
-  PaymentMethod,
   RequestStatus as PrismaRequestStatus,
   BlockStatus as PrismaBlockStatus,
+  Prisma,
 } from "@prisma/client";
 
 export type UserRole = "ADMIN" | "FINANCE" | "USER";
@@ -36,51 +33,39 @@ interface BaseAccountingBlock
 }
 
 interface BaseExpense
-  extends Omit<
-    PrismaExpense,
-    | "amount"
-    | "date"
-    | "createdAt"
-    | "updatedAt"
-    | "whatsappMessageId"
-    | "whatsappMessageStatus"
-    | "whatsappMessageError"
-  > {
+  extends Omit<PrismaExpense, "amount" | "date" | "createdAt" | "updatedAt"> {
   amount: number;
   date: Date;
   createdAt: Date;
   updatedAt: Date;
-  whatsappMessageId?: string | null;
-  whatsappMessageStatus?: string | null;
-  whatsappMessageError?: string | null;
 }
 
 export interface Request extends BaseRequest {
-  accountingBlock?: AccountingBlock | null;
+  id: string;
+  amount: number;
+  currentBalance: number | null;
+  accountingBlock: AccountingBlock | null;
 }
 
 export interface AccountingBlock extends BaseAccountingBlock {
-  request: Request;
+  id: string;
+  totalAmount: number;
   expenses: Expense[];
-  totalAmount?: number;
+  request: Request | null;
 }
 
 export interface Expense extends BaseExpense {
   block?: AccountingBlock;
 }
 
-export interface AccountingBlocksListProps {
-  accountingBlocks: AccountingBlock[];
-  userRole: UserRole;
-}
-
-export interface AdminStats {
-  totalUsers: number;
-  pendingRequests: number;
-  totalApprovedAmount: number;
-  openAccountingBlocks: number;
-}
-
-export interface UserMetadata {
-  role: UserRole;
-}
+// Update the RequestWithFullDetails type to include the correct expense structure
+export type RequestWithFullDetails = Prisma.RequestGetPayload<{
+  include: {
+    accountingBlock: {
+      include: {
+        expenses: true;
+        request: true;
+      };
+    };
+  };
+}>;
