@@ -9,6 +9,13 @@ import {
 
 export type UserRole = "ADMIN" | "FINANCE" | "USER";
 
+export interface AdminStats {
+  totalUsers: number;
+  pendingRequests: number;
+  totalApprovedAmount: number;
+  openAccountingBlocks: number;
+}
+
 export interface FormattedUser {
   id: string;
   email: string;
