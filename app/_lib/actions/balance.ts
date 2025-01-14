@@ -40,10 +40,10 @@ export async function registerExpense(
   if (!block) throw new Error("Block not found");
   if (block.status !== "OPEN")
     throw new Error("Cannot add expenses to a closed block");
-  if (block.request.userId !== userId) throw new Error("Unauthorized");
+  if (block.request?.userId !== userId) throw new Error("Unauthorized");
 
   const expenseAmount = new Decimal(expenseData.amount.toString());
-  const currentBalance = new Decimal(block.request.currentBalance.toString());
+  const currentBalance = new Decimal(block.request?.currentBalance.toString());
   const newBalance = currentBalance.minus(expenseAmount);
 
   await db.$transaction([
@@ -61,7 +61,7 @@ export async function registerExpense(
       },
     }),
     db.request.update({
-      where: { id: block.request.id },
+      where: { id: block.request?.id },
       data: {
         currentBalance: newBalance,
       },

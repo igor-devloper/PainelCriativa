@@ -173,7 +173,7 @@ export function UpsertExpenseDialog({
         );
 
         // Safe to access block.request since we checked for null above
-        const currentBalance = Number(block.request.currentBalance);
+        const currentBalance = Number(block.request?.currentBalance);
         if (data.amount > currentBalance) {
           setPendingSubmission({ data, imagesBase64 });
           setAlertDialogOpen(true);
@@ -193,7 +193,7 @@ export function UpsertExpenseDialog({
         });
       }
     },
-    [block.request.currentBalance, images, submitExpense],
+    [block.request?.currentBalance, images, submitExpense],
   );
 
   const handleConfirmSubmit = async () => {

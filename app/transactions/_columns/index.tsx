@@ -88,7 +88,7 @@ export const expenseColumns: ColumnDef<Expense>[] = [
     header: "Bloco Contábil",
     cell: ({ row }) => {
       const block = row.original.block;
-      return `${block.code} - ${block.request.name}`;
+      return `${block.code} - ${block.request?.name}`;
     },
   },
 ];
