@@ -83,7 +83,7 @@ export function AccountingBlockDialog({
     0,
   );
 
-  const remainingBalance = Number(block.request.amount) - totalAmount;
+  const remainingBalance = Number(block.request?.amount) - totalAmount;
 
   const handleCloseAccounting = async () => {
     try {
@@ -112,7 +112,7 @@ export function AccountingBlockDialog({
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
               <span>Prestação de Contas - {block.code}</span>
-              <Badge className="ml-2">{block.request.name}</Badge>
+              <Badge className="ml-2">{block.request?.name}</Badge>
             </DialogTitle>
           </DialogHeader>
 
@@ -171,7 +171,7 @@ export function AccountingBlockDialog({
             <p className="text-lg">
               Saldo disponível:{" "}
               <span className="font-bold">
-                {formatCurrency(Number(block.request.amount))}
+                {formatCurrency(Number(block.request?.amount))}
               </span>
             </p>
             <p className="text-lg">
