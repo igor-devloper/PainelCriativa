@@ -16,13 +16,11 @@ import { CreateTeamButton } from "./create-request-button";
 interface ClientHomeWrapperProps {
   userRole: UserRole;
   pendingRequestsCount: number;
-  userId: string;
 }
 
 export function ClientHomeWrapper({
   userRole,
   pendingRequestsCount,
-  userId,
 }: ClientHomeWrapperProps) {
   return (
     <SidebarProvider>
@@ -46,7 +44,7 @@ export function ClientHomeWrapper({
                   <h1 className="text-xl font-semibold">Home</h1>
                 </div>
                 <div className="mr-4">
-                  <CreateTeamButton userId={userId} />
+                  <CreateTeamButton />
                 </div>
               </div>
             </div>

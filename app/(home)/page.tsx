@@ -23,7 +23,6 @@ export default async function Home() {
 
   return (
     <ClientHomeWrapper
-      userId={userId}
       userRole={userRole}
       pendingRequestsCount={pendingRequestsCount}
     />
