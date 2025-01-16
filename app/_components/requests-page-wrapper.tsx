@@ -45,7 +45,10 @@ export function RequestsPageWrapper({
             <div className="flex justify-between">
               <div className="flex h-16 items-center gap-4 px-4">
                 <Siren className="h-6 w-6" />
-                <h1 className="text-xl font-semibold">Solicitações</h1>
+                <h1 className="text-xl font-semibold">
+                  {userRole === "USER" ? <h1>Suas</h1> : ""}
+                  Solicitações
+                </h1>
               </div>
             </div>
           </div>

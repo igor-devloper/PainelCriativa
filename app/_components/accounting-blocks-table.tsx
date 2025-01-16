@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { AccountingBlock } from "@/app/types";
 import { AccountingBlockDialog } from "./accounting-block-dialog";
 import { formatDate, formatCurrency } from "@/app/_lib/utils";
@@ -13,6 +13,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableFooter,
 } from "@/app/_components/ui/table";
 
 interface AccountingBlocksTableProps {
@@ -30,6 +31,20 @@ export function AccountingBlocksTable({ blocks }: AccountingBlocksTableProps) {
     setDialogOpen(true);
   };
 
+  const totalAmount = useMemo(() => {
+    return blocks.reduce(
+      (sum, block) => sum + Number(block.request?.currentBalance),
+      0,
+    );
+  }, [blocks]);
+
+  const sortedBlocks = useMemo(() => {
+    return [...blocks].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+  }, [blocks]);
+
   return (
     <>
       <Table>
@@ -38,12 +53,12 @@ export function AccountingBlocksTable({ blocks }: AccountingBlocksTableProps) {
             <TableHead>Código</TableHead>
             <TableHead>Solicitação</TableHead>
             <TableHead>Data de Criação</TableHead>
-            <TableHead>Valor Total</TableHead>
+            <TableHead className="text-right">Valor Disponível</TableHead>
             <TableHead>Status</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {blocks.map((block) => (
+          {sortedBlocks.map((block) => (
             <TableRow
               key={block.id}
               className="cursor-pointer hover:bg-muted"
@@ -52,11 +67,8 @@ export function AccountingBlocksTable({ blocks }: AccountingBlocksTableProps) {
               <TableCell>{block.code}</TableCell>
               <TableCell>{block.request?.name}</TableCell>
               <TableCell>{formatDate(block.createdAt)}</TableCell>
-              <TableCell>
-                {formatCurrency(
-                  Number(block.request?.amount) -
-                    Number(block.request?.currentBalance),
-                )}
+              <TableCell className="text-right">
+                {formatCurrency(Number(block.request?.currentBalance))}
               </TableCell>
               <TableCell>
                 <Badge
@@ -76,6 +88,15 @@ export function AccountingBlocksTable({ blocks }: AccountingBlocksTableProps) {
             </TableRow>
           ))}
         </TableBody>
+        <TableFooter>
+          <TableRow>
+            <TableCell colSpan={3}>Total</TableCell>
+            <TableCell className="text-right">
+              {formatCurrency(totalAmount)}
+            </TableCell>
+            <TableCell></TableCell>
+          </TableRow>
+        </TableFooter>
       </Table>
 
       <AccountingBlockDialog

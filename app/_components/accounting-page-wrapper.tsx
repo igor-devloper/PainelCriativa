@@ -44,7 +44,10 @@ export function AccountingPageWrapper({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <HandCoins className="h-6 w-6" />
-              <h1 className="text-xl font-semibold">Prestação de Contas</h1>
+              <h1 className="text-xl font-semibold">
+                {userRole === "USER" ? <h1>Suas</h1> : ""}
+                Prestações de Contas
+              </h1>
             </div>
             <UserBalance balance={userBalance} />
           </div>
