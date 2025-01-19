@@ -2,9 +2,9 @@
 "use client";
 
 import { useState } from "react";
-import { closeAccountingBlock } from "@/app/_lib/actions/balance";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { closeAccountingBlock } from "../_actions/close-accounting-block";
 
 export function useCloseBlock() {
   const [isPending, setIsPending] = useState(false);
