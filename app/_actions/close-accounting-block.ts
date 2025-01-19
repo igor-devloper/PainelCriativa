@@ -26,32 +26,52 @@ export async function closeAccountingBlock(blockId: string) {
     }
 
     const totalExpenses = block.expenses.reduce(
-      (sum: Prisma.Decimal.Value, expense: { amount: Prisma.Decimal.Value }) =>
-        new Prisma.Decimal(sum).plus(expense.amount),
+      (sum, expense) => new Prisma.Decimal(sum).plus(expense.amount),
       new Prisma.Decimal(0),
     );
 
-    const remainingBalance = new Prisma.Decimal(block.request?.amount).minus(
+    const remainingBalance = new Prisma.Decimal(block.request.amount).minus(
       totalExpenses,
     );
 
     const userBalance = await db.userBalance.findUnique({
-      where: { userId },
+      where: { userId: block.request.userId },
     });
 
-    const newBalance = userBalance
-      ? new Prisma.Decimal(userBalance.balance).plus(remainingBalance)
-      : remainingBalance;
+    let newBalance: Prisma.Decimal;
+
+    if (remainingBalance.isPositive()) {
+      // If there's remaining balance, add it to the user's balance
+      newBalance = userBalance
+        ? new Prisma.Decimal(userBalance.balance).plus(remainingBalance)
+        : remainingBalance;
+    } else {
+      // If expenses exceeded the available amount, deduct the overspent amount from the user's balance
+      newBalance = userBalance
+        ? new Prisma.Decimal(userBalance.balance).plus(remainingBalance)
+        : remainingBalance;
+    }
 
     await db.$transaction([
       db.accountingBlock.update({
         where: { id: blockId },
-        data: { status: "CLOSED" },
+        data: {
+          status: "CLOSED",
+          currentBalance: remainingBalance,
+        },
+      }),
+      db.request.update({
+        where: { id: block.request.id },
+        data: {
+          status: "COMPLETED",
+          balanceDeducted: totalExpenses,
+          currentBalance: remainingBalance,
+        },
       }),
       db.userBalance.upsert({
-        where: { userId },
+        where: { userId: block.request.userId },
         create: {
-          userId,
+          userId: block.request.userId,
           balance: newBalance,
         },
         update: {

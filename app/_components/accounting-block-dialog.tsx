@@ -21,7 +21,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/app/_components/ui/card";
-import { ScrollArea } from "@/app/_components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/app/_components/ui/scroll-area";
 import {
   Table,
   TableBody,
@@ -83,7 +83,7 @@ export function AccountingBlockDialog({
     0,
   );
 
-  const remainingBalance = Number(block.request?.amount) - totalAmount;
+  const remainingBalance = Number(block.initialAmount) - totalAmount;
 
   const handleCloseAccounting = async () => {
     try {
@@ -91,7 +91,7 @@ export function AccountingBlockDialog({
       if (result.success) {
         toast({
           title: "Prestação de contas fechada com sucesso",
-          description: `Saldo restante: ${formatCurrency(result.remainingBalance)}. Novo saldo: ${formatCurrency(result.newBalance)}`,
+          description: `Saldo restante: ${formatCurrency(result.remainingBalance)}. Novo saldo do usuário: ${formatCurrency(result.newBalance)}`,
         });
         onOpenChange(false);
       }
@@ -107,129 +107,121 @@ export function AccountingBlockDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <ScrollArea className="h-[600px]">
-        <DialogContent className="max-w-3xl object-cover">
-          <DialogHeader>
-            <DialogTitle className="flex items-center justify-between">
-              <span>Prestação de Contas - {block.code}</span>
-              <Badge className="ml-2">{block.request?.name}</Badge>
-            </DialogTitle>
-          </DialogHeader>
+      <DialogContent className="max-h-[90vh] w-[90vw] max-w-4xl overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center justify-between">
+            <span>Prestação de Contas - {block.code}</span>
+            <Badge className="ml-2">{block.request?.name}</Badge>
+          </DialogTitle>
+        </DialogHeader>
 
-          <div className="grid grid-cols-3 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Status</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Badge
-                  variant={
-                    block.status === "APPROVED"
-                      ? "default"
-                      : block.status === "DENIED"
-                        ? "destructive"
-                        : block.status === "CLOSED"
-                          ? "secondary"
-                          : "outline"
-                  }
-                >
-                  {BLOCK_STATUS_LABELS[block.status]}
-                </Badge>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>Data de Criação</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-lg">{formatDate(block.createdAt)}</p>
-              </CardContent>
-            </Card>
-            {/* <Card>
-                <CardHeader>
-                  <CardTitle>Valor Disponibilizado</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-lg font-bold">
-                    {formatCurrency(Number(block.request.amount))}
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Saldo Atual</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-lg font-bold">
-                    {formatCurrency(Number(block.request.currentBalance))}
-                  </p>
-                </CardContent>
-              </Card> */}
-          </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Card>
+            <CardHeader>
+              <CardTitle>Status</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Badge
+                variant={
+                  block.status === "APPROVED"
+                    ? "default"
+                    : block.status === "DENIED"
+                      ? "destructive"
+                      : block.status === "CLOSED"
+                        ? "secondary"
+                        : "outline"
+                }
+              >
+                {BLOCK_STATUS_LABELS[block.status]}
+              </Badge>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Data de Criação</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-lg">{formatDate(block.createdAt)}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Valor Disponibilizado</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-lg font-bold">
+                {formatCurrency(Number(block.initialAmount))}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
 
-          <div className="flex items-center justify-between">
-            <p className="text-lg">
-              Saldo disponível:{" "}
-              <span className="font-bold">
-                {formatCurrency(Number(block.request?.amount))}
-              </span>
-            </p>
-            <p className="text-lg">
-              Saldo restante:{" "}
-              <span className="font-bold">
-                {formatCurrency(remainingBalance)}
-              </span>
-            </p>
-          </div>
+        <div className="flex items-center justify-between">
+          <p className="text-lg">
+            Saldo:{" "}
+            <span className="font-bold">
+              {formatCurrency(remainingBalance)}
+            </span>
+          </p>
+        </div>
 
-          <Tabs defaultValue="expenses" className="w-full">
-            <div className="flex items-center justify-between gap-2">
-              <TabsList>
-                <TabsTrigger value="expenses">Despesas</TabsTrigger>
-                <TabsTrigger value="receipts">Comprovantes</TabsTrigger>
-              </TabsList>
-              <div className="flex gap-2">
-                {block && ( // Only render if block exists
-                  <AddExpenseButton
-                    blockId={block.id}
-                    block={block} // Pass the entire block object
-                  />
-                )}
-                {block.status !== "CLOSED" && (
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="outline">Fechar Prestação</Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>
-                          Fechar Prestação de Contas
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Tem certeza que deseja fechar esta prestação de
-                          contas? Esta ação não pode ser desfeita.
-                          {remainingBalance < 0 && (
-                            <p className="mt-2 text-red-500">
-                              Atenção: O valor das despesas excede o saldo
-                              disponível. Isso resultará em um saldo negativo.
-                            </p>
-                          )}
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleCloseAccounting}>
-                          Confirmar
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                )}
-              </div>
+        <Tabs defaultValue="expenses" className="w-full">
+          <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
+            <TabsList>
+              <TabsTrigger value="expenses">Despesas</TabsTrigger>
+              <TabsTrigger value="receipts">Comprovantes</TabsTrigger>
+            </TabsList>
+            <div className="flex gap-2">
+              {block && ( // Only render if block exists
+                <AddExpenseButton
+                  blockId={block.id}
+                  block={block} // Pass the entire block object
+                />
+              )}
+              {block.status !== "CLOSED" && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline">Fechar Prestação</Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>
+                        Fechar Prestação de Contas
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Tem certeza que deseja fechar esta prestação de contas?
+                        Esta ação não pode ser desfeita.
+                        {remainingBalance > 0 && (
+                          <p className="mt-2 text-green-500">
+                            Há um saldo positivo de{" "}
+                            {formatCurrency(remainingBalance)}. Este valor será
+                            adicionado ao saldo do usuário.
+                          </p>
+                        )}
+                        {remainingBalance < 0 && (
+                          <p className="mt-2 text-red-500">
+                            As despesas excederam o valor disponível em{" "}
+                            {formatCurrency(Math.abs(remainingBalance))}. Isso
+                            resultará em um saldo negativo para o usuário.
+                          </p>
+                        )}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleCloseAccounting}>
+                        Confirmar
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
             </div>
+          </div>
 
-            <TabsContent value="expenses">
-              <ScrollArea className="h-[200px] w-full rounded-md border">
+          <TabsContent value="expenses">
+            <ScrollArea className="max-h-[400px] w-full rounded-md border">
+              <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -276,61 +268,62 @@ export function AccountingBlockDialog({
                     ))}
                   </TableBody>
                 </Table>
-              </ScrollArea>
-            </TabsContent>
+              </div>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+          </TabsContent>
 
-            <TabsContent value="receipts">
-              {selectedExpense ? (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold">
-                      Comprovantes - {selectedExpense.name}
-                    </h3>
-                    <Badge>
-                      {formatCurrency(Number(selectedExpense.amount))}
-                    </Badge>
-                  </div>
+          <TabsContent value="receipts">
+            {selectedExpense ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">
+                    Comprovantes - {selectedExpense.name}
+                  </h3>
+                  <Badge>
+                    {formatCurrency(Number(selectedExpense.amount))}
+                  </Badge>
+                </div>
 
-                  {selectedExpense.imageUrls &&
-                  selectedExpense.imageUrls.length > 0 ? (
-                    <ScrollArea className="h-[400px]">
-                      <Carousel className="mx-auto w-full max-w-xl">
-                        <CarouselContent className="flex items-center justify-center">
-                          {selectedExpense.imageUrls.map((url, index) => (
-                            <CarouselItem key={index}>
-                              <div className="p-1">
-                                <div className="flex aspect-square items-center justify-center p-6">
-                                  <Image
-                                    src={url}
-                                    alt={`Comprovante ${index + 1}`}
-                                    width={400}
-                                    height={400}
-                                    className="rounded-md object-contain"
-                                  />
-                                </div>
+                {selectedExpense.imageUrls &&
+                selectedExpense.imageUrls.length > 0 ? (
+                  <Carousel className="mx-auto w-full max-w-[90vw] sm:max-w-xl">
+                    <CarouselContent className="flex items-center justify-center">
+                      <ScrollArea className="max-h-[200px]">
+                        {selectedExpense.imageUrls.map((url, index) => (
+                          <CarouselItem key={index}>
+                            <div className="p-1">
+                              <div className="flex aspect-square items-center justify-center p-6">
+                                <Image
+                                  src={url || "/placeholder.svg"}
+                                  alt={`Comprovante ${index + 1}`}
+                                  width={200}
+                                  height={200}
+                                  className="h-auto max-w-full rounded-md object-contain"
+                                />
                               </div>
-                            </CarouselItem>
-                          ))}
-                        </CarouselContent>
-                        <CarouselPrevious />
-                        <CarouselNext />
-                      </Carousel>
-                    </ScrollArea>
-                  ) : (
-                    <div className="py-8 text-center text-muted-foreground">
-                      Nenhum comprovante disponível para esta despesa
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="py-8 text-center text-muted-foreground">
-                  Selecione uma despesa para ver seus comprovantes
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </DialogContent>
-      </ScrollArea>
+                            </div>
+                          </CarouselItem>
+                        ))}
+                      </ScrollArea>
+                    </CarouselContent>
+                    <CarouselPrevious />
+                    <CarouselNext />
+                  </Carousel>
+                ) : (
+                  <div className="py-8 text-center text-muted-foreground">
+                    Nenhum comprovante disponível para esta despesa
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="py-8 text-center text-muted-foreground">
+                Selecione uma despesa para ver seus comprovantes
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
     </Dialog>
   );
 }

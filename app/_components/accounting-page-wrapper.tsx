@@ -6,7 +6,7 @@ import {
   SidebarTrigger,
 } from "@/app/_components/ui/sidebar";
 import { Separator } from "@/app/_components/ui/separator";
-import { ScrollArea } from "@/app/_components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/app/_components/ui/scroll-area";
 import { AppSidebar } from "@/app/_components/app-sidebar";
 import { UserRole, AccountingBlock } from "@/app/types";
 import { AccountingBlocksTable } from "./accounting-blocks-table";
@@ -40,23 +40,28 @@ export function AccountingPageWrapper({
             <Separator orientation="vertical" className="mr-2 h-4" />
           </div>
         </header>
-        <div className="flex w-[350px] flex-col overflow-hidden p-6 pb-10 pr-10 md:w-full">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <HandCoins className="h-6 w-6" />
-              <h1 className="text-xl font-semibold">
-                {userRole === "USER" ? <h1>Suas</h1> : ""}
-                Prestações de Contas
-              </h1>
+
+        <ScrollArea className="max-h-[600px]">
+          <div className="flex w-[350px] flex-col overflow-hidden p-6 pb-10 pr-10 md:w-full">
+            <div className="flex flex-col items-center gap-4 md:flex-row md:justify-between">
+              <div className="flex items-center gap-4">
+                <HandCoins className="h-6 w-6" />
+                <h1 className="text-xl font-semibold">
+                  {userRole === "USER" ? <h1>Suas</h1> : ""}
+                  Prestações de Contas
+                </h1>
+              </div>
+              <UserBalance balance={userBalance} />
             </div>
-            <UserBalance balance={userBalance} />
+            <ScrollArea className="h-full flex-1">
+              <div className="container mx-auto py-6">
+                <AccountingBlocksTable blocks={accountingBlocks} />
+              </div>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
           </div>
-          <ScrollArea className="flex-1">
-            <div className="container mx-auto py-6">
-              <AccountingBlocksTable blocks={accountingBlocks} />
-            </div>
-          </ScrollArea>
-        </div>
+          <ScrollBar orientation="vertical" />
+        </ScrollArea>
       </SidebarInset>
     </SidebarProvider>
   );

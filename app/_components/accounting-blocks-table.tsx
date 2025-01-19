@@ -31,19 +31,38 @@ export function AccountingBlocksTable({ blocks }: AccountingBlocksTableProps) {
     setDialogOpen(true);
   };
 
-  const totalAmount = useMemo(() => {
-    return blocks.reduce(
-      (sum, block) => sum + Number(block.request?.currentBalance),
-      0,
-    );
-  }, [blocks]);
-
   const sortedBlocks = useMemo(() => {
     return [...blocks].sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
   }, [blocks]);
+
+  const blocksWithRemainingBalance = useMemo(() => {
+    return sortedBlocks.map((block) => {
+      const totalExpenses = block.expenses.reduce(
+        (total, expense) => total + Number(expense.amount),
+        0,
+      );
+      const remainingBalance = Number(block.initialAmount) - totalExpenses;
+      return { ...block, remainingBalance };
+    });
+  }, [sortedBlocks]);
+
+  const totals = useMemo(() => {
+    return blocksWithRemainingBalance.reduce(
+      (acc, block) => ({
+        initialAmount: acc.initialAmount + Number(block.initialAmount),
+        currentBalance: acc.currentBalance + Number(block.request?.amount),
+        remainingBalance: acc.remainingBalance + block.remainingBalance,
+      }),
+      {
+        initialAmount: 0,
+        currentBalance: 0,
+        remainingBalance: 0,
+      },
+    );
+  }, [blocksWithRemainingBalance]);
 
   return (
     <>
@@ -53,12 +72,13 @@ export function AccountingBlocksTable({ blocks }: AccountingBlocksTableProps) {
             <TableHead>Código</TableHead>
             <TableHead>Solicitação</TableHead>
             <TableHead>Data de Criação</TableHead>
-            <TableHead className="text-right">Valor Disponível</TableHead>
+            <TableHead className="text-right">Valor Solicitado</TableHead>
+            <TableHead className="text-right">Saldo Restante</TableHead>
             <TableHead>Status</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {sortedBlocks.map((block) => (
+          {blocksWithRemainingBalance.map((block) => (
             <TableRow
               key={block.id}
               className="cursor-pointer hover:bg-muted"
@@ -68,7 +88,10 @@ export function AccountingBlocksTable({ blocks }: AccountingBlocksTableProps) {
               <TableCell>{block.request?.name}</TableCell>
               <TableCell>{formatDate(block.createdAt)}</TableCell>
               <TableCell className="text-right">
-                {formatCurrency(Number(block.request?.currentBalance))}
+                {formatCurrency(Number(block.initialAmount))}
+              </TableCell>
+              <TableCell className="text-right">
+                {formatCurrency(block.remainingBalance)}
               </TableCell>
               <TableCell>
                 <Badge
@@ -92,9 +115,12 @@ export function AccountingBlocksTable({ blocks }: AccountingBlocksTableProps) {
           <TableRow>
             <TableCell colSpan={3}>Total</TableCell>
             <TableCell className="text-right">
-              {formatCurrency(totalAmount)}
+              {formatCurrency(totals.initialAmount)}
             </TableCell>
-            <TableCell></TableCell>
+            <TableCell className="text-right">
+              {formatCurrency(totals.remainingBalance)}
+            </TableCell>
+            <TableCell />
           </TableRow>
         </TableFooter>
       </Table>

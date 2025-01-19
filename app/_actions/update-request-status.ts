@@ -1,33 +1,10 @@
+/* eslint-disable prefer-const */
 "use server";
 
 import { db } from "@/app/_lib/prisma";
 import { RequestStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { sendWhatsAppMessage } from "@/app/_lib/twilio-client";
-
-const STATUS_MESSAGES = {
-  WAITING: "Sua solicitação está aguardando análise.",
-  RECEIVED: "Sua solicitação foi recebida pelo financeiro e está em análise.",
-  ACCEPTED: "Sua solicitação foi aceita! Em breve será finalizada.",
-  DENIED: (reason: string) =>
-    `Sua solicitação não foi aceita. Motivo: ${reason}`,
-  COMPLETED:
-    "Sua solicitação foi finalizada! Um bloco contábil foi criado para você registrar as despesas.",
-};
-
-async function generateAccountingBlockCode() {
-  const latestBlock = await db.accountingBlock.findFirst({
-    orderBy: { createdAt: "desc" },
-  });
-
-  if (!latestBlock) {
-    return "01-PRC";
-  }
-
-  const latestNumber = parseInt(latestBlock.code.split("-")[0]);
-  const newNumber = latestNumber + 1;
-  return `${newNumber.toString().padStart(2, "0")}-PRC`;
-}
+import { Prisma } from "@prisma/client";
 
 export async function updateRequestStatus(
   requestId: string,
@@ -53,9 +30,6 @@ export async function updateRequestStatus(
       status: RequestStatus;
       denialReason?: string | null;
       proofUrl?: string | null;
-      whatsappMessageId?: string | null;
-      whatsappMessageStatus?: string;
-      whatsappMessageError?: string | null;
     } = {
       status: newStatus,
     };
@@ -68,28 +42,6 @@ export async function updateRequestStatus(
       updateData.proofUrl = proofBase64;
     }
 
-    // Send WhatsApp message
-    try {
-      const message =
-        newStatus === "DENIED"
-          ? STATUS_MESSAGES.DENIED(denialReason || "Não especificado")
-          : STATUS_MESSAGES[newStatus];
-      console.log(request.phoneNumber);
-
-      const whatsappResult = await sendWhatsAppMessage(
-        request.phoneNumber,
-        message,
-      );
-
-      updateData.whatsappMessageId = whatsappResult.messageId;
-      updateData.whatsappMessageStatus = "sent";
-    } catch (error) {
-      console.error("Error sending WhatsApp message:", error);
-      updateData.whatsappMessageError =
-        error instanceof Error ? error.message : "Unknown error";
-      updateData.whatsappMessageStatus = "failed";
-    }
-
     // Use a transaction to ensure data consistency
     await db.$transaction(async (tx) => {
       // Update request status
@@ -98,16 +50,64 @@ export async function updateRequestStatus(
         data: updateData,
       });
 
-      // Create accounting block if status is COMPLETED
-      if (newStatus === "COMPLETED" && !request.accountingBlock) {
-        const blockCode = await generateAccountingBlockCode();
-        await tx.accountingBlock.create({
-          data: {
-            code: blockCode,
-            requestId: requestId,
-            status: "OPEN",
+      // If the request is being accepted
+      if (newStatus === "ACCEPTED" || newStatus === "COMPLETED") {
+        const userBalance = await tx.userBalance.findUnique({
+          where: { userId: request.userId },
+        });
+
+        let currentBalance = userBalance
+          ? userBalance.balance
+          : new Prisma.Decimal(0);
+        const requestedAmount = request.currentBalance; // This is the original requested amount
+        let balanceDeducted = new Prisma.Decimal(0);
+
+        // Deduct the requested amount from the user's balance
+        if (currentBalance.gte(requestedAmount)) {
+          // If balance is sufficient, deduct the full amount
+          balanceDeducted = requestedAmount;
+        } else {
+          // If balance is insufficient, deduct whatever is available
+          balanceDeducted = currentBalance;
+        }
+
+        const newBalance = currentBalance.minus(balanceDeducted);
+
+        // Update user balance
+        await tx.userBalance.upsert({
+          where: { userId: request.userId },
+          create: {
+            userId: request.userId,
+            balance: newBalance,
+          },
+          update: {
+            balance: newBalance,
           },
         });
+
+        // Update request with deducted balance
+        await tx.request.update({
+          where: { id: requestId },
+          data: {
+            balanceDeducted: balanceDeducted,
+            currentBalance: requestedAmount.minus(balanceDeducted), // Reduce the current balance by the deducted amount
+          },
+        });
+
+        // Create accounting block if it doesn't exist
+        if (!request.accountingBlock) {
+          const blockCode = await generateAccountingBlockCode();
+
+          await tx.accountingBlock.create({
+            data: {
+              code: blockCode,
+              requestId: requestId,
+              status: "OPEN",
+              initialAmount: requestedAmount, // This is the original requested amount
+              currentBalance: requestedAmount.minus(balanceDeducted), // Initial balance minus deducted amount
+            },
+          });
+        }
       }
     });
 
@@ -119,4 +119,18 @@ export async function updateRequestStatus(
     console.error("Error updating request status:", error);
     throw new Error("Failed to update request status");
   }
+}
+
+async function generateAccountingBlockCode() {
+  const latestBlock = await db.accountingBlock.findFirst({
+    orderBy: { createdAt: "desc" },
+  });
+
+  if (!latestBlock) {
+    return "01-PRC";
+  }
+
+  const latestNumber = parseInt(latestBlock.code.split("-")[0]);
+  const newNumber = latestNumber + 1;
+  return `${newNumber.toString().padStart(2, "0")}-PRC`;
 }

@@ -10,34 +10,38 @@ datasource db {
 model Request {
   id                    String           @id @default(cuid())
   name                  String
-  description           String
-  amount                Decimal          @db.Decimal(10, 2)
-  status                RequestStatus    @default(WAITING)
-  userId                String
-  phoneNumber           String
-  financeId             String?
-  expectedDate          DateTime?
-  denialReason          String?
-  proofUrl              String?
-  accountingBlock       AccountingBlock?
-  currentBalance        Decimal          @db.Decimal(10, 2)
-  createdAt             DateTime         @default(now())
-  updatedAt             DateTime         @updatedAt
-  responsibleCompany    String
-  whatsappMessageId     String?
+  description          String
+  amount               Decimal          @db.Decimal(10, 2)
+  currentBalance       Decimal          @db.Decimal(10, 2)
+  initialUserBalance   Decimal          @db.Decimal(10, 2)
+  balanceDeducted      Decimal          @db.Decimal(10, 2)
+  status               RequestStatus    @default(WAITING)
+  userId               String
+  phoneNumber          String
+  financeId            String?
+  expectedDate         DateTime?
+  denialReason         String?
+  proofUrl             String?
+  accountingBlock      AccountingBlock?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  responsibleCompany   String
+  whatsappMessageId    String?
   whatsappMessageStatus String?
   whatsappMessageError  String?
 }
 
 model AccountingBlock {
-  id        String      @id @default(cuid())
-  code      String      @unique // Código sequencial (01-PRC, 02-PRC, etc)
-  requestId String      @unique
-  request   Request     @relation(fields: [requestId], references: [id])
-  status    BlockStatus @default(OPEN)
-  expenses  Expense[]
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  id             String      @id @default(cuid())
+  code           String      @unique
+  requestId      String      @unique
+  request        Request     @relation(fields: [requestId], references: [id])
+  status         BlockStatus @default(OPEN)
+  initialAmount  Decimal     @db.Decimal(10, 2)
+  currentBalance Decimal     @db.Decimal(10, 2)
+  expenses       Expense[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 }
 
 model Expense {

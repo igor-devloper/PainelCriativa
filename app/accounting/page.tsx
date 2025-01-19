@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getUserRole } from "@/app/_lib/utils";
 import { getAccountingBlocks } from "@/app/_actions/get-accounting-blocks";
 import { AccountingPageWrapper } from "@/app/_components/accounting-page-wrapper";
-import { getUserBalance } from "@/app/_lib/actions/balance";
+import { getUserBalance } from "../_lib/actions/balance";
 
 export const metadata = {
   title: "Prestação de Contas - Painel Criativa",

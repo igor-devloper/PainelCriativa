@@ -1,22 +1,35 @@
+/* eslint-disable prefer-const */
 "use server";
 
 import { db } from "@/app/_lib/prisma";
 import { Prisma } from "@prisma/client";
 import { auth } from "@clerk/nextjs/server";
+import { revalidatePath } from "next/cache";
 
 interface CreateRequestData {
   name: string;
   description: string;
   amount: number;
-  phoneNumber: string;
   responsibleCompany: string;
+  phoneNumber: string;
 }
 
 export async function createRequest(data: CreateRequestData) {
   try {
     const { userId } = auth();
     if (!userId) {
-      throw new Error("User not authenticated");
+      throw new Error("Usuário não autenticado");
+    }
+
+    // Validate input data
+    if (
+      !data.name ||
+      !data.description ||
+      !data.amount ||
+      !data.responsibleCompany ||
+      !data.phoneNumber
+    ) {
+      throw new Error("Todos os campos são obrigatórios");
     }
 
     // Fetch or create UserBalance
@@ -24,60 +37,48 @@ export async function createRequest(data: CreateRequestData) {
       where: { userId },
     });
 
-    if (!userBalance) {
-      userBalance = await db.userBalance.create({
-        data: {
-          userId,
-          balance: 0,
-        },
-      });
-    }
+    const balance = userBalance ? userBalance.balance : new Prisma.Decimal(0);
+    const requestedAmount = new Prisma.Decimal(data.amount);
 
-    const balance = new Prisma.Decimal(userBalance.balance);
-    const requestAmount = new Prisma.Decimal(data.amount);
-    let amountToAllocate: Prisma.Decimal;
-    let initialBlockBalance: Prisma.Decimal;
+    let totalRequestAmount: Prisma.Decimal;
 
     if (balance.isNegative()) {
-      // If balance is negative, allocate balance + requested amount
-      amountToAllocate = balance.abs().plus(requestAmount);
-      initialBlockBalance = requestAmount;
+      // If user has negative balance, add it to the request amount
+      totalRequestAmount = requestedAmount.minus(balance); // This adds the negative balance
     } else {
-      // If balance is positive or zero
-      amountToAllocate = requestAmount;
-      initialBlockBalance = requestAmount;
-
-      // Deduct the request amount from the user's balance
-      await db.userBalance.update({
-        where: { userId },
-        data: {
-          balance: balance.minus(requestAmount),
-        },
-      });
+      totalRequestAmount = requestedAmount;
     }
 
     // Create the request
-    const request = await db.request.create({
-      data: {
-        userId,
-        name: data.name,
-        description: data.description,
-        phoneNumber: data.phoneNumber,
-        amount: amountToAllocate,
-        currentBalance: initialBlockBalance,
-        responsibleCompany: data.responsibleCompany,
-        status: "WAITING",
-      },
+    const result = await db.$transaction(async (tx) => {
+      const request = await tx.request.create({
+        data: {
+          userId,
+          name: data.name,
+          description: data.description,
+          amount: totalRequestAmount, // This is the total amount including negative balance
+          currentBalance: requestedAmount, // This is the original requested amount
+          responsibleCompany: data.responsibleCompany,
+          status: "WAITING",
+          phoneNumber: data.phoneNumber,
+          initialUserBalance: balance,
+          balanceDeducted: new Prisma.Decimal(0), // Initially, no balance is deducted
+        },
+      });
+
+      return request;
     });
+
+    revalidatePath("/requests");
 
     return {
       success: true,
-      request,
-      amountToAllocate: amountToAllocate.toNumber(),
-      initialBlockBalance: initialBlockBalance.toNumber(),
+      request: result,
     };
   } catch (error) {
     console.error("Error creating request:", error);
-    throw new Error("Failed to create request");
+    throw error instanceof Error
+      ? error
+      : new Error("Erro ao criar solicitação. Por favor, tente novamente.");
   }
 }
