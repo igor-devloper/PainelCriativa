@@ -1,7 +1,14 @@
 "use client";
 export const revalidate = 0;
 export const dynamic = "force-dynamic";
-import { Home, HandCoins, Settings, Siren, Wallet } from "lucide-react";
+import {
+  Home,
+  HandCoins,
+  Settings,
+  Siren,
+  Wallet,
+  DollarSign,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarFooter,
@@ -38,6 +45,12 @@ const defaultNavItems = [
   },
 ];
 
+const financeNavItem = {
+  title: "Financeiro",
+  url: "/financial",
+  icon: DollarSign,
+};
+
 const adminNavItem = {
   title: "Administrador",
   url: "/admin",
@@ -55,7 +68,11 @@ export function AppSidebar({
   ...props
 }: AppSidebarProps) {
   const navItems =
-    userRole === "ADMIN" ? [...defaultNavItems, adminNavItem] : defaultNavItems;
+    userRole === "ADMIN"
+      ? [...defaultNavItems, adminNavItem, financeNavItem]
+      : defaultNavItems || userRole === "FINANCE"
+        ? [...defaultNavItems, financeNavItem]
+        : defaultNavItems;
 
   const updatedNavItems = navItems.map((item) =>
     item.title === "Solicitações"
