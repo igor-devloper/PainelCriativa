@@ -33,7 +33,6 @@ export async function upsertExpense(data: UpsertExpenseData) {
     if (!block) {
       throw new Error("AccountingBlock not found");
     }
-
     const expense = await db.expense.upsert({
       where: {
         id: data.id ?? "",

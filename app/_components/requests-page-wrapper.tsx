@@ -6,7 +6,7 @@ import {
   SidebarTrigger,
 } from "@/app/_components/ui/sidebar";
 import { Separator } from "@/app/_components/ui/separator";
-import { ScrollArea } from "@/app/_components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/app/_components/ui/scroll-area";
 import { AppSidebar } from "@/app/_components/app-sidebar";
 import { UserRole, Request } from "@/app/types";
 import { RequestsList } from "./requests-list";
@@ -40,28 +40,32 @@ export function RequestsPageWrapper({
             <Separator orientation="vertical" className="mr-2 h-4" />
           </div>
         </header>
-        <div className="flex w-[350px] flex-col overflow-hidden p-6 pb-10 pr-10 md:w-full">
-          <div className="flex justify-between">
+        <ScrollArea>
+          <div className="flex w-[350px] flex-col overflow-hidden p-6 pb-10 pr-10 md:w-full">
             <div className="flex justify-between">
-              <div className="flex h-16 items-center gap-4 px-4">
-                <Siren className="h-6 w-6" />
-                <h1 className="text-xl font-semibold">
-                  {userRole === "USER" ? <h1>Suas</h1> : ""}
-                  Solicitações
-                </h1>
+              <div className="flex justify-between">
+                <div className="flex h-16 items-center gap-4 px-4">
+                  <Siren className="h-6 w-6" />
+                  <h1 className="text-xl font-semibold">
+                    {userRole === "USER" ? <h1>Suas</h1> : ""}
+                    Solicitações
+                  </h1>
+                </div>
               </div>
             </div>
+            <ScrollArea className="h-full flex-1">
+              <div className="container mx-auto py-6">
+                <RequestsList
+                  requests={requests}
+                  userRole={userRole}
+                  user={user}
+                />
+              </div>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
           </div>
-          <ScrollArea className="flex-1">
-            <div className="container mx-auto py-6">
-              <RequestsList
-                requests={requests}
-                userRole={userRole}
-                user={user}
-              />
-            </div>
-          </ScrollArea>
-        </div>
+          <ScrollBar orientation="vertical" />
+        </ScrollArea>
       </SidebarInset>
     </SidebarProvider>
   );

@@ -9,9 +9,14 @@ import { AccountingBlock } from "@/app/types";
 interface AddExpenseButtonProps {
   blockId: string;
   block: AccountingBlock;
+  user: string;
 }
 
-export function AddExpenseButton({ blockId, block }: AddExpenseButtonProps) {
+export function AddExpenseButton({
+  blockId,
+  block,
+  user,
+}: AddExpenseButtonProps) {
   const [dialogIsOpen, setDialogIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -33,6 +38,7 @@ export function AddExpenseButton({ blockId, block }: AddExpenseButtonProps) {
         )}
       </Button>
       <UpsertExpenseDialog
+        name={user}
         isOpen={dialogIsOpen}
         setIsOpen={setDialogIsOpen}
         onLoadingChange={setIsLoading}

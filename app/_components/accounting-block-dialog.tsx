@@ -21,7 +21,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/app/_components/ui/card";
-import { ScrollArea, ScrollBar } from "@/app/_components/ui/scroll-area";
+import { ScrollArea } from "@/app/_components/ui/scroll-area";
 import {
   Table,
   TableBody,
@@ -45,7 +45,7 @@ import {
   BLOCK_STATUS_LABELS,
 } from "@/app/_constants/transactions";
 import { Badge } from "@/app/_components/ui/badge";
-import { AccountingBlock, Expense } from "@/app/types";
+import type { AccountingBlock, Expense } from "@/app/types";
 import { AddExpenseButton } from "./add-expense-button";
 import { Button } from "@/app/_components/ui/button";
 import { closeAccountingBlock } from "@/app/_actions/close-accounting-block";
@@ -66,12 +66,14 @@ interface AccountingBlockDialogProps {
   block: AccountingBlock | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  name: string;
 }
 
 export function AccountingBlockDialog({
   block,
   open,
   onOpenChange,
+  name,
 }: AccountingBlockDialogProps) {
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const { toast } = useToast();
@@ -107,20 +109,22 @@ export function AccountingBlockDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] w-[90vw] max-w-4xl overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Prestação de Contas - {block.code}</span>
-            <Badge className="ml-2">{block.request?.name}</Badge>
+      <DialogContent className="max-h-[95vh] w-[95vw] max-w-5xl overflow-y-auto p-4 sm:p-6">
+        <DialogHeader className="mb-4">
+          <DialogTitle className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
+            <span className="text-lg sm:text-xl">
+              Prestação de Contas - {block.code}
+            </span>
+            <Badge className="mt-2 sm:mt-0">{block.request?.name}</Badge>
           </DialogTitle>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Card>
-            <CardHeader>
-              <CardTitle>Status</CardTitle>
+        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Card className="w-full">
+            <CardHeader className="p-4">
+              <CardTitle className="text-sm font-medium">Status</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0">
               <Badge
                 variant={
                   block.status === "APPROVED"
@@ -136,28 +140,34 @@ export function AccountingBlockDialog({
               </Badge>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Data de Criação</CardTitle>
+          <Card className="w-full">
+            <CardHeader className="p-4">
+              <CardTitle className="text-sm font-medium">
+                Data de Criação
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-lg">{formatDate(block.createdAt)}</p>
+            <CardContent className="p-4 pt-0">
+              <p className="text-base sm:text-lg">
+                {formatDate(block.createdAt)}
+              </p>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Valor Disponibilizado</CardTitle>
+          <Card className="w-full">
+            <CardHeader className="p-4">
+              <CardTitle className="text-sm font-medium">
+                Valor Disponibilizado
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-lg font-bold">
+            <CardContent className="p-4 pt-0">
+              <p className="text-base font-bold sm:text-lg">
                 {formatCurrency(Number(block.initialAmount))}
               </p>
             </CardContent>
           </Card>
         </div>
 
-        <div className="flex items-center justify-between">
-          <p className="text-lg">
+        <div className="mb-6 flex items-center justify-between">
+          <p className="text-base sm:text-lg">
             Saldo:{" "}
             <span className="font-bold">
               {formatCurrency(remainingBalance)}
@@ -166,24 +176,31 @@ export function AccountingBlockDialog({
         </div>
 
         <Tabs defaultValue="expenses" className="w-full">
-          <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
-            <TabsList>
-              <TabsTrigger value="expenses">Despesas</TabsTrigger>
-              <TabsTrigger value="receipts">Comprovantes</TabsTrigger>
+          <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+            <TabsList className="w-full sm:w-auto">
+              <TabsTrigger value="expenses" className="flex-1 sm:flex-none">
+                Despesas
+              </TabsTrigger>
+              <TabsTrigger value="receipts" className="flex-1 sm:flex-none">
+                Comprovantes
+              </TabsTrigger>
             </TabsList>
-            <div className="flex gap-2">
-              {block && ( // Only render if block exists
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+              {block && (
                 <AddExpenseButton
                   blockId={block.id}
-                  block={block} // Pass the entire block object
+                  block={block}
+                  user={name}
                 />
               )}
               {block.status !== "CLOSED" && (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="outline">Fechar Prestação</Button>
+                    <Button variant="outline" className="w-full sm:w-auto">
+                      Fechar Prestação
+                    </Button>
                   </AlertDialogTrigger>
-                  <AlertDialogContent>
+                  <AlertDialogContent className="max-w-md">
                     <AlertDialogHeader>
                       <AlertDialogTitle>
                         Fechar Prestação de Contas
@@ -220,15 +237,19 @@ export function AccountingBlockDialog({
           </div>
 
           <TabsContent value="expenses">
-            <ScrollArea className="max-h-[400px] w-full rounded-md border">
+            <ScrollArea className="h-[400px] w-full rounded-md border">
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Data</TableHead>
+                      <TableHead className="w-[100px]">Data</TableHead>
                       <TableHead>Nome</TableHead>
-                      <TableHead>Categoria</TableHead>
-                      <TableHead>Método</TableHead>
+                      <TableHead className="hidden sm:table-cell">
+                        Categoria
+                      </TableHead>
+                      <TableHead className="hidden md:table-cell">
+                        Método
+                      </TableHead>
                       <TableHead>Valor</TableHead>
                       <TableHead>Status</TableHead>
                     </TableRow>
@@ -240,12 +261,14 @@ export function AccountingBlockDialog({
                         className="cursor-pointer hover:bg-muted"
                         onClick={() => setSelectedExpense(expense)}
                       >
-                        <TableCell>{formatDate(expense.date)}</TableCell>
+                        <TableCell className="font-medium">
+                          {formatDate(expense.date)}
+                        </TableCell>
                         <TableCell>{expense.name}</TableCell>
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell">
                           {EXPENSE_CATEGORY_LABELS[expense.category]}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">
                           {PAYMENT_METHOD_LABELS[expense.paymentMethod]}
                         </TableCell>
                         <TableCell>
@@ -269,14 +292,13 @@ export function AccountingBlockDialog({
                   </TableBody>
                 </Table>
               </div>
-              <ScrollBar orientation="horizontal" />
             </ScrollArea>
           </TabsContent>
 
           <TabsContent value="receipts">
             {selectedExpense ? (
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
                   <h3 className="text-lg font-semibold">
                     Comprovantes - {selectedExpense.name}
                   </h3>
@@ -287,25 +309,23 @@ export function AccountingBlockDialog({
 
                 {selectedExpense.imageUrls &&
                 selectedExpense.imageUrls.length > 0 ? (
-                  <Carousel className="mx-auto w-full max-w-[90vw] sm:max-w-xl">
-                    <CarouselContent className="flex items-center justify-center">
-                      <ScrollArea className="max-h-[200px]">
-                        {selectedExpense.imageUrls.map((url, index) => (
-                          <CarouselItem key={index}>
-                            <div className="p-1">
-                              <div className="flex aspect-square items-center justify-center p-6">
-                                <Image
-                                  src={url || "/placeholder.svg"}
-                                  alt={`Comprovante ${index + 1}`}
-                                  width={200}
-                                  height={200}
-                                  className="h-auto max-w-full rounded-md object-contain"
-                                />
-                              </div>
+                  <Carousel className="mx-auto w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl">
+                    <CarouselContent>
+                      {selectedExpense.imageUrls.map((url, index) => (
+                        <CarouselItem key={index}>
+                          <div className="p-1">
+                            <div className="flex aspect-square items-center justify-center p-2 sm:p-4">
+                              <Image
+                                src={url || "/placeholder.svg"}
+                                alt={`Comprovante ${index + 1}`}
+                                width={300}
+                                height={300}
+                                className="h-auto max-w-full rounded-md object-contain"
+                              />
                             </div>
-                          </CarouselItem>
-                        ))}
-                      </ScrollArea>
+                          </div>
+                        </CarouselItem>
+                      ))}
                     </CarouselContent>
                     <CarouselPrevious />
                     <CarouselNext />

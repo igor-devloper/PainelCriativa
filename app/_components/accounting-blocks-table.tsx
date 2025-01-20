@@ -18,9 +18,13 @@ import {
 
 interface AccountingBlocksTableProps {
   blocks: AccountingBlock[];
+  name: string;
 }
 
-export function AccountingBlocksTable({ blocks }: AccountingBlocksTableProps) {
+export function AccountingBlocksTable({
+  blocks,
+  name,
+}: AccountingBlocksTableProps) {
   const [selectedBlock, setSelectedBlock] = useState<AccountingBlock | null>(
     null,
   );
@@ -126,6 +130,7 @@ export function AccountingBlocksTable({ blocks }: AccountingBlocksTableProps) {
       </Table>
 
       <AccountingBlockDialog
+        name={name}
         block={selectedBlock}
         open={dialogOpen}
         onOpenChange={setDialogOpen}

@@ -24,6 +24,7 @@ export default async function AccountingPage() {
 
   return (
     <AccountingPageWrapper
+      name={user.fullName ?? ""}
       userRole={userRole}
       accountingBlocks={accountingBlocks}
       userBalance={balance}

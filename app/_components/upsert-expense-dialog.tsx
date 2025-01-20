@@ -43,9 +43,9 @@ import {
   PAYMENT_METHOD_OPTIONS,
 } from "@/app/_constants/transactions";
 import { ScrollArea } from "./ui/scroll-area";
+import { clerkClient } from "@clerk/nextjs/server";
 
 const formSchema = z.object({
-  name: z.string().min(1, "O nome é obrigatório"),
   description: z.string().min(1, "A descrição é obrigatória"),
   amount: z.number().min(0.01, "O valor deve ser maior que zero"),
   category: z.string().min(1, "A categoria é obrigatória"),
@@ -60,6 +60,7 @@ type FormSchema = z.infer<typeof formSchema>;
 interface UpsertExpenseDialogProps {
   isOpen: boolean;
   blockId: string;
+  name: string;
   block: AccountingBlock;
   setIsOpen: (isOpen: boolean) => void;
   onLoadingChange?: (isLoading: boolean) => void;
@@ -68,6 +69,7 @@ interface UpsertExpenseDialogProps {
 export function UpsertExpenseDialog({
   isOpen,
   blockId,
+  name,
   block,
   setIsOpen,
   onLoadingChange,
@@ -80,7 +82,6 @@ export function UpsertExpenseDialog({
     defaultValues: {
       amount: 0,
       category: "OTHER",
-      name: "",
       description: "",
       paymentMethod: "CASH",
       date: new Date(),
@@ -104,10 +105,10 @@ export function UpsertExpenseDialog({
       const imagesBase64 = await Promise.all(
         images.map((file) => fileToBase64(file)),
       );
-
       await registerExpense(blockId, {
         ...data,
         imageUrls: imagesBase64,
+        name: name,
       });
 
       toast({
@@ -147,20 +148,6 @@ export function UpsertExpenseDialog({
               onSubmit={form.handleSubmit(onSubmit)}
               className="space-y-2 md:space-y-6"
             >
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nome</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Digite o nome..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               <FormField
                 control={form.control}
                 name="description"

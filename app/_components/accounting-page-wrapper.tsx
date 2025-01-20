@@ -18,12 +18,14 @@ interface AccountingPageWrapperProps {
   userRole: UserRole;
   accountingBlocks: AccountingBlock[];
   userBalance: number | Decimal;
+  name: string;
 }
 
 export function AccountingPageWrapper({
   userRole,
   accountingBlocks,
   userBalance,
+  name,
 }: AccountingPageWrapperProps) {
   const pendingRequestsCount = 0; // This should be fetched or passed as a prop
 
@@ -55,7 +57,7 @@ export function AccountingPageWrapper({
             </div>
             <ScrollArea className="h-full flex-1">
               <div className="container mx-auto py-6">
-                <AccountingBlocksTable blocks={accountingBlocks} />
+                <AccountingBlocksTable blocks={accountingBlocks} name={name} />
               </div>
               <ScrollBar orientation="horizontal" />
             </ScrollArea>
