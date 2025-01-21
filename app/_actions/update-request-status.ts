@@ -73,8 +73,6 @@ export async function updateRequestStatus(
           balanceDeducted = currentBalance;
         }
 
-        const newBalance = currentBalance.minus(balanceDeducted);
-
         // Update user balance - using upsert without unique constraint
         if (userBalance) {
           await tx.userBalance.update({
@@ -82,7 +80,7 @@ export async function updateRequestStatus(
               id: userBalance.id,
             },
             data: {
-              balance: newBalance,
+              balance: request.currentBalance,
             },
           });
         } else {
@@ -90,7 +88,7 @@ export async function updateRequestStatus(
             data: {
               userId: request.userId,
               company: request.responsibleCompany,
-              balance: newBalance,
+              balance: request.currentBalance,
             },
           });
         }

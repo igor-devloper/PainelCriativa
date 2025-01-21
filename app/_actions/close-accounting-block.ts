@@ -76,22 +76,22 @@ export async function closeAccountingBlock(blockId: string) {
       });
 
       // Update or create user balance
-      if (userBalance) {
-        await tx.userBalance.update({
-          where: { id: userBalance.id },
-          data: {
-            balance: newBalance,
-          },
-        });
-      } else {
-        await tx.userBalance.create({
-          data: {
-            userId: block.request.userId,
-            company: block.company,
-            balance: newBalance,
-          },
-        });
-      }
+      // if (userBalance) {
+      //   await tx.userBalance.update({
+      //     where: { id: userBalance.id },
+      //     data: {
+      //       balance: newBalance,
+      //     },
+      //   });
+      // } else {
+      //   await tx.userBalance.create({
+      //     data: {
+      //       userId: block.request.userId,
+      //       company: block.company,
+      //       balance: newBalance,
+      //     },
+      //   });
+      // }
     });
 
     revalidatePath("/accounting");

@@ -164,7 +164,7 @@ export function CreateRequestDialog({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nome</FormLabel>
+                  <FormLabel>Nome do projeto</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="Digite o nome da solicitação"

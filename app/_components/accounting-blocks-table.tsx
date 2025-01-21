@@ -119,7 +119,7 @@ export function AccountingBlocksTable({
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={3}>Total</TableCell>
+            <TableCell colSpan={4}>Total</TableCell>
             <TableCell className="text-right">
               {formatCurrency(totals.initialAmount)}
             </TableCell>

@@ -1,7 +1,11 @@
 "use server";
 
 import { db } from "@/app/_lib/prisma";
-import { ExpenseCategory, PaymentMethod, Prisma } from "@prisma/client";
+import {
+  type ExpenseCategory,
+  type PaymentMethod,
+  Prisma,
+} from "@prisma/client";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
@@ -90,20 +94,54 @@ export async function registerExpense(
       throw new Error("Bloco contábil não encontrado");
     }
 
-    const expense = await db.expense.create({
-      data: {
-        name: data.name,
-        description: data.description,
-        amount: new Prisma.Decimal(data.amount),
-        category: data.category,
-        paymentMethod: data.paymentMethod,
-        date: data.date,
-        blockId: blockId,
-        userId: userId,
-        imageUrls: data.imageUrls,
-        status: "WAITING",
-        company: block.company,
-      },
+    // Start a transaction
+    const result = await db.$transaction(async (prisma) => {
+      // Create the expense
+      const expense = await prisma.expense.create({
+        data: {
+          name: data.name,
+          description: data.description,
+          amount: new Prisma.Decimal(data.amount),
+          category: data.category,
+          paymentMethod: data.paymentMethod,
+          date: data.date,
+          blockId: blockId,
+          userId: userId,
+          imageUrls: data.imageUrls,
+          status: "WAITING",
+          company: block.company,
+        },
+      });
+
+      // Find existing balance first
+      const existingBalance = await prisma.userBalance.findFirst({
+        where: {
+          userId: userId,
+          company: block.company,
+        },
+      });
+
+      // Update or create the balance
+      const updatedBalance = existingBalance
+        ? await prisma.userBalance.update({
+            where: {
+              id: existingBalance.id,
+            },
+            data: {
+              balance: {
+                decrement: data.amount,
+              },
+            },
+          })
+        : await prisma.userBalance.create({
+            data: {
+              userId: userId,
+              company: block.company,
+              balance: new Prisma.Decimal(-data.amount),
+            },
+          });
+
+      return { expense, updatedBalance };
     });
 
     revalidatePath("/accounting");
@@ -111,7 +149,8 @@ export async function registerExpense(
 
     return {
       success: true,
-      data: expense,
+      data: result.expense,
+      updatedBalance: Number(result.updatedBalance.balance),
     };
   } catch (error) {
     console.error("Error registering expense:", error);
