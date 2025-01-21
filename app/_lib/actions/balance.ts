@@ -95,54 +95,60 @@ export async function registerExpense(
     }
 
     // Start a transaction
-    const result = await db.$transaction(async (prisma) => {
-      // Create the expense
-      const expense = await prisma.expense.create({
-        data: {
-          name: data.name,
-          description: data.description,
-          amount: new Prisma.Decimal(data.amount),
-          category: data.category,
-          paymentMethod: data.paymentMethod,
-          date: data.date,
-          blockId: blockId,
-          userId: userId,
-          imageUrls: data.imageUrls,
-          status: "WAITING",
-          company: block.company,
-        },
-      });
+    const result = await db.$transaction(
+      async (prisma) => {
+        // Create the expense
+        const expense = await prisma.expense.create({
+          data: {
+            name: data.name,
+            description: data.description,
+            amount: new Prisma.Decimal(data.amount),
+            category: data.category,
+            paymentMethod: data.paymentMethod,
+            date: data.date,
+            blockId: blockId,
+            userId: userId,
+            imageUrls: data.imageUrls,
+            status: "WAITING",
+            company: block.company,
+          },
+        });
 
-      // Find existing balance first
-      const existingBalance = await prisma.userBalance.findFirst({
-        where: {
-          userId: userId,
-          company: block.company,
-        },
-      });
+        // Find existing balance first
+        const existingBalance = await prisma.userBalance.findFirst({
+          where: {
+            userId: userId,
+            company: block.company,
+          },
+        });
 
-      // Update or create the balance
-      const updatedBalance = existingBalance
-        ? await prisma.userBalance.update({
-            where: {
-              id: existingBalance.id,
-            },
-            data: {
-              balance: {
-                decrement: data.amount,
+        // Update or create the balance
+        const updatedBalance = existingBalance
+          ? await prisma.userBalance.update({
+              where: {
+                id: existingBalance.id,
               },
-            },
-          })
-        : await prisma.userBalance.create({
-            data: {
-              userId: userId,
-              company: block.company,
-              balance: new Prisma.Decimal(-data.amount),
-            },
-          });
+              data: {
+                balance: {
+                  decrement: data.amount,
+                },
+              },
+            })
+          : await prisma.userBalance.create({
+              data: {
+                userId: userId,
+                company: block.company,
+                balance: new Prisma.Decimal(-data.amount),
+              },
+            });
 
-      return { expense, updatedBalance };
-    });
+        return { expense, updatedBalance };
+      },
+      {
+        maxWait: 10000, // Tempo de espera em milissegundos
+        timeout: 60000, // Tempo limite da transação em milissegundos
+      },
+    );
 
     revalidatePath("/accounting");
     revalidatePath(`/accounting/${blockId}`);
