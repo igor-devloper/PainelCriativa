@@ -19,11 +19,13 @@ import {
 interface AccountingBlocksTableProps {
   blocks: AccountingBlock[];
   name: string;
+  userRole: string;
 }
 
 export function AccountingBlocksTable({
   blocks,
   name,
+  userRole,
 }: AccountingBlocksTableProps) {
   const [selectedBlock, setSelectedBlock] = useState<AccountingBlock | null>(
     null,
@@ -132,6 +134,7 @@ export function AccountingBlocksTable({
       </Table>
 
       <AccountingBlockDialog
+        userRole={userRole}
         name={name}
         block={selectedBlock}
         open={dialogOpen}

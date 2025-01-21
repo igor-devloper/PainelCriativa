@@ -57,7 +57,11 @@ export function AccountingPageWrapper({
           </div>
           <ScrollArea className="flex-1">
             <div className="container mx-auto py-6">
-              <AccountingBlocksTable blocks={accountingBlocks} name={name} />
+              <AccountingBlocksTable
+                blocks={accountingBlocks}
+                name={name}
+                userRole={userRole}
+              />
             </div>
             <ScrollBar orientation="horizontal" />
           </ScrollArea>
