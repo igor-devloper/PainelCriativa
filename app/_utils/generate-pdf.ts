@@ -38,12 +38,13 @@ export async function generateAccountingPDF(block: AccountingBlock) {
   const tableData = block.expenses.map((expense) => [
     formatDate(expense.date),
     expense.name,
+    expense.description,
     EXPENSE_CATEGORY_LABELS[expense.category],
     formatCurrency(Number(expense.amount)),
   ]);
 
   autoTable(doc, {
-    head: [["Data", "Nome", "Categoria", "Valor"]],
+    head: [["Data", "Nome", "Descrição", "Categoria", "Valor"]],
     body: tableData,
     startY: 65,
   });
@@ -69,12 +70,12 @@ export async function generateAccountingPDF(block: AccountingBlock) {
           }
 
           // Add receipt image
-          doc.addImage(img, "JPEG", 14, yPos, 180, 100);
+          doc.addImage(img, "JPEG", 14, yPos, 100, 100);
           yPos += 110;
 
           // Add expense info under image
           doc.text(
-            `${expense.name} - ${formatCurrency(Number(expense.amount))}`,
+            `${expense.name} - ${expense.description} - ${formatCurrency(Number(expense.amount))}`,
             14,
             yPos,
           );
