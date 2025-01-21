@@ -67,12 +67,16 @@ export function AppSidebar({
   pendingRequestsCount,
   ...props
 }: AppSidebarProps) {
-  const navItems =
-    userRole === "ADMIN"
-      ? [...defaultNavItems, adminNavItem, financeNavItem]
-      : defaultNavItems || userRole === "FINANCE"
-        ? [...defaultNavItems, financeNavItem]
-        : defaultNavItems;
+  const navItems = (() => {
+    switch (userRole) {
+      case "ADMIN":
+        return [...defaultNavItems, adminNavItem, financeNavItem];
+      case "FINANCE":
+        return [...defaultNavItems, financeNavItem];
+      default:
+        return defaultNavItems;
+    }
+  })();
 
   const updatedNavItems = navItems.map((item) =>
     item.title === "Solicitações"

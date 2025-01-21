@@ -160,7 +160,7 @@ export function AccountingBlockDialog({
             </CardHeader>
             <CardContent className="p-4 pt-0">
               <p className="text-base font-bold sm:text-lg">
-                {formatCurrency(Number(block.initialAmount))}
+                {formatCurrency(Number(block.request?.amount))}
               </p>
             </CardContent>
           </Card>

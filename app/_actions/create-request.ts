@@ -44,7 +44,14 @@ export async function createRequest(data: CreateRequestData) {
 
     let totalRequestAmount: Prisma.Decimal;
 
-    if (balance.isNegative()) {
+    if (balance.isPositive()) {
+      // If user has positive balance, subtract it from the request amount
+      totalRequestAmount = requestedAmount.minus(balance);
+      // If the balance covers the entire request, set to 0 to avoid negative request amount
+      totalRequestAmount = totalRequestAmount.isNegative()
+        ? new Prisma.Decimal(0)
+        : totalRequestAmount;
+    } else if (balance.isNegative()) {
       // If user has negative balance, add it to the request amount
       totalRequestAmount = requestedAmount.minus(balance); // This adds the negative balance
     } else {
@@ -53,12 +60,23 @@ export async function createRequest(data: CreateRequestData) {
 
     // Create the request
     const result = await db.$transaction(async (tx) => {
+      let updatedDescription = data.description;
+
+      if (balance.isPositive()) {
+        const usedBalance = balance.gte(requestedAmount)
+          ? requestedAmount
+          : balance;
+        updatedDescription += `\n\n - Saldo do usuario utilizado: ${usedBalance.toFixed(2)}`;
+      } else if (balance.isNegative()) {
+        updatedDescription += `\n\n - Valor a ser ressarcido ao usuario: ${balance.abs().toFixed(2)}`;
+      }
+
       const request = await tx.request.create({
         data: {
           userId,
           name: data.name,
-          description: data.description,
-          amount: totalRequestAmount, // This is the total amount including negative balance
+          description: updatedDescription,
+          amount: totalRequestAmount, // This is the amount after considering user balance
           currentBalance: requestedAmount, // This is the original requested amount
           responsibleCompany: data.responsibleCompany,
           status: "WAITING",

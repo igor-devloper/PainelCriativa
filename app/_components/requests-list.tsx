@@ -103,6 +103,7 @@ export function RequestsList({ requests, userRole, user }: RequestsListProps) {
         <TableHeader>
           <TableRow>
             <TableHead>Empresa Responsalvel</TableHead>
+            <TableHead>Motivo da solicitação</TableHead>
             <TableHead>Data</TableHead>
             <TableHead>Valor</TableHead>
             <TableHead>Autor</TableHead>
@@ -114,6 +115,7 @@ export function RequestsList({ requests, userRole, user }: RequestsListProps) {
           {requests.map((request) => (
             <TableRow key={request.id}>
               <TableCell>{request.responsibleCompany}</TableCell>
+              <TableCell>{request.description}</TableCell>
               <TableCell>{formatDate(request.createdAt)}</TableCell>
               <TableCell>{formatCurrency(request.amount)}</TableCell>
               <TableCell>

@@ -114,7 +114,7 @@ export async function updateRequestStatus(
               requestId: requestId,
               status: "OPEN",
               initialAmount: requestedAmount, // This is the original requested amount
-              currentBalance: requestedAmount.minus(balanceDeducted), // Initial balance minus deducted amount
+              currentBalance: requestedAmount, // Initial balance minus deducted amount
               company: request.responsibleCompany,
             },
           });
