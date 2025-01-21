@@ -61,6 +61,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/app/_components/ui/alert-dialog";
+import { DownloadPDFButton } from "./download-pdf-button";
 
 interface AccountingBlockDialogProps {
   block: AccountingBlock | null;
@@ -193,6 +194,7 @@ export function AccountingBlockDialog({
                   user={name}
                 />
               )}
+              <DownloadPDFButton block={block} />
               {block.status !== "CLOSED" && (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
