@@ -1,6 +1,8 @@
 "use client";
+
 export const revalidate = 0;
 export const dynamic = "force-dynamic";
+
 import {
   Home,
   HandCoins,
@@ -70,7 +72,7 @@ export function AppSidebar({
   const navItems = (() => {
     switch (userRole) {
       case "ADMIN":
-        return [...defaultNavItems, adminNavItem, financeNavItem];
+        return [...defaultNavItems, financeNavItem, adminNavItem];
       case "FINANCE":
         return [...defaultNavItems, financeNavItem];
       default:
