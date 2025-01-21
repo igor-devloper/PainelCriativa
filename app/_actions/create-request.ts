@@ -1,4 +1,3 @@
-/* eslint-disable prefer-const */
 "use server";
 
 import { db } from "@/app/_lib/prisma";
@@ -32,9 +31,12 @@ export async function createRequest(data: CreateRequestData) {
       throw new Error("Todos os campos são obrigatórios");
     }
 
-    // Fetch or create UserBalance
-    let userBalance = await db.userBalance.findUnique({
-      where: { userId },
+    // Fetch or create UserBalance for the specific company
+    const userBalance = await db.userBalance.findFirst({
+      where: {
+        userId,
+        company: data.responsibleCompany,
+      },
     });
 
     const balance = userBalance ? userBalance.balance : new Prisma.Decimal(0);

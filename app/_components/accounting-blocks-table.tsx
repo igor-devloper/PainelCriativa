@@ -75,6 +75,7 @@ export function AccountingBlocksTable({
           <TableRow>
             <TableHead>Código</TableHead>
             <TableHead>Solicitação</TableHead>
+            <TableHead>Empresa</TableHead>
             <TableHead>Data de Criação</TableHead>
             <TableHead className="text-right">Valor Solicitado</TableHead>
             <TableHead className="text-right">Saldo Restante</TableHead>
@@ -90,6 +91,7 @@ export function AccountingBlocksTable({
             >
               <TableCell>{block.code}</TableCell>
               <TableCell>{block.request?.name}</TableCell>
+              <TableCell>{block.company}</TableCell>
               <TableCell>{formatDate(block.createdAt)}</TableCell>
               <TableCell className="text-right">
                 {formatCurrency(Number(block.initialAmount))}

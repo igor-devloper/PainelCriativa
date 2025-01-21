@@ -34,8 +34,11 @@ export async function closeAccountingBlock(blockId: string) {
       totalExpenses,
     );
 
-    const userBalance = await db.userBalance.findUnique({
-      where: { userId: block.request.userId },
+    const userBalance = await db.userBalance.findFirst({
+      where: {
+        userId: block.request.userId,
+        company: block.company,
+      },
     });
 
     let newBalance: Prisma.Decimal;
@@ -52,33 +55,44 @@ export async function closeAccountingBlock(blockId: string) {
         : remainingBalance;
     }
 
-    await db.$transaction([
-      db.accountingBlock.update({
+    await db.$transaction(async (tx) => {
+      // Update the accounting block
+      await tx.accountingBlock.update({
         where: { id: blockId },
         data: {
           status: "CLOSED",
           currentBalance: remainingBalance,
         },
-      }),
-      db.request.update({
+      });
+
+      // Update the request
+      await tx.request.update({
         where: { id: block.request.id },
         data: {
           status: "COMPLETED",
           balanceDeducted: totalExpenses,
           currentBalance: remainingBalance,
         },
-      }),
-      db.userBalance.upsert({
-        where: { userId: block.request.userId },
-        create: {
-          userId: block.request.userId,
-          balance: newBalance,
-        },
-        update: {
-          balance: newBalance,
-        },
-      }),
-    ]);
+      });
+
+      // Update or create user balance
+      if (userBalance) {
+        await tx.userBalance.update({
+          where: { id: userBalance.id },
+          data: {
+            balance: newBalance,
+          },
+        });
+      } else {
+        await tx.userBalance.create({
+          data: {
+            userId: block.request.userId,
+            company: block.company,
+            balance: newBalance,
+          },
+        });
+      }
+    });
 
     revalidatePath("/accounting");
     revalidatePath(`/accounting/${blockId}`);

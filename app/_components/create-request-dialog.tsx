@@ -36,7 +36,6 @@ import {
   SelectValue,
 } from "./ui/select";
 import { Loader2 } from "lucide-react";
-import { ScrollArea } from "./ui/scroll-area";
 
 const formSchema = z.object({
   name: z.string().min(1, "O nome é obrigatório"),
@@ -89,9 +88,10 @@ export function CreateRequestDialog({
     try {
       setIsPending(true);
 
-      const userBalance = await getUserBalance();
+      const userBalance = await getUserBalance(data.responsibleCompany);
 
-      if (userBalance < 0) {
+      // Now userBalance will be a number since we're passing the company
+      if (typeof userBalance === "number" && userBalance < 0) {
         const negativeBalance = Math.abs(userBalance);
         const confirm = window.confirm(
           `Você possui um saldo negativo de ${new Intl.NumberFormat("pt-BR", {
@@ -99,7 +99,7 @@ export function CreateRequestDialog({
             currency: "BRL",
           }).format(
             negativeBalance,
-          )}. Este valor será deduzido da sua solicitação quando for aprovada. Deseja continuar?`,
+          )} para a empresa ${data.responsibleCompany}. Este valor será deduzido da sua solicitação quando for aprovada. Deseja continuar?`,
         );
 
         if (!confirm) {
@@ -150,101 +150,60 @@ export function CreateRequestDialog({
         setIsOpen(open);
       }}
     >
-      <ScrollArea className="max-h-[50px]">
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Criar Nova Solicitação</DialogTitle>
-            <DialogDescription>
-              Crie uma nova solicitação para gerenciar prestações
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-2 md:space-y-6"
-            >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Criar Nova Solicitação</DialogTitle>
+          <DialogDescription>
+            Crie uma nova solicitação para gerenciar prestações
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nome</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Digite o nome da solicitação"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="name"
+                name="responsibleCompany"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nome</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Digite o nome da solicitação"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="responsibleCompany"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Empresa responsável</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione a empresa responsável" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="GSM SOLARION 02">
-                            GSM SOLARION 02
-                          </SelectItem>
-                          <SelectItem value="CRIATIVA ENERGIA">
-                            CRIATIVA ENERGIA
-                          </SelectItem>
-                          <SelectItem value="OESTE BIOGÁS">
-                            OESTE BIOGÁS
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="amount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Valor</FormLabel>
+                    <FormLabel>Empresa responsável</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
-                        <MoneyInput
-                          value={field.value}
-                          onValueChange={(values) => {
-                            field.onChange(values.floatValue || 0);
-                          }}
-                        />
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione a empresa responsável" />
+                        </SelectTrigger>
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Descrição</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Descreva o motivo da solicitação"
-                        {...field}
-                      />
-                    </FormControl>
+                      <SelectContent>
+                        <SelectItem value="GSM SOLARION 02">
+                          GSM SOLARION 02
+                        </SelectItem>
+                        <SelectItem value="CRIATIVA ENERGIA">
+                          CRIATIVA ENERGIA
+                        </SelectItem>
+                        <SelectItem value="OESTE BIOGÁS">
+                          OESTE BIOGÁS
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -252,46 +211,82 @@ export function CreateRequestDialog({
 
               <FormField
                 control={form.control}
-                name="phoneNumber"
+                name="amount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Número de Telefone (WhatsApp)</FormLabel>
+                    <FormLabel>Valor</FormLabel>
                     <FormControl>
-                      <Input
-                        type="tel"
-                        placeholder="Digite o número de telefone"
-                        {...field}
+                      <MoneyInput
+                        value={field.value}
+                        onValueChange={(values) => {
+                          field.onChange(values.floatValue || 0);
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+            </div>
 
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsOpen(false)}
-                  disabled={isPending}
-                >
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={isPending}>
-                  {isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Enviando...
-                    </>
-                  ) : (
-                    "Enviar Solicitação"
-                  )}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </ScrollArea>
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Descrição</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Descreva o motivo da solicitação"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="phoneNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Número de Telefone (WhatsApp)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="tel"
+                      placeholder="Digite o número de telefone"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsOpen(false)}
+                disabled={isPending}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isPending}>
+                {isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Enviando...
+                  </>
+                ) : (
+                  "Enviar Solicitação"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
     </Dialog>
   );
 }

@@ -102,7 +102,7 @@ export function RequestsList({ requests, userRole, user }: RequestsListProps) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>ID</TableHead>
+            <TableHead>Empresa Responsalvel</TableHead>
             <TableHead>Data</TableHead>
             <TableHead>Valor</TableHead>
             <TableHead>Autor</TableHead>
@@ -113,7 +113,7 @@ export function RequestsList({ requests, userRole, user }: RequestsListProps) {
         <TableBody>
           {requests.map((request) => (
             <TableRow key={request.id}>
-              <TableCell>{request.id}</TableCell>
+              <TableCell>{request.responsibleCompany}</TableCell>
               <TableCell>{formatDate(request.createdAt)}</TableCell>
               <TableCell>{formatCurrency(request.amount)}</TableCell>
               <TableCell>

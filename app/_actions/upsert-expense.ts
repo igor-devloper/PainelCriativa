@@ -3,7 +3,7 @@
 import { db } from "@/app/_lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
-import { ExpenseCategory, PaymentMethod } from "@prisma/client";
+import type { ExpenseCategory, PaymentMethod } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
 
 interface UpsertExpenseData {
@@ -33,6 +33,7 @@ export async function upsertExpense(data: UpsertExpenseData) {
     if (!block) {
       throw new Error("AccountingBlock not found");
     }
+
     const expense = await db.expense.upsert({
       where: {
         id: data.id ?? "",
@@ -48,6 +49,7 @@ export async function upsertExpense(data: UpsertExpenseData) {
         userId: userId,
         imageUrls: data.imageUrls,
         status: "WAITING",
+        company: block.company, // Add the company from the block
       },
       update: {
         name: data.name,
