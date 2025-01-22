@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
 import { db } from "@/app/_lib/prisma";
@@ -111,7 +113,12 @@ export async function updateRequestStatus(
         }
       }
 
-      const message = getGZappyMessage(newStatus, denialReason, proofBase64);
+      const message = getGZappyMessage(
+        request,
+        newStatus,
+        denialReason,
+        proofBase64,
+      );
 
       await sendMessageThroughGZappy(
         tx,
@@ -142,19 +149,54 @@ export async function updateRequestStatus(
 }
 
 function getGZappyMessage(
+  request: any,
   status: RequestStatus,
   denialReason?: string,
   proofBase64?: string,
 ): string {
   switch (status) {
     case "ACCEPTED":
-      return `Olá,\n\nSua solicitação de reembolso foi aceita e está em processamento. Em breve você receberá mais informações.\n\nAtenciosamente,\nEquipe de Reembolso`;
+      return (
+        `🔔 Solicitação de Verba Aceita\n\n` +
+        `👤 Usuário: ${request.userName}\n` +
+        `💰 Valor: R$ ${request.amount.toFixed(2)}\n` +
+        `🏢 Empresa: ${request.company}\n\n` +
+        `Sua solicitação de verba foi aceita e está em processamento. Em breve você receberá mais informações.\n\n` +
+        `Acesse o painel para mais detalhes.`
+      );
+
     case "DENIED":
-      return `Olá,\n\nInfelizmente, sua solicitação de reembolso foi negada.\n\nMotivo: ${denialReason}\n\nSe você tiver alguma dúvida, por favor, entre em contato com nossa equipe de suporte.\n\nAtenciosamente,\nEquipe de Reembolso`;
+      return (
+        `🔔 Solicitação de Verba Negada\n\n` +
+        `👤 Usuário: ${request.userName}\n` +
+        `💰 Valor: R$ ${request.amount.toFixed(2)}\n` +
+        `🏢 Empresa: ${request.company}\n\n` +
+        `Infelizmente, sua solicitação de verba foi negada.\n\n` +
+        `Motivo: ${denialReason}\n\n` +
+        `Se você tiver alguma dúvida, por favor, entre em contato com nossa equipe de suporte.`
+      );
+
     case "COMPLETED":
-      return `Olá,\n\nSua solicitação de reembolso foi finalizada com sucesso!\n\nVocê pode verificar o comprovante através do link abaixo:\n${proofBase64}\n\nObrigado por sua paciência.\n\nAtenciosamente,\nEquipe de Reembolso`;
+      return (
+        `🔔 Solicitação de Verba Concluída\n\n` +
+        `👤 Usuário: ${request.userName}\n` +
+        `💰 Valor: R$ ${request.amount.toFixed(2)}\n` +
+        `🏢 Empresa: ${request.company}\n\n` +
+        `💵 Link docomprovante: ${proofBase64}` +
+        `Sua solicitação de verba foi finalizada com sucesso!\n\n` +
+        `Você pode acessar os detalhes da transação no painel.\n\n` +
+        `Obrigado por sua paciência.`
+      );
+
     default:
-      return `Olá,\n\nO status da sua solicitação de reembolso foi atualizado para ${status}.\n\nAtenciosamente,\nEquipe de Reembolso`;
+      return (
+        `🔔 Atualização sobre Solicitação de Verba\n\n` +
+        `👤 Usuário: ${request.userName}\n` +
+        `💰 Valor: R$ ${request.amount.toFixed(2)}\n` +
+        `🏢 Empresa: ${request.company}\n\n` +
+        `O status da sua solicitação de verba foi atualizado para ${status}.\n\n` +
+        `Acesse o painel para mais detalhes.`
+      );
   }
 }
 
