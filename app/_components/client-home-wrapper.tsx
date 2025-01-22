@@ -14,6 +14,7 @@ import { HomeIcon } from "lucide-react";
 import { Avatar } from "@/app/_components/ui/avatar";
 import UserInfo from "./user-info";
 import { UserButton } from "@clerk/nextjs";
+import { Separator } from "./ui/separator";
 
 interface ClientHomeWrapperProps {
   userRole: UserRole;
@@ -39,14 +40,14 @@ export function ClientHomeWrapper({
         pendingRequestsCount={pendingRequestsCount}
       />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <header className="flex h-16 shrink-0 items-center gap-2 bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="flex flex-1 items-center gap-2">
             <SidebarTrigger />
+            <Separator orientation="vertical" className="mr-2 h-4" />
           </div>
           <div className="flex items-center gap-4">
             <Avatar>
               <UserButton
-                showName={true}
                 appearance={{
                   elements: {
                     userButtonBox: "flex items-center gap-2",
