@@ -79,7 +79,6 @@ export function RequestsList({ requests, userRole, user }: RequestsListProps) {
       setIsUpdating(null);
     }
   }
-
   const handleStatusSelect = (requestId: string, newStatus: RequestStatus) => {
     if (newStatus === "DENIED") {
       setSelectedRequest(requests.find((r) => r.id === requestId) || null);
@@ -104,6 +103,7 @@ export function RequestsList({ requests, userRole, user }: RequestsListProps) {
           <TableRow>
             <TableHead>Empresa Responsalvel</TableHead>
             <TableHead>Motivo da solicitação</TableHead>
+            <TableHead>Observação</TableHead>
             <TableHead>Data</TableHead>
             <TableHead>Valor</TableHead>
             <TableHead>Autor</TableHead>
@@ -112,44 +112,59 @@ export function RequestsList({ requests, userRole, user }: RequestsListProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {requests.map((request) => (
-            <TableRow key={request.id}>
-              <TableCell>{request.responsibleCompany}</TableCell>
-              <TableCell>{request.description}</TableCell>
-              <TableCell>{formatDate(request.createdAt)}</TableCell>
-              <TableCell>{formatCurrency(request.amount)}</TableCell>
-              <TableCell>
-                <UserInfo userId={request.userId} />
-              </TableCell>
-              <TableCell>{REQUEST_STATUS_LABELS[request.status]}</TableCell>
-              <TableCell>
-                {canChangeStatus(request) && (
-                  <Select
-                    value={request.status}
-                    onValueChange={(value: RequestStatus) =>
-                      handleStatusSelect(request.id, value)
-                    }
-                    disabled={isUpdating === request.id}
-                  >
-                    <SelectTrigger className="ml-2 w-[180px]">
-                      <SelectValue placeholder="Alterar status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="WAITING">
-                        Aguardando análise
-                      </SelectItem>
-                      <SelectItem value="RECEIVED">
-                        Recebida pelo financeiro
-                      </SelectItem>
-                      <SelectItem value="ACCEPTED">Aceita</SelectItem>
-                      <SelectItem value="DENIED">Não aceita</SelectItem>
-                      <SelectItem value="COMPLETED">Finalizada</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
-              </TableCell>
-            </TableRow>
-          ))}
+          {requests.map((request) => {
+            const startIndex = request.description
+              .toLowerCase()
+              .indexOf("saldo");
+            const startIndex2 = request.description.lastIndexOf("-");
+            return (
+              <TableRow key={request.id}>
+                <TableCell>{request.responsibleCompany}</TableCell>
+                <TableCell>
+                  {startIndex !== -1
+                    ? request.description.slice(0, startIndex)
+                    : "Nenhuma descrição"}
+                </TableCell>
+                <TableCell>
+                  {startIndex !== -1
+                    ? request.description.slice(startIndex)
+                    : "Nenhuma observação"}
+                </TableCell>
+                <TableCell>{formatDate(request.createdAt)}</TableCell>
+                <TableCell>{formatCurrency(request.amount)}</TableCell>
+                <TableCell>
+                  <UserInfo userId={request.userId} />
+                </TableCell>
+                <TableCell>{REQUEST_STATUS_LABELS[request.status]}</TableCell>
+                <TableCell>
+                  {canChangeStatus(request) && (
+                    <Select
+                      value={request.status}
+                      onValueChange={(value: RequestStatus) =>
+                        handleStatusSelect(request.id, value)
+                      }
+                      disabled={isUpdating === request.id}
+                    >
+                      <SelectTrigger className="ml-2 w-[180px]">
+                        <SelectValue placeholder="Alterar status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="WAITING">
+                          Aguardando análise
+                        </SelectItem>
+                        <SelectItem value="RECEIVED">
+                          Recebida pelo financeiro
+                        </SelectItem>
+                        <SelectItem value="ACCEPTED">Aceita</SelectItem>
+                        <SelectItem value="DENIED">Não aceita</SelectItem>
+                        <SelectItem value="COMPLETED">Finalizada</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
       <RequestStatusDialog

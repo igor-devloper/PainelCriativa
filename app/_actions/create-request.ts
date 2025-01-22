@@ -2,8 +2,9 @@
 
 import { db } from "@/app/_lib/prisma";
 import { Prisma } from "@prisma/client";
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient, type User } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+import { sendGZappyMessage } from "@/app/_lib/gzappy";
 
 interface CreateRequestData {
   name: string;
@@ -13,12 +14,61 @@ interface CreateRequestData {
   phoneNumber: string;
 }
 
+interface NotificationData {
+  userName: string;
+  amount: number;
+  company: string;
+}
+
+async function notifyAdminsAndFinance(requestData: NotificationData) {
+  try {
+    // Get all users with proper typing
+    const users = await clerkClient.users.getUserList({
+      limit: 100,
+    });
+
+    // Filter users with ADMIN or FINANCE role with type checking
+    const adminsAndFinance = users.data.filter((user: User) => {
+      const role = user.publicMetadata.role as string | undefined;
+      return role === "ADMIN" || role === "FINANCE";
+    });
+
+    // Format the notification message
+    const message =
+      `🔔 Nova Solicitação de Verba\n\n` +
+      `👤 Usuário: ${requestData.userName}\n` +
+      `💰 Valor: R$ ${requestData.amount.toFixed(2)}\n` +
+      `🏢 Empresa: ${requestData.company}\n\n` +
+      `Acesse o painel para mais detalhes.`;
+
+    // Send notifications to all admins and finance users
+    const notifications = adminsAndFinance.map(async (user: User) => {
+      const phoneNumber = user.phoneNumbers[0]?.phoneNumber;
+      if (phoneNumber) {
+        try {
+          await sendGZappyMessage(phoneNumber, message);
+        } catch (error) {
+          console.error(`Failed to send notification to ${user.id}:`, error);
+        }
+      }
+    });
+
+    await Promise.all(notifications);
+  } catch (error) {
+    console.error("Error sending notifications:", error);
+    // Don't throw the error to avoid blocking the request creation
+  }
+}
+
 export async function createRequest(data: CreateRequestData) {
   try {
     const { userId } = auth();
     if (!userId) {
       throw new Error("Usuário não autenticado");
     }
+
+    // Get user details for the notification with proper typing
+    const user = await clerkClient.users.getUser(userId);
 
     // Validate input data
     if (
@@ -45,15 +95,12 @@ export async function createRequest(data: CreateRequestData) {
     let totalRequestAmount: Prisma.Decimal;
 
     if (balance.isPositive()) {
-      // If user has positive balance, subtract it from the request amount
       totalRequestAmount = requestedAmount.minus(balance);
-      // If the balance covers the entire request, set to 0 to avoid negative request amount
       totalRequestAmount = totalRequestAmount.isNegative()
         ? new Prisma.Decimal(0)
         : totalRequestAmount;
     } else if (balance.isNegative()) {
-      // If user has negative balance, add it to the request amount
-      totalRequestAmount = requestedAmount.minus(balance); // This adds the negative balance
+      totalRequestAmount = requestedAmount.minus(balance);
     } else {
       totalRequestAmount = requestedAmount;
     }
@@ -66,27 +113,37 @@ export async function createRequest(data: CreateRequestData) {
         const usedBalance = balance.gte(requestedAmount)
           ? requestedAmount
           : balance;
-        updatedDescription += `\n\n - Saldo do usuario utilizado: ${usedBalance.toFixed(2)}`;
+        updatedDescription += `\n\n - Saldo do usuario utilizado: R$${usedBalance.toFixed(2)}`;
       } else if (balance.isNegative()) {
-        updatedDescription += `\n\n - Valor a ser ressarcido ao usuario: ${balance.abs().toFixed(2)}`;
+        updatedDescription += `\n\n - Valor a ser ressarcido ao usuario: R$${balance.abs().toFixed(2)}`;
       }
 
       const request = await tx.request.create({
         data: {
           userId,
           name: data.name,
-          description: updatedDescription,
-          amount: totalRequestAmount, // This is the amount after considering user balance
-          currentBalance: requestedAmount, // This is the original requested amount
+          description: data.description,
+          amount: totalRequestAmount,
+          currentBalance: requestedAmount,
           responsibleCompany: data.responsibleCompany,
           status: "WAITING",
           phoneNumber: data.phoneNumber,
           initialUserBalance: balance,
-          balanceDeducted: new Prisma.Decimal(0), // Initially, no balance is deducted
+          balanceDeducted: new Prisma.Decimal(0),
         },
       });
 
-      return request;
+      return {
+        request,
+        updatedDescription,
+      };
+    });
+
+    // Send notifications after successful request creation
+    await notifyAdminsAndFinance({
+      userName: user.firstName ?? "Usuário",
+      amount: data.amount,
+      company: data.responsibleCompany,
     });
 
     revalidatePath("/requests");

@@ -4,6 +4,7 @@ import { db } from "@/app/_lib/prisma";
 import type { RequestStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
+import { sendGZappyMessage } from "@/app/_lib/gzappy";
 
 export async function updateRequestStatus(
   requestId: string,
@@ -41,15 +42,12 @@ export async function updateRequestStatus(
       updateData.proofUrl = proofBase64;
     }
 
-    // Use a transaction to ensure data consistency
     await db.$transaction(async (tx) => {
-      // Update request status
       await tx.request.update({
         where: { id: requestId },
         data: updateData,
       });
 
-      // If the request is being accepted
       if (newStatus === "ACCEPTED" || newStatus === "COMPLETED") {
         const userBalance = await tx.userBalance.findFirst({
           where: {
@@ -61,26 +59,22 @@ export async function updateRequestStatus(
         const currentBalance = userBalance
           ? userBalance.balance
           : new Prisma.Decimal(0);
-        const requestedAmount = request.currentBalance; // This is the original requested amount
+        const requestedAmount = request.currentBalance;
         let balanceDeducted = new Prisma.Decimal(0);
 
-        // Deduct the requested amount from the user's balance
         if (currentBalance.gte(requestedAmount)) {
-          // If balance is sufficient, deduct the full amount
           balanceDeducted = requestedAmount;
         } else {
-          // If balance is insufficient, deduct whatever is available
           balanceDeducted = currentBalance;
         }
 
-        // Update user balance - using upsert without unique constraint
         if (userBalance) {
           await tx.userBalance.update({
             where: {
               id: userBalance.id,
             },
             data: {
-              balance: request.currentBalance,
+              balance: currentBalance.minus(balanceDeducted),
             },
           });
         } else {
@@ -88,21 +82,19 @@ export async function updateRequestStatus(
             data: {
               userId: request.userId,
               company: request.responsibleCompany,
-              balance: request.currentBalance,
+              balance: new Prisma.Decimal(0),
             },
           });
         }
 
-        // Update request with deducted balance
         await tx.request.update({
           where: { id: requestId },
           data: {
             balanceDeducted: balanceDeducted,
-            currentBalance: requestedAmount.minus(balanceDeducted), // Reduce the current balance by the deducted amount
+            currentBalance: requestedAmount.minus(balanceDeducted),
           },
         });
 
-        // Create accounting block if it doesn't exist
         if (!request.accountingBlock) {
           const blockCode = await generateAccountingBlockCode();
 
@@ -111,26 +103,90 @@ export async function updateRequestStatus(
               code: blockCode,
               requestId: requestId,
               status: "OPEN",
-              initialAmount: requestedAmount, // This is the original requested amount
-              currentBalance: requestedAmount, // Initial balance minus deducted amount
+              initialAmount: requestedAmount,
+              currentBalance: requestedAmount,
               company: request.responsibleCompany,
             },
           });
         }
       }
+
+      const message = getGZappyMessage(newStatus, denialReason, proofBase64);
+
+      await sendMessageThroughGZappy(
+        tx,
+        request.phoneNumber,
+        message,
+        requestId,
+      );
     });
 
     revalidatePath("/requests");
     revalidatePath(`/requests/${requestId}`);
 
-    return { success: true };
+    return {
+      success: true,
+      request: {
+        ...request,
+        // Converta os objetos Decimal para string
+        currentBalance: request.currentBalance.toString(),
+        initialUserBalance: request.initialUserBalance.toString(),
+        balanceDeducted: request.balanceDeducted.toString(),
+        amount: request.amount.toString(),
+      },
+    };
   } catch (error) {
     console.error("Error updating request status:", error);
     throw new Error("Failed to update request status");
   }
 }
 
-async function generateAccountingBlockCode() {
+function getGZappyMessage(
+  status: RequestStatus,
+  denialReason?: string,
+  proofBase64?: string,
+): string {
+  switch (status) {
+    case "ACCEPTED":
+      return `Olá,\n\nSua solicitação de reembolso foi aceita e está em processamento. Em breve você receberá mais informações.\n\nAtenciosamente,\nEquipe de Reembolso`;
+    case "DENIED":
+      return `Olá,\n\nInfelizmente, sua solicitação de reembolso foi negada.\n\nMotivo: ${denialReason}\n\nSe você tiver alguma dúvida, por favor, entre em contato com nossa equipe de suporte.\n\nAtenciosamente,\nEquipe de Reembolso`;
+    case "COMPLETED":
+      return `Olá,\n\nSua solicitação de reembolso foi finalizada com sucesso!\n\nVocê pode verificar o comprovante através do link abaixo:\n${proofBase64}\n\nObrigado por sua paciência.\n\nAtenciosamente,\nEquipe de Reembolso`;
+    default:
+      return `Olá,\n\nO status da sua solicitação de reembolso foi atualizado para ${status}.\n\nAtenciosamente,\nEquipe de Reembolso`;
+  }
+}
+
+async function sendMessageThroughGZappy(
+  tx: Prisma.TransactionClient,
+  phoneNumber: string,
+  message: string,
+  requestId: string,
+) {
+  try {
+    const gZappyResponse = await sendGZappyMessage(phoneNumber, message);
+    await tx.request.update({
+      where: { id: requestId },
+      data: {
+        whatsappMessageId: gZappyResponse.id,
+        whatsappMessageStatus: gZappyResponse.status,
+      },
+    });
+  } catch (error) {
+    console.error("Error sending gZappy message:", error);
+    await tx.request.update({
+      where: { id: requestId },
+      data: {
+        whatsappMessageError:
+          error instanceof Error ? error.message : String(error),
+        whatsappMessageStatus: "ERROR",
+      },
+    });
+  }
+}
+
+async function generateAccountingBlockCode(): Promise<string> {
   const latestBlock = await db.accountingBlock.findFirst({
     orderBy: { createdAt: "desc" },
   });

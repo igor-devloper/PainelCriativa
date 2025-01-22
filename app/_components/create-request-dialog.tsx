@@ -36,6 +36,7 @@ import {
   SelectValue,
 } from "./ui/select";
 import { Loader2 } from "lucide-react";
+import { PhoneInput } from "./phone-input";
 
 const formSchema = z.object({
   name: z.string().min(1, "O nome é obrigatório"),
@@ -88,10 +89,22 @@ export function CreateRequestDialog({
     try {
       setIsPending(true);
 
-      const userBalance = await getUserBalance(data.responsibleCompany);
+      let userBalance: number;
+      try {
+        userBalance = (await getUserBalance(data.responsibleCompany)) as number;
+      } catch (error) {
+        console.error("Error fetching user balance:", error);
+        toast({
+          title: "Erro ao verificar saldo",
+          description:
+            "Não foi possível verificar seu saldo atual. Deseja continuar mesmo assim?",
+          variant: "destructive",
+        });
+        // Allow the request to continue even if balance check fails
+        userBalance = 0;
+      }
 
-      // Now userBalance will be a number since we're passing the company
-      if (typeof userBalance === "number" && userBalance < 0) {
+      if (userBalance < 0) {
         const negativeBalance = Math.abs(userBalance);
         const confirm = window.confirm(
           `Você possui um saldo negativo de ${new Intl.NumberFormat("pt-BR", {
@@ -164,7 +177,7 @@ export function CreateRequestDialog({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nome do projeto</FormLabel>
+                  <FormLabel>Nome</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="Digite o nome da solicitação"
@@ -253,10 +266,10 @@ export function CreateRequestDialog({
                 <FormItem>
                   <FormLabel>Número de Telefone (WhatsApp)</FormLabel>
                   <FormControl>
-                    <Input
-                      type="tel"
-                      placeholder="Digite o número de telefone"
-                      {...field}
+                    <PhoneInput
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="(00) 00000-0000"
                     />
                   </FormControl>
                   <FormMessage />

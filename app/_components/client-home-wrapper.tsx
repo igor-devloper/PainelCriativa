@@ -5,22 +5,30 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/app/_components/ui/sidebar";
-import { Separator } from "@/app/_components/ui/separator";
 import { ScrollArea } from "@/app/_components/ui/scroll-area";
 import { AppSidebar } from "@/app/_components/app-sidebar";
-import { UserRole } from "@/app/types";
+import type { AdminStats, UserRole } from "@/app/types";
 import { DashboardOverview } from "./dashboard-overview";
 import { HomeIcon } from "lucide-react";
-import { CreateTeamButton } from "./create-request-button";
+import { Avatar } from "@/app/_components/ui/avatar";
+import UserInfo from "./user-info";
 
 interface ClientHomeWrapperProps {
   userRole: UserRole;
   pendingRequestsCount: number;
+  userName: string;
+  userId: string;
+  userCount: number;
+  stats: AdminStats;
 }
 
 export function ClientHomeWrapper({
   userRole,
   pendingRequestsCount,
+  userName,
+  userCount,
+  userId,
+  stats,
 }: ClientHomeWrapperProps) {
   return (
     <SidebarProvider>
@@ -29,28 +37,30 @@ export function ClientHomeWrapper({
         pendingRequestsCount={pendingRequestsCount}
       />
       <SidebarInset>
-        <header className="flex h-14 shrink-0 items-center gap-2">
-          <div className="flex flex-1 items-center gap-2 px-3">
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="flex flex-1 items-center gap-2">
             <SidebarTrigger />
-            <Separator orientation="vertical" className="mr-2 h-4" />
+          </div>
+          <div className="flex items-center gap-4">
+            <Avatar>
+              <UserInfo userId={userId} />
+            </Avatar>
           </div>
         </header>
+        <div className="flex justify-between p-5">
+          <div className="flex items-center gap-4">
+            <HomeIcon className="h-5 w-5" />
+            <h1 className="text-lg font-semibold">Dashboard</h1>
+          </div>
+        </div>
         <ScrollArea className="flex-1">
           <div className="container mx-auto p-6">
-            <div className="flex justify-between">
-              <div className="flex h-16 w-full items-center justify-between gap-4 px-4">
-                <div className="flex items-center justify-center gap-4">
-                  <HomeIcon className="h-6 w-6" />
-                  <h1 className="text-xl font-semibold">Home</h1>
-                </div>
-                <div className="mr-4">
-                  <CreateTeamButton />
-                </div>
-              </div>
-            </div>
             <DashboardOverview
+              stats={stats}
+              userCount={userCount}
               userRole={userRole}
               pendingRequestsCount={pendingRequestsCount}
+              userName={userName}
             />
           </div>
         </ScrollArea>

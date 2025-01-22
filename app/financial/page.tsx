@@ -13,7 +13,8 @@ import {
 import { Separator } from "@/app/_components/ui/separator";
 import { ScrollArea, ScrollBar } from "@/app/_components/ui/scroll-area";
 import { DollarSign } from "lucide-react";
-import { FinancialOverview } from "@/app/_components/financial-overview";
+import { FinancialDashboard } from "./_components/financial-dashboard";
+import { getFinancialDashboardData } from "../_actions/get-financial-dashboard-data";
 
 export const metadata = {
   title: "Área Financeira - Criativa",
@@ -50,6 +51,7 @@ export default async function FinancialPage() {
   if (!financialData.expensesByCategory.length) {
     financialData.expensesByCategory = [{ category: "Sem dados", value: 0 }];
   }
+  const dashboardData = await getFinancialDashboardData();
 
   return (
     <SidebarProvider>
@@ -57,14 +59,14 @@ export default async function FinancialPage() {
         pendingRequestsCount={pendingRequestsCount}
         userRole={userRole}
       />
-      <SidebarInset className="w-[100px] md:w-full">
+      <SidebarInset className="w-full md:w-full">
         <header className="flex h-16 shrink-0 items-center gap-2">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
           </div>
         </header>
-        <div className="flex w-[350px] flex-col space-y-6 overflow-hidden p-6 pb-10 pr-10 md:w-full">
+        <div className="flex w-full flex-col space-y-6 overflow-hidden p-6 pb-10 pr-10 md:w-full">
           <div className="flex justify-between">
             <div className="flex h-16 items-center gap-4 px-4">
               <DollarSign className="h-6 w-6" />
@@ -72,7 +74,7 @@ export default async function FinancialPage() {
             </div>
           </div>
           <ScrollArea className="h-full">
-            <FinancialOverview data={financialData} />
+            <FinancialDashboard data={dashboardData} />
             <ScrollBar orientation="horizontal" />
           </ScrollArea>
         </div>
