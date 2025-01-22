@@ -67,7 +67,7 @@ const ExpensesPage = async () => {
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
           <ScrollArea className="max-h-[600px]">
-            <div className="flex w-full flex-col space-y-6 overflow-hidden p-6 pb-10 pr-10 md:w-full">
+            <div className="flex w-[400px] flex-col space-y-6 overflow-hidden p-6 pb-10 pr-10 md:w-full">
               <div className="flex justify-between">
                 <div className="flex h-16 items-center gap-4 px-4">
                   <Receipt className="h-6 w-6" />

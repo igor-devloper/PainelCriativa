@@ -66,7 +66,7 @@ export default async function FinancialPage() {
             <Separator orientation="vertical" className="mr-2 h-4" />
           </div>
         </header>
-        <div className="flex w-full flex-col space-y-6 overflow-hidden p-6 pb-10 pr-10 md:w-full">
+        <div className="flex w-full flex-col space-y-6 overflow-hidden md:w-full">
           <div className="flex justify-between">
             <div className="flex h-16 items-center gap-4 px-4">
               <DollarSign className="h-6 w-6" />

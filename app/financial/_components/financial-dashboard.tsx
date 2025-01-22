@@ -14,7 +14,7 @@ interface FinancialDashboardProps {
 
 export function FinancialDashboard({ data }: FinancialDashboardProps) {
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto w-full p-6">
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <div className="col-span-full">
           <SummaryCards

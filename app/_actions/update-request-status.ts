@@ -3,10 +3,12 @@
 "use server";
 
 import { db } from "@/app/_lib/prisma";
-import type { RequestStatus } from "@prisma/client";
+import type { Request, RequestStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
 import { sendGZappyMessage } from "@/app/_lib/gzappy";
+import { clerkClient } from "@clerk/nextjs/server";
+import { REQUEST_STATUS_LABELS } from "../_constants/transactions";
 
 export async function updateRequestStatus(
   requestId: string,
@@ -44,89 +46,95 @@ export async function updateRequestStatus(
       updateData.proofUrl = proofBase64;
     }
 
-    await db.$transaction(async (tx) => {
-      await tx.request.update({
-        where: { id: requestId },
-        data: updateData,
-      });
-
-      if (newStatus === "ACCEPTED" || newStatus === "COMPLETED") {
-        const userBalance = await tx.userBalance.findFirst({
-          where: {
-            userId: request.userId,
-            company: request.responsibleCompany,
-          },
-        });
-
-        const currentBalance = userBalance
-          ? userBalance.balance
-          : new Prisma.Decimal(0);
-        const requestedAmount = request.currentBalance;
-        let balanceDeducted = new Prisma.Decimal(0);
-
-        if (currentBalance.gte(requestedAmount)) {
-          balanceDeducted = requestedAmount;
-        } else {
-          balanceDeducted = currentBalance;
-        }
-
-        if (userBalance) {
-          await tx.userBalance.update({
-            where: {
-              id: userBalance.id,
-            },
-            data: {
-              balance: currentBalance.minus(balanceDeducted),
-            },
-          });
-        } else {
-          await tx.userBalance.create({
-            data: {
-              userId: request.userId,
-              company: request.responsibleCompany,
-              balance: new Prisma.Decimal(0),
-            },
-          });
-        }
-
+    await db.$transaction(
+      async (tx) => {
         await tx.request.update({
           where: { id: requestId },
-          data: {
-            balanceDeducted: balanceDeducted,
-            currentBalance: requestedAmount.minus(balanceDeducted),
-          },
+          data: updateData,
         });
 
-        if (!request.accountingBlock) {
-          const blockCode = await generateAccountingBlockCode();
-
-          await tx.accountingBlock.create({
-            data: {
-              code: blockCode,
-              requestId: requestId,
-              status: "OPEN",
-              initialAmount: requestedAmount,
-              currentBalance: requestedAmount,
+        if (newStatus === "ACCEPTED" || newStatus === "COMPLETED") {
+          const userBalance = await tx.userBalance.findFirst({
+            where: {
+              userId: request.userId,
               company: request.responsibleCompany,
             },
           });
+
+          const currentBalance = userBalance
+            ? userBalance.balance
+            : new Prisma.Decimal(0);
+          const requestedAmount = request.currentBalance;
+          let balanceDeducted = new Prisma.Decimal(0);
+
+          if (currentBalance.gte(requestedAmount)) {
+            balanceDeducted = requestedAmount;
+          } else {
+            balanceDeducted = currentBalance;
+          }
+
+          if (userBalance) {
+            await tx.userBalance.update({
+              where: {
+                id: userBalance.id,
+              },
+              data: {
+                balance: currentBalance.minus(balanceDeducted),
+              },
+            });
+          } else {
+            await tx.userBalance.create({
+              data: {
+                userId: request.userId,
+                company: request.responsibleCompany,
+                balance: new Prisma.Decimal(0),
+              },
+            });
+          }
+
+          await tx.request.update({
+            where: { id: requestId },
+            data: {
+              balanceDeducted: balanceDeducted,
+              currentBalance: requestedAmount.minus(balanceDeducted),
+            },
+          });
+
+          if (!request.accountingBlock) {
+            const blockCode = await generateAccountingBlockCode();
+
+            await tx.accountingBlock.create({
+              data: {
+                code: blockCode,
+                requestId: requestId,
+                status: "OPEN",
+                initialAmount: requestedAmount,
+                currentBalance: requestedAmount,
+                company: request.responsibleCompany,
+              },
+            });
+          }
         }
-      }
 
-      const message = getGZappyMessage(
-        request,
-        newStatus,
-        denialReason,
-        proofBase64,
-      );
+        const message = await getGZappyMessage(
+          request,
+          newStatus,
+          denialReason,
+          proofBase64,
+        );
 
-      await sendMessageThroughGZappy(
-        tx,
-        request.phoneNumber,
-        message,
-        requestId,
-      );
-    });
+        await sendMessageThroughGZappy(
+          tx,
+          request.phoneNumber,
+          message,
+          requestId,
+        );
+      },
+      {
+        maxWait: 10000,
+        timeout: 60000,
+      },
+    );
 
     revalidatePath("/requests");
     revalidatePath(`/requests/${requestId}`);
@@ -148,19 +156,20 @@ export async function updateRequestStatus(
   }
 }
 
-function getGZappyMessage(
-  request: any,
+async function getGZappyMessage(
+  request: Request,
   status: RequestStatus,
   denialReason?: string,
   proofBase64?: string,
-): string {
+): Promise<string> {
+  const user = await (await clerkClient.users.getUser(request.userId)).fullName;
   switch (status) {
     case "ACCEPTED":
       return (
         `🔔 Solicitação de Verba Aceita\n\n` +
-        `👤 Usuário: ${request.userName}\n` +
+        `👤 Usuário: ${user}\n` +
         `💰 Valor: R$ ${request.amount.toFixed(2)}\n` +
-        `🏢 Empresa: ${request.company}\n\n` +
+        `🏢 Empresa: ${request.responsibleCompany}\n\n` +
         `Sua solicitação de verba foi aceita e está em processamento. Em breve você receberá mais informações.\n\n` +
         `Acesse o painel para mais detalhes.`
       );
@@ -168,9 +177,9 @@ function getGZappyMessage(
     case "DENIED":
       return (
         `🔔 Solicitação de Verba Negada\n\n` +
-        `👤 Usuário: ${request.userName}\n` +
+        `👤 Usuário: ${user}\n` +
         `💰 Valor: R$ ${request.amount.toFixed(2)}\n` +
-        `🏢 Empresa: ${request.company}\n\n` +
+        `🏢 Empresa: ${request.responsibleCompany}\n\n` +
         `Infelizmente, sua solicitação de verba foi negada.\n\n` +
         `Motivo: ${denialReason}\n\n` +
         `Se você tiver alguma dúvida, por favor, entre em contato com nossa equipe de suporte.`
@@ -179,10 +188,10 @@ function getGZappyMessage(
     case "COMPLETED":
       return (
         `🔔 Solicitação de Verba Concluída\n\n` +
-        `👤 Usuário: ${request.userName}\n` +
+        `👤 Usuário: ${user}\n` +
         `💰 Valor: R$ ${request.amount.toFixed(2)}\n` +
-        `🏢 Empresa: ${request.company}\n\n` +
-        `💵 Link docomprovante: ${proofBase64}` +
+        `🏢 Empresa: ${request.responsibleCompany}\n\n` +
+        `${proofBase64 ? `💵 Link do comprovante: ${proofBase64}\n\n` : ""}` +
         `Sua solicitação de verba foi finalizada com sucesso!\n\n` +
         `Você pode acessar os detalhes da transação no painel.\n\n` +
         `Obrigado por sua paciência.`
@@ -191,10 +200,10 @@ function getGZappyMessage(
     default:
       return (
         `🔔 Atualização sobre Solicitação de Verba\n\n` +
-        `👤 Usuário: ${request.userName}\n` +
+        `👤 Usuário: ${user}\n` +
         `💰 Valor: R$ ${request.amount.toFixed(2)}\n` +
-        `🏢 Empresa: ${request.company}\n\n` +
-        `O status da sua solicitação de verba foi atualizado para ${status}.\n\n` +
+        `🏢 Empresa: ${request.responsibleCompany}\n\n` +
+        `O status da sua solicitação de verba foi atualizado para ${REQUEST_STATUS_LABELS[status]}.\n\n` +
         `Acesse o painel para mais detalhes.`
       );
   }

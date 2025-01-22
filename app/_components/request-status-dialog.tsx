@@ -18,14 +18,14 @@ interface RequestStatusDialogProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   request: Request | null;
-  onComplete: () => void;
+  onConfirm: (imagesBase64: string[]) => void; // Modificado para lidar com múltiplos comprovantes
 }
 
 export function RequestStatusDialog({
   isOpen,
   setIsOpen,
   request,
-  onComplete,
+  onConfirm,
 }: RequestStatusDialogProps) {
   const [images, setImages] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -39,12 +39,18 @@ export function RequestStatusDialog({
         images.map((file) => fileToBase64(file)),
       );
 
+      // Passando as imagens base64 para o onConfirm
       await uploadProof(request.id, imagesBase64);
       toast({
         title: "Comprovante enviado",
         description: "O comprovante foi enviado com sucesso.",
       });
-      onComplete();
+
+      // Chamando onConfirm após o upload ser bem-sucedido
+      onConfirm(imagesBase64);
+
+      // Fechando o diálogo após o envio
+      setIsOpen(false);
     } catch (error) {
       console.error(error);
       toast({

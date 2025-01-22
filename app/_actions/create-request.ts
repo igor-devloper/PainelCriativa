@@ -122,7 +122,7 @@ export async function createRequest(data: CreateRequestData) {
         data: {
           userId,
           name: data.name,
-          description: data.description,
+          description: updatedDescription,
           amount: totalRequestAmount,
           currentBalance: requestedAmount,
           responsibleCompany: data.responsibleCompany,

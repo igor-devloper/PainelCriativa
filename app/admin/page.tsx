@@ -38,15 +38,15 @@ export default async function AdminPage() {
         pendingRequestsCount={pendingRequestsCount}
         userRole={userRole}
       />
-      <SidebarInset className="w-[100px] md:w-full">
+      <SidebarInset className="md:w-full">
         <header className="flex h-16 shrink-0 items-center gap-2">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
           </div>
         </header>
-        <div className="flex w-[350px] flex-col space-y-6 overflow-hidden p-6 pb-10 pr-10 md:w-full">
-          <div className="flex justify-between">
+        <div className="overflow-hiden w-[400px] space-y-6 p-6 pb-10 pr-10 md:w-full">
+          <div className="flex flex-col justify-between md:flex-row">
             <div className="flex h-16 items-center gap-4 px-4">
               <LayoutDashboard className="h-6 w-6" />
               <h1 className="text-xl font-semibold">Painel Administrativo</h1>

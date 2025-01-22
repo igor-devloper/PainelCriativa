@@ -59,14 +59,6 @@ export function RequestsList({ requests, userRole, user }: RequestsListProps) {
           description: "O status da solicitação foi atualizado com sucesso.",
         });
         router.refresh();
-
-        if (newStatus === "COMPLETED") {
-          const request = requests.find((r) => r.id === requestId);
-          if (request) {
-            setSelectedRequest(request);
-            setDialogOpen(true);
-          }
-        }
       }
     } catch (error) {
       toast({
@@ -79,10 +71,26 @@ export function RequestsList({ requests, userRole, user }: RequestsListProps) {
       setIsUpdating(null);
     }
   }
+
+  const handleStatusComplete = (
+    requestId: string,
+    newStatus: RequestStatus,
+  ) => {
+    if (newStatus === "COMPLETED") {
+      const request = requests.find((r) => r.id === requestId);
+      if (request) {
+        setSelectedRequest(request);
+        setDialogOpen(true); // Garantir que o estado seja setado para abrir o diálogo
+      }
+    }
+  };
+
   const handleStatusSelect = (requestId: string, newStatus: RequestStatus) => {
     if (newStatus === "DENIED") {
       setSelectedRequest(requests.find((r) => r.id === requestId) || null);
       setDenialDialogOpen(true);
+    } else if (newStatus === "COMPLETED") {
+      handleStatusComplete(requestId, newStatus);
     } else {
       handleStatusChange(requestId, newStatus);
     }
@@ -171,8 +179,12 @@ export function RequestsList({ requests, userRole, user }: RequestsListProps) {
         isOpen={dialogOpen}
         setIsOpen={setDialogOpen}
         request={selectedRequest}
-        onComplete={() => {
+        onConfirm={() => {
+          if (selectedRequest) {
+            handleStatusChange(selectedRequest.id, "COMPLETED");
+          }
           setDialogOpen(false);
+
           setSelectedRequest(null);
           router.refresh();
         }}
