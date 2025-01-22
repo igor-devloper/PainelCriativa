@@ -41,7 +41,7 @@ export function RequestsPageWrapper({
           </div>
         </header>
         <ScrollArea>
-          <div className="flex w-[350px] flex-col overflow-hidden p-6 pb-10 pr-10 md:w-full">
+          <div className="flex w-full flex-col overflow-hidden p-6 pb-10 pr-10 md:w-full">
             <div className="flex justify-between">
               <div className="flex justify-between">
                 <div className="flex h-16 items-center gap-4 px-4">
