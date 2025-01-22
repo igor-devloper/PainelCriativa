@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import {
@@ -12,6 +13,7 @@ import { DashboardOverview } from "./dashboard-overview";
 import { HomeIcon } from "lucide-react";
 import { Avatar } from "@/app/_components/ui/avatar";
 import UserInfo from "./user-info";
+import { UserButton } from "@clerk/nextjs";
 
 interface ClientHomeWrapperProps {
   userRole: UserRole;
@@ -43,7 +45,16 @@ export function ClientHomeWrapper({
           </div>
           <div className="flex items-center gap-4">
             <Avatar>
-              <UserInfo userId={userId} />
+              <UserButton
+                showName={true}
+                appearance={{
+                  elements: {
+                    userButtonBox: "flex items-center gap-2",
+                    userButtonOuterIdentifier: "text-black font-semibold",
+                    userButtonTrigger: "focus:shadow-none focus:outline-none",
+                  },
+                }}
+              />
             </Avatar>
           </div>
         </header>
