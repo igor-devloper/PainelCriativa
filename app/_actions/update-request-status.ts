@@ -194,7 +194,8 @@ async function getGZappyMessage(
         `${proofBase64 ? `💵 Link do comprovante: ${proofBase64}\n\n` : ""}` +
         `Sua solicitação de verba foi finalizada com sucesso!\n\n` +
         `Você pode acessar os detalhes da transação no painel.\n\n` +
-        `Obrigado por sua paciência.`
+        `https://painel-criativa.vercel.app/accounting \n\n` +
+        `Obrigado por sua paciência.\n\n`
       );
 
     default:
