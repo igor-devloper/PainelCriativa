@@ -79,7 +79,7 @@ export async function updateRequestStatus(
                 id: userBalance.id,
               },
               data: {
-                balance: currentBalance.minus(balanceDeducted),
+                balance: request.amount,
               },
             });
           } else {
@@ -87,7 +87,7 @@ export async function updateRequestStatus(
               data: {
                 userId: request.userId,
                 company: request.responsibleCompany,
-                balance: new Prisma.Decimal(0),
+                balance: request.currentBalance,
               },
             });
           }
@@ -116,19 +116,19 @@ export async function updateRequestStatus(
           }
         }
 
-        const message = await getGZappyMessage(
-          request,
-          newStatus,
-          denialReason,
-          proofBase64,
-        );
+        // const message = await getGZappyMessage(
+        //   request,
+        //   newStatus,
+        //   denialReason,
+        //   proofBase64,
+        // );
 
-        await sendMessageThroughGZappy(
-          tx,
-          request.phoneNumber,
-          message,
-          requestId,
-        );
+        // await sendMessageThroughGZappy(
+        //   tx,
+        //   request.phoneNumber,
+        //   message,
+        //   requestId,
+        // );
       },
       {
         maxWait: 10000,

@@ -32,7 +32,7 @@ export function AddExpenseButton({
           <Loader2 className="h-4 w-4 animate-spin" />
         ) : (
           <>
-            Adicionar transação
+            Registrar despesa
             <ArrowDownUpIcon className="ml-2 h-4 w-4" />
           </>
         )}
