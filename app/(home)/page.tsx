@@ -1,37 +1,29 @@
-export const revalidate = 0;
-export const dynamic = "force-dynamic";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { ClientHomeWrapper } from "@/app/_components/client-home-wrapper";
-import { getUserRole } from "@/app/_lib/utils";
-import { getPendingRequestsCount } from "@/app/_actions/get-pending-requests-count";
-import { getAdminStats } from "../_actions/get-admin-stats";
+import { getDashboardOverview } from "@/app/_actions/get-dashboard-overview";
+import { getUserRole } from "../_lib/utils";
 
-export const metadata = {
-  title: "Home - Painel Criativa",
-};
-
-export default async function Home() {
+export default async function HomePage() {
   const { userId } = auth();
-
   if (!userId) {
     redirect("/login");
   }
 
   const user = await clerkClient.users.getUser(userId);
+  const dashboardData = await getDashboardOverview();
   const userRole = getUserRole(user.publicMetadata);
-  const pendingRequestsCount = await getPendingRequestsCount();
-  const userCount = await clerkClient.users.getCount();
-  const stats = await getAdminStats();
 
   return (
     <ClientHomeWrapper
-      stats={stats}
       userRole={userRole}
-      pendingRequestsCount={pendingRequestsCount}
-      userName={user.fullName ?? ""}
-      userId={userId}
-      userCount={userCount}
+      userName={`${user.firstName} ${user.lastName}`}
+      pendingRequestsCount={dashboardData.pendingRequests.count}
+      activeUsersCount={dashboardData.activeUsers.count}
+      activeUsersChange={dashboardData.activeUsers.percentageChange}
+      accountStatementsCount={dashboardData.accountStatements.count}
+      accountStatementsChange={dashboardData.accountStatements.percentageChange}
+      recentActivity={dashboardData.recentActivity}
     />
   );
 }

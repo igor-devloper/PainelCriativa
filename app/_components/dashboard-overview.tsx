@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Card,
   CardContent,
@@ -6,36 +5,50 @@ import {
   CardHeader,
   CardTitle,
 } from "@/app/_components/ui/card";
-import type { AdminStats, UserRole } from "@/app/types";
-import { Button } from "@/app/_components/ui/button";
+import type { UserRole } from "@/app/types";
 import { ClipboardList, Users, FileText } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { CreateRequestButton } from "./create-request-button";
 import Link from "next/link";
+import { Button } from "./ui/button";
 
 interface DashboardOverviewProps {
   userRole: UserRole;
-  pendingRequestsCount: number;
   userName: string;
-  userCount: number;
-  stats: AdminStats;
+  pendingRequestsCount: number;
+  activeUsersCount: number;
+  activeUsersChange: number;
+  accountStatementsCount: number;
+  accountStatementsChange: number;
+  recentActivity: {
+    id: string;
+    type: "REQUEST_CREATED" | "STATEMENT_APPROVED" | "USER_REGISTERED";
+    description: string;
+    userFullName: string;
+    createdAt: Date;
+  }[];
 }
 
 export function DashboardOverview({
-  userRole,
-  pendingRequestsCount,
   userName,
-  userCount,
-  stats,
+  pendingRequestsCount,
+  activeUsersCount,
+  activeUsersChange,
+  accountStatementsCount,
+  accountStatementsChange,
+  recentActivity,
+  userRole,
 }: DashboardOverviewProps) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <h2 className="text-2xl font-bold tracking-tight">
           Bem-vindo, {userName}!
         </h2>
         <CreateRequestButton />
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -47,32 +60,21 @@ export function DashboardOverview({
             <div className="text-2xl font-bold">{pendingRequestsCount}</div>
           </CardContent>
         </Card>
-        {/* <Card>
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Despesas</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">
+              Usuários Ativos
+            </CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold"></div>
-            <p className="text-xs text-muted-foreground">+10% em relação ao mês passado</p>
+            <div className="text-2xl font-bold">+{activeUsersCount}</div>
+            <p className="text-xs text-muted-foreground">
+              {activeUsersChange > 0 ? "+" : ""}
+              {activeUsersChange.toFixed(0)}% em relação ao mês passado
+            </p>
           </CardContent>
-        </Card> */}
-        {userRole === "ADMIN" || userRole === "FINANCE" ? (
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Usuários Ativos
-              </CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">+{userCount}</div>
-              <p className="text-xs text-muted-foreground"></p>
-            </CardContent>
-          </Card>
-        ) : (
-          ""
-        )}
+        </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -81,15 +83,15 @@ export function DashboardOverview({
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {stats.openAccountingBlocks}
-            </div>
+            <div className="text-2xl font-bold">{accountStatementsCount}</div>
             <p className="text-xs text-muted-foreground">
-              -8% em relação ao mês passado
+              {accountStatementsChange > 0 ? "+" : ""}
+              {accountStatementsChange.toFixed(0)}% em relação ao mês passado
             </p>
           </CardContent>
         </Card>
       </div>
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card className="col-span-4">
           <CardHeader>
@@ -121,48 +123,37 @@ export function DashboardOverview({
             )}
           </CardContent>
         </Card>
-        {/* <Card className="col-span-3">
+        <Card className="col-span-4">
           <CardHeader>
             <CardTitle>Atividade Recente</CardTitle>
-            <CardDescription>
-              Você tem 3 solicitações não visualizadas
-            </CardDescription>
+            <CardDescription>Últimas atualizações do sistema</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center">
-                <div className="ml-4 space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    Nova solicitação criada
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Há 2 horas por João Silva
-                  </p>
+              {recentActivity.map((activity) => (
+                <div key={activity.id} className="flex items-center">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      {activity.type === "REQUEST_CREATED" &&
+                        "Nova solicitação criada"}
+                      {activity.type === "STATEMENT_APPROVED" &&
+                        "Prestação de contas aprovada"}
+                      {activity.type === "USER_REGISTERED" &&
+                        "Novo usuário registrado"}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {formatDistanceToNow(activity.createdAt, {
+                        addSuffix: true,
+                        locale: ptBR,
+                      })}{" "}
+                      por {activity.userFullName}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center">
-                <div className="ml-4 space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    Prestação de contas aprovada
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Há 5 horas por Maria Oliveira
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <div className="ml-4 space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    Novo usuário registrado
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Há 1 dia por Carlos Ferreira
-                  </p>
-                </div>
-              </div>
+              ))}
             </div>
           </CardContent>
-        </Card> */}
+        </Card>
       </div>
     </div>
   );

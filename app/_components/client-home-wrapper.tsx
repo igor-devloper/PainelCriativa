@@ -18,20 +18,30 @@ import { Separator } from "./ui/separator";
 
 interface ClientHomeWrapperProps {
   userRole: UserRole;
-  pendingRequestsCount: number;
   userName: string;
-  userId: string;
-  userCount: number;
-  stats: AdminStats;
+  pendingRequestsCount: number;
+  activeUsersCount: number;
+  activeUsersChange: number;
+  accountStatementsCount: number;
+  accountStatementsChange: number;
+  recentActivity: {
+    id: string;
+    type: "REQUEST_CREATED" | "STATEMENT_APPROVED" | "USER_REGISTERED";
+    description: string;
+    userFullName: string;
+    createdAt: Date;
+  }[];
 }
 
 export function ClientHomeWrapper({
-  userRole,
-  pendingRequestsCount,
   userName,
-  userCount,
-  userId,
-  stats,
+  pendingRequestsCount,
+  userRole,
+  activeUsersCount,
+  activeUsersChange,
+  accountStatementsCount,
+  accountStatementsChange,
+  recentActivity,
 }: ClientHomeWrapperProps) {
   return (
     <SidebarProvider>
@@ -62,17 +72,20 @@ export function ClientHomeWrapper({
         <div className="flex justify-between p-5">
           <div className="flex items-center gap-4">
             <HomeIcon className="h-5 w-5" />
-            <h1 className="text-lg font-semibold">Dashboard</h1>
+            <h1 className="text-lg font-semibold">Home</h1>
           </div>
         </div>
         <ScrollArea className="flex-1">
           <div className="container mx-auto p-6">
             <DashboardOverview
-              stats={stats}
-              userCount={userCount}
               userRole={userRole}
-              pendingRequestsCount={pendingRequestsCount}
               userName={userName}
+              pendingRequestsCount={pendingRequestsCount}
+              activeUsersCount={activeUsersCount}
+              activeUsersChange={activeUsersChange}
+              accountStatementsCount={accountStatementsCount}
+              accountStatementsChange={activeUsersChange}
+              recentActivity={recentActivity}
             />
           </div>
         </ScrollArea>
