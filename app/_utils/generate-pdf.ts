@@ -2,11 +2,12 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { AccountingBlock } from "@/app/types";
 import { formatDate, formatCurrency } from "@/app/_lib/utils";
+import { clerkClient } from "@clerk/nextjs/server";
 
 // Company CNPJs mapping
 const COMPANY_CNPJS = {
-  "GSM SOLARION 02": "44.910.546/0001-55", // Replace with actual CNPJ
-  "CRIATIVA ENERGIA": "Não consta", // Replace with actual CNPJ
+  "GSM SOLARION 02": "44.910.546/0001-55",
+  "CRIATIVA ENERGIA": "Não consta",
   "OESTE BIOGÁS": "41.106.939/0001-12",
   "EXATA I": "38.406.585/0001-17",
 };
@@ -18,9 +19,9 @@ export async function generateAccountingPDF(
   // Create new PDF document
   const doc = new jsPDF();
 
-  // Add Criativa logo in the top right
-  const logoWidth = 50; // Largura desejada
-  const logoHeight = logoWidth * (551 / 453); // Altura proporcional
+  // Resize and add the logo
+  const logoWidth = 30; // Width of the logo
+  const logoHeight = logoWidth * (551 / 453); // Maintain original aspect ratio
   doc.addImage("/logo.png", "PNG", 140, 10, logoWidth, logoHeight);
 
   const getCompanyCNPJ = (companyName: string): string => {
@@ -29,11 +30,15 @@ export async function generateAccountingPDF(
       : "";
   };
 
+  // Fetch user information
+  const user = await clerkClient.users.getUser(block.request?.userId ?? "");
+  const userName = user?.firstName ?? "N/A";
+
   const companyCNPJ = getCompanyCNPJ(companyName);
 
   // Add header table with updated styling
   autoTable(doc, {
-    startY: 10,
+    startY: 10 + logoHeight + 5, // Adjust position after logo
     head: [],
     body: [
       [
@@ -99,7 +104,7 @@ export async function generateAccountingPDF(
       ],
     ],
     body: [
-      ["Colaborador:", block.request?.name || ""],
+      ["Colaborador:", userName],
       ["Descrição conta financeira:", `Despesas empresa ${companyName}`],
       [
         "Período:",
@@ -133,7 +138,7 @@ export async function generateAccountingPDF(
     },
   });
 
-  // Add expenses table with the new styling
+  // Add expenses table with new styling
   autoTable(doc, {
     startY: doc.lastAutoTable.finalY + 10,
     head: [["Data", "Fonte", "Crédito", "Valor despesa", "Descrição Despesa"]],
@@ -161,24 +166,20 @@ export async function generateAccountingPDF(
   doc.text("Comprovantes:", 14, yPos);
   yPos += 10;
 
-  // Add receipt images
   for (const expense of block.expenses) {
     if (expense.imageUrls && expense.imageUrls.length > 0) {
       for (const url of expense.imageUrls) {
         try {
           const img = await loadImage(url);
 
-          // Check if we need a new page
           if (yPos > 250) {
             doc.addPage();
             yPos = 20;
           }
 
-          // Add receipt image
           doc.addImage(img, "JPEG", 14, yPos, 100, 100);
           yPos += 110;
 
-          // Add expense info under image
           doc.setFontSize(9);
           doc.text(
             `${expense.name} - ${expense.description} - ${formatCurrency(Number(expense.amount))}`,
@@ -196,7 +197,7 @@ export async function generateAccountingPDF(
   return doc;
 }
 
-// Helper function to load images (remains the same)
+// Helper function to load images
 function loadImage(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
