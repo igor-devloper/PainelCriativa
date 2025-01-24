@@ -12,7 +12,8 @@ interface DownloadPDFButtonProps {
 export function DownloadPDFButton({ block }: DownloadPDFButtonProps) {
   const handleDownload = async () => {
     try {
-      const doc = await generateAccountingPDF(block);
+      const companyName = block.company;
+      const doc = await generateAccountingPDF(block, companyName);
       doc.save(`prestacao-de-contas-${block.code}.pdf`);
     } catch (error) {
       console.error("Error generating PDF:", error);

@@ -8,7 +8,11 @@ import {
 } from "@/app/_components/ui/card";
 import { cn } from "@/app/_lib/utils";
 
-type CompanyName = "GSM SOLARION 02" | "CRIATIVA ENERGIA" | "OESTE BIOGÁS";
+type CompanyName =
+  | "GSM SOLARION 02"
+  | "CRIATIVA ENERGIA"
+  | "OESTE BIOGÁS"
+  | "EXATA I";
 
 interface UserBalanceProps {
   balances: Partial<Record<CompanyName, number>>;
@@ -26,6 +30,7 @@ export function UserBalance({ balances = {} }: UserBalanceProps) {
     "GSM SOLARION 02",
     "CRIATIVA ENERGIA",
     "OESTE BIOGÁS",
+    "EXATA I",
   ];
 
   return (

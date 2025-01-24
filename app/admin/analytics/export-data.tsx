@@ -9,13 +9,14 @@ import {
   CardTitle,
 } from "@/app/_components/ui/card";
 import { Button } from "@/app/_components/ui/button";
-import { exportToExcel, exportToPDF } from "@/app/_actions/admin-analytics";
-import { toast } from "sonner";
-import { FileSpreadsheet, FileText } from "lucide-react";
+import { exportToPDF } from "@/app/_actions/admin-analytics";
+import { useToast } from "@/app/_hooks/use-toast";
+import { FileText } from "lucide-react";
 import { format } from "date-fns";
 
 export function ExportDataCard() {
   const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
   const downloadFile = (
     data: Uint8Array,
@@ -23,15 +24,27 @@ export function ExportDataCard() {
     mimeType: string,
   ) => {
     try {
+      // Create blob with explicit type
       const blob = new Blob([data], { type: mimeType });
-      const url = window.URL.createObjectURL(blob);
+
+      // Create object URL
+      const url = URL.createObjectURL(blob);
+
+      // Create temporary link
       const link = document.createElement("a");
+      link.style.display = "none";
       link.href = url;
       link.download = filename;
+
+      // Append, click, and cleanup
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+
+      // Small timeout to ensure the download starts
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }, 100);
     } catch (error) {
       console.error("Download error:", error);
       throw new Error("Erro ao fazer download do arquivo");
@@ -47,7 +60,11 @@ export function ExportDataCard() {
       const data = await exportFunction();
 
       if (!data) {
-        toast.error("Não há dados suficientes para gerar o relatório");
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Não há dados suficientes para gerar o relatório",
+        });
         return;
       }
 
@@ -58,12 +75,17 @@ export function ExportDataCard() {
           : "application/pdf";
 
       downloadFile(data, fileName, mimeType);
-      toast.success(
-        `Relatório ${fileType.toUpperCase()} exportado com sucesso`,
-      );
+      toast({
+        title: "Sucesso",
+        description: `Relatório ${fileType.toUpperCase()} exportado com sucesso`,
+      });
     } catch (error) {
       console.error(`Export error (${fileType}):`, error);
-      toast.error(`Erro ao exportar relatório ${fileType.toUpperCase()}`);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: `Erro ao exportar relatório ${fileType.toUpperCase()}`,
+      });
     } finally {
       setLoading(false);
     }
@@ -79,15 +101,6 @@ export function ExportDataCard() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <Button
-            className="w-full justify-start"
-            variant="outline"
-            onClick={() => handleExport(exportToExcel, "xlsx")}
-            disabled={loading}
-          >
-            <FileSpreadsheet className="mr-2 h-4 w-4" />
-            Exportar como Excel
-          </Button>
           <Button
             className="w-full justify-start"
             variant="outline"

@@ -58,7 +58,12 @@ export async function getUserBalance(
         },
       });
 
-      const companies = ["GSM SOLARION 02", "CRIATIVA ENERGIA", "OESTE BIOGÁS"];
+      const companies = [
+        "GSM SOLARION 02",
+        "CRIATIVA ENERGIA",
+        "OESTE BIOGÁS",
+        "EXATA I",
+      ];
       const balances: { [key: string]: number } = {};
 
       // Initialize all companies with 0 balance
