@@ -7,13 +7,14 @@ import type { AccountingBlock } from "@/app/types";
 
 interface DownloadPDFButtonProps {
   block: AccountingBlock;
+  userName: string;
 }
 
-export function DownloadPDFButton({ block }: DownloadPDFButtonProps) {
+export function DownloadPDFButton({ block, userName }: DownloadPDFButtonProps) {
   const handleDownload = async () => {
     try {
       const companyName = block.company;
-      const doc = await generateAccountingPDF(block, companyName);
+      const doc = await generateAccountingPDF(block, companyName, userName);
       doc.save(`prestacao-de-contas-${block.code}.pdf`);
     } catch (error) {
       console.error("Error generating PDF:", error);

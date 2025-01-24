@@ -18,6 +18,7 @@ interface AccountingPageWrapperProps {
   accountingBlocks: AccountingBlock[];
   userBalances: { [key: string]: number };
   name: string;
+  userName: string;
 }
 
 export function AccountingPageWrapper({
@@ -25,6 +26,7 @@ export function AccountingPageWrapper({
   accountingBlocks,
   userBalances,
   name,
+  userName,
 }: AccountingPageWrapperProps) {
   const pendingRequestsCount = 0; // This should be fetched or passed as a prop
 
@@ -60,6 +62,7 @@ export function AccountingPageWrapper({
               <AccountingBlocksTable
                 blocks={accountingBlocks}
                 name={name}
+                userName={userName}
                 userRole={userRole}
               />
             </div>

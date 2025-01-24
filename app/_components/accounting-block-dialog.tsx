@@ -69,6 +69,7 @@ interface AccountingBlockDialogProps {
   onOpenChange: (open: boolean) => void;
   name: string;
   userRole: string;
+  userName: string;
 }
 
 export function AccountingBlockDialog({
@@ -77,6 +78,7 @@ export function AccountingBlockDialog({
   onOpenChange,
   name,
   userRole,
+  userName,
 }: AccountingBlockDialogProps) {
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const { toast } = useToast();
@@ -196,7 +198,11 @@ export function AccountingBlockDialog({
                   user={name}
                 />
               )}
-              {userRole === "ADMIN" ? <DownloadPDFButton block={block} /> : ""}
+              {userRole === "ADMIN" ? (
+                <DownloadPDFButton block={block} userName={userName} />
+              ) : (
+                ""
+              )}
               {block.status !== "CLOSED" && (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>

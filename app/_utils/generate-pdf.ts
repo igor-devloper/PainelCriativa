@@ -2,7 +2,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { AccountingBlock } from "@/app/types";
 import { formatDate, formatCurrency } from "@/app/_lib/utils";
-import { clerkClient } from "@clerk/nextjs/server";
+// import { clerkClient } from "@clerk/nextjs/server";
 
 // Company CNPJs mapping
 const COMPANY_CNPJS = {
@@ -15,6 +15,7 @@ const COMPANY_CNPJS = {
 export async function generateAccountingPDF(
   block: AccountingBlock,
   companyName: string,
+  name: string,
 ) {
   const doc = new jsPDF();
 
@@ -28,9 +29,6 @@ export async function generateAccountingPDF(
       ? COMPANY_CNPJS[companyName as keyof typeof COMPANY_CNPJS]
       : "";
   };
-
-  const user = await clerkClient.users.getUser(block.request?.userId ?? "");
-  const userName = user?.firstName ?? "N/A";
 
   const companyCNPJ = getCompanyCNPJ(companyName);
 
@@ -68,7 +66,7 @@ export async function generateAccountingPDF(
       ],
     ],
     body: [
-      ["Colaborador:", userName],
+      ["Colaborador:", name],
       ["Descrição conta financeira:", `Despesas empresa ${companyName}`],
       [
         "Período:",
