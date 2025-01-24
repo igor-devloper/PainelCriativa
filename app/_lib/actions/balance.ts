@@ -88,6 +88,7 @@ export async function registerExpense(
   try {
     const block = await db.accountingBlock.findUnique({
       where: { id: blockId },
+      include: { request: true },
     });
 
     if (!block) {
@@ -114,15 +115,15 @@ export async function registerExpense(
           },
         });
 
-        // Find existing balance first
+        // Find existing balance for the block creator
         const existingBalance = await prisma.userBalance.findFirst({
           where: {
-            userId: userId,
+            userId: block.request.userId,
             company: block.company,
           },
         });
 
-        // Update or create the balance
+        // Update or create the balance for the block creator
         const updatedBalance = existingBalance
           ? await prisma.userBalance.update({
               where: {
@@ -136,7 +137,7 @@ export async function registerExpense(
             })
           : await prisma.userBalance.create({
               data: {
-                userId: userId,
+                userId: block.request.userId,
                 company: block.company,
                 balance: new Prisma.Decimal(-data.amount),
               },
