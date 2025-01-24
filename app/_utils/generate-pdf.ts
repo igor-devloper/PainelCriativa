@@ -16,12 +16,11 @@ export async function generateAccountingPDF(
   block: AccountingBlock,
   companyName: string,
 ) {
-  // Create new PDF document
   const doc = new jsPDF();
 
-  // Resize and add the logo
-  const logoWidth = 30; // Width of the logo
-  const logoHeight = logoWidth * (551 / 453); // Maintain original aspect ratio
+  // Logo settings
+  const logoWidth = 30;
+  const logoHeight = logoWidth * (551 / 453);
   doc.addImage("/logo.png", "PNG", 140, 10, logoWidth, logoHeight);
 
   const getCompanyCNPJ = (companyName: string): string => {
@@ -30,54 +29,19 @@ export async function generateAccountingPDF(
       : "";
   };
 
-  // Fetch user information
   const user = await clerkClient.users.getUser(block.request?.userId ?? "");
   const userName = user?.firstName ?? "N/A";
 
   const companyCNPJ = getCompanyCNPJ(companyName);
 
-  // Add header table with updated styling
+  // Header table
   autoTable(doc, {
-    startY: 10 + logoHeight + 5, // Adjust position after logo
-    head: [],
+    startY: 10 + logoHeight + 5,
     body: [
-      [
-        {
-          content: "Data da última atualização:",
-          styles: { fontStyle: "bold", cellWidth: 50 },
-        },
-        {
-          content: formatDate(new Date()),
-          styles: { cellWidth: 40 },
-        },
-      ],
-      [
-        {
-          content: "Empresa:",
-          styles: { fontStyle: "bold" },
-        },
-        {
-          content: companyName,
-        },
-      ],
-      [
-        {
-          content: "CNPJ:",
-          styles: { fontStyle: "bold" },
-        },
-        {
-          content: companyCNPJ,
-        },
-      ],
-      [
-        {
-          content: "Documento:",
-          styles: { fontStyle: "bold" },
-        },
-        {
-          content: `Prestação de Contas - ${block.code}`,
-        },
-      ],
+      ["Data da última atualização:", formatDate(new Date())],
+      ["Empresa:", companyName],
+      ["CNPJ:", companyCNPJ],
+      ["Documento:", `Prestação de Contas - ${block.code}`],
     ],
     theme: "plain",
     styles: {
@@ -87,7 +51,7 @@ export async function generateAccountingPDF(
     margin: { right: 70 },
   });
 
-  // Add "DADOS COLABORADOR" section with gray background
+  // Colaborador data
   autoTable(doc, {
     startY: doc.lastAutoTable.finalY + 10,
     head: [
@@ -118,7 +82,7 @@ export async function generateAccountingPDF(
     },
   });
 
-  // Add financial information table
+  // Financial summary
   const totalExpenses = block.expenses.reduce(
     (total, expense) => total + Number(expense.amount),
     0,
@@ -138,7 +102,7 @@ export async function generateAccountingPDF(
     },
   });
 
-  // Add expenses table with new styling
+  // Expenses table
   autoTable(doc, {
     startY: doc.lastAutoTable.finalY + 10,
     head: [["Data", "Fonte", "Crédito", "Valor despesa", "Descrição Despesa"]],
@@ -160,33 +124,32 @@ export async function generateAccountingPDF(
     },
   });
 
-  // Add receipts section
-  let yPos = doc.lastAutoTable.finalY + 20;
-  doc.setFontSize(12);
-  doc.text("Comprovantes:", 14, yPos);
-  yPos += 10;
-
+  // Add receipts, one per page
   for (const expense of block.expenses) {
     if (expense.imageUrls && expense.imageUrls.length > 0) {
       for (const url of expense.imageUrls) {
         try {
           const img = await loadImage(url);
 
-          if (yPos > 250) {
-            doc.addPage();
-            yPos = 20;
-          }
+          // Start a new page for each receipt
+          doc.addPage();
 
-          doc.addImage(img, "JPEG", 14, yPos, 100, 100);
-          yPos += 110;
+          // Add receipt image
+          const margin = 20;
+          const imgWidth = 160; // Adjusted image width
+          const imgHeight = (imgWidth * img.height) / img.width; // Maintain aspect ratio
+          doc.addImage(img, "JPEG", margin, margin, imgWidth, imgHeight);
 
-          doc.setFontSize(9);
+          // Add expense info below the image
+          const textY = margin + imgHeight + 10;
+          doc.setFontSize(10);
           doc.text(
-            `${expense.name} - ${expense.description} - ${formatCurrency(Number(expense.amount))}`,
-            14,
-            yPos,
+            `Despesa: ${expense.name}\nDescrição: ${expense.description}\nValor: ${formatCurrency(
+              Number(expense.amount),
+            )}`,
+            margin,
+            textY,
           );
-          yPos += 20;
         } catch (error) {
           console.error("Error loading receipt image:", error);
         }
