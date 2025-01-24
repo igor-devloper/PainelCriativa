@@ -20,7 +20,7 @@ export async function generateAccountingPDF(
 
   // Add Criativa logo in the top right
   const logoWidth = 50; // Largura desejada
-  const logoHeight = (20 / 50) * logoWidth; // Altura proporcional (baseada na proporção original)
+  const logoHeight = logoWidth * (551 / 453); // Altura proporcional
   doc.addImage("/logo.png", "PNG", 140, 10, logoWidth, logoHeight);
 
   const getCompanyCNPJ = (companyName: string): string => {
