@@ -116,19 +116,19 @@ export async function updateRequestStatus(
           }
         }
 
-        const message = await getGZappyMessage(
-          request,
-          newStatus,
-          denialReason,
-          proofBase64,
-        );
+        // const message = await getGZappyMessage(
+        //   request,
+        //   newStatus,
+        //   denialReason,
+        //   proofBase64,
+        // );
 
-        await sendMessageThroughGZappy(
-          tx,
-          request.phoneNumber,
-          message,
-          requestId,
-        );
+        // await sendMessageThroughGZappy(
+        //   tx,
+        //   request.phoneNumber,
+        //   message,
+        //   requestId,
+        // );
       },
       {
         maxWait: 10000,

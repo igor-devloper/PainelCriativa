@@ -64,3 +64,23 @@ export function generateBlockCode(lastCode: string | undefined) {
     return "01-PRC";
   }
 }
+export function formatExpenseCategory(category: string): string {
+  const categoryMap: Record<string, string> = {
+    FOODANDBEVERAGE: "Alimentação",
+    ACCOMMODATION: "Hospedagem",
+    TOLL: "Pedágio",
+    FREIGHT: "Frete",
+    POSTAGE: "Correios",
+    PRINTING: "Impressão",
+    FUEL: "Combustível",
+    VEHICLERENTAL: "Aluguel de Veículo",
+    TICKET: "Passagem",
+    AIRTICKET: "Passagem Aérea",
+    BUSTICKET: "Passagem Ônibus",
+    VEHICLEWASH: "Lavagem",
+    ADVANCE: "Adiantamento",
+    SUPPLIES: "Suprimentos",
+    OTHER: "Outros",
+  };
+  return categoryMap[category] || category;
+}

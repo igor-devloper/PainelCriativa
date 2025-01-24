@@ -1,11 +1,26 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use server";
 
 import { db } from "@/app/_lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import type { ExpenseCategory } from "@prisma/client";
-import Excel from "exceljs";
-import { PDFDocument, rgb } from "pdf-lib";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
+import { formatExpenseCategory } from "@/app/_lib/utils";
+
+// Extend jsPDF with autoTable types
+declare module "jspdf" {
+  interface jsPDF {
+    autoTable: (options: {
+      head: string[][];
+      body: string[][];
+      startY: number;
+    }) => void;
+    lastAutoTable: {
+      finalY: number;
+    };
+  }
+}
 
 export interface CompanyMetrics {
   company: string;
@@ -166,7 +181,7 @@ export async function getExpenseAnalytics(
 export async function exportToExcel(
   startDate?: Date,
   endDate?: Date,
-): Promise<Uint8Array> {
+): Promise<Uint8Array | null> {
   const { userId } = auth();
   if (!userId) throw new Error("Unauthorized");
 
@@ -175,50 +190,68 @@ export async function exportToExcel(
     getExpenseAnalytics(startDate, endDate),
   ]);
 
-  const workbook = new Excel.Workbook();
+  // Validate if we have data to export
+  if (companyMetrics.length === 0 && expenseAnalytics.byCategory.length === 0) {
+    return null;
+  }
 
-  // Métricas por Empresa
-  const metricsSheet = workbook.addWorksheet("Métricas por Empresa");
-  metricsSheet.columns = [
-    { header: "Empresa", key: "company", width: 30 },
-    { header: "Total de Despesas", key: "expenses", width: 20 },
-    { header: "Total de Solicitações", key: "requests", width: 20 },
-    { header: "Blocos Abertos", key: "blocks", width: 20 },
-  ];
+  // Create workbook
+  const wb = XLSX.utils.book_new();
 
-  companyMetrics.forEach((metric) => {
-    metricsSheet.addRow({
-      company: metric.company,
-      expenses: metric.totalExpenses,
-      requests: metric.totalRequests,
-      blocks: metric.openBlocks,
-    });
-  });
+  // Company Metrics Sheet - Add default row if empty
+  const metricsData =
+    companyMetrics.length > 0
+      ? companyMetrics.map((metric) => ({
+          Empresa: metric.company,
+          "Total de Despesas": metric.totalExpenses,
+          "Total de Solicitações": metric.totalRequests,
+          "Blocos Abertos": metric.openBlocks,
+        }))
+      : [
+          {
+            Empresa: "Sem dados no período",
+            "Total de Despesas": 0,
+            "Total de Solicitações": 0,
+            "Blocos Abertos": 0,
+          },
+        ];
 
-  // Análise de Despesas
-  const analysisSheet = workbook.addWorksheet("Análise de Despesas");
-  analysisSheet.columns = [
-    { header: "Categoria", key: "category", width: 30 },
-    { header: "Valor", key: "amount", width: 20 },
-    { header: "Porcentagem", key: "percentage", width: 20 },
-  ];
+  const metricsSheet = XLSX.utils.json_to_sheet(metricsData);
+  XLSX.utils.book_append_sheet(wb, metricsSheet, "Métricas por Empresa");
 
-  expenseAnalytics.byCategory.forEach((category) => {
-    analysisSheet.addRow({
-      category: category.category,
-      amount: category.amount,
-      percentage: `${category.percentage.toFixed(2)}%`,
-    });
-  });
+  // Expense Analysis Sheet - Add default row if empty
+  const analysisData =
+    expenseAnalytics.byCategory.length > 0
+      ? expenseAnalytics.byCategory.map((category) => ({
+          Categoria: formatExpenseCategory(category.category),
+          Valor: category.amount,
+          Porcentagem: category.percentage,
+        }))
+      : [
+          {
+            Categoria: "Sem dados no período",
+            Valor: 0,
+            Porcentagem: 0,
+          },
+        ];
 
-  const buffer = await workbook.xlsx.writeBuffer();
-  return new Uint8Array(buffer);
+  const analysisSheet = XLSX.utils.json_to_sheet(analysisData);
+  XLSX.utils.book_append_sheet(wb, analysisSheet, "Análise de Despesas");
+
+  // Write to buffer with error handling
+  try {
+    const excelBuffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+    return new Uint8Array(excelBuffer);
+  } catch (error) {
+    console.error("Error generating Excel:", error);
+    return null;
+  }
 }
 
 export async function exportToPDF(
   startDate?: Date,
   endDate?: Date,
-): Promise<Uint8Array> {
+): Promise<Uint8Array | null> {
   const { userId } = auth();
   if (!userId) throw new Error("Unauthorized");
 
@@ -227,66 +260,81 @@ export async function exportToPDF(
     getExpenseAnalytics(startDate, endDate),
   ]);
 
-  const pdfDoc = await PDFDocument.create();
-  const page = pdfDoc.addPage();
-  const { height, width } = page.getSize();
+  // Validate if we have data to export
+  if (companyMetrics.length === 0 && expenseAnalytics.byCategory.length === 0) {
+    return null;
+  }
 
-  let yOffset = height - 50;
+  try {
+    const doc = new jsPDF();
 
-  // Title
-  page.drawText("Relatório de Análise Financeira", {
-    x: 50,
-    y: yOffset,
-    size: 20,
-    color: rgb(0, 0, 0),
-  });
+    // Title
+    doc.setFontSize(16);
+    doc.text("Relatório de Análise Financeira", 14, 15);
 
-  yOffset -= 40;
+    // Period
+    if (startDate && endDate) {
+      doc.setFontSize(12);
+      doc.text(
+        `Período: ${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`,
+        14,
+        25,
+      );
+    }
 
-  // Company Metrics
-  page.drawText("Métricas por Empresa", {
-    x: 50,
-    y: yOffset,
-    size: 16,
-    color: rgb(0, 0, 0),
-  });
+    // Company Metrics
+    doc.setFontSize(14);
+    doc.text("Métricas por Empresa", 14, 35);
 
-  yOffset -= 20;
+    const metricsData =
+      companyMetrics.length > 0
+        ? companyMetrics.map((metric) => [
+            metric.company,
+            `R$ ${metric.totalExpenses.toFixed(2)}`,
+            metric.totalRequests.toString(),
+            metric.openBlocks.toString(),
+          ])
+        : [["Sem dados no período", "R$ 0,00", "0", "0"]];
 
-  companyMetrics.forEach((metric) => {
-    yOffset -= 20;
-    page.drawText(`${metric.company}: R$ ${metric.totalExpenses.toFixed(2)}`, {
-      x: 50,
-      y: yOffset,
-      size: 12,
-      color: rgb(0, 0, 0),
+    doc.autoTable({
+      head: [
+        [
+          "Empresa",
+          "Total de Despesas",
+          "Total de Solicitações",
+          "Blocos Abertos",
+        ],
+      ],
+      body: metricsData,
+      startY: 40,
     });
-  });
 
-  yOffset -= 40;
-
-  // Expense Analysis
-  page.drawText("Análise de Despesas por Categoria", {
-    x: 50,
-    y: yOffset,
-    size: 16,
-    color: rgb(0, 0, 0),
-  });
-
-  yOffset -= 20;
-
-  expenseAnalytics.byCategory.forEach((category) => {
-    yOffset -= 20;
-    page.drawText(
-      `${category.category}: R$ ${category.amount.toFixed(2)} (${category.percentage.toFixed(2)}%)`,
-      {
-        x: 50,
-        y: yOffset,
-        size: 12,
-        color: rgb(0, 0, 0),
-      },
+    // Expense Analysis
+    doc.setFontSize(14);
+    doc.text(
+      "Análise de Despesas por Categoria",
+      14,
+      doc.lastAutoTable.finalY + 10,
     );
-  });
 
-  return await pdfDoc.save();
+    const analysisData =
+      expenseAnalytics.byCategory.length > 0
+        ? expenseAnalytics.byCategory.map((category) => [
+            formatExpenseCategory(category.category),
+            `R$ ${category.amount.toFixed(2)}`,
+            `${category.percentage.toFixed(2)}%`,
+          ])
+        : [["Sem dados no período", "R$ 0,00", "0%"]];
+
+    doc.autoTable({
+      head: [["Categoria", "Valor", "Porcentagem"]],
+      body: analysisData,
+      startY: doc.lastAutoTable.finalY + 15,
+    });
+
+    return new Uint8Array(doc.output("arraybuffer"));
+  } catch (error) {
+    console.error("Error generating PDF:", error);
+    return null;
+  }
 }

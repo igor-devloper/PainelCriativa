@@ -22,18 +22,19 @@ import { ptBR } from "date-fns/locale";
 import { getCompanyMetrics } from "@/app/_actions/admin-analytics";
 import type { CompanyMetrics } from "@/app/_actions/admin-analytics";
 import { toast } from "sonner";
+import type { DateRange } from "react-day-picker";
+import { cn } from "@/app/_lib/utils";
 
 export function CompanyMetricsCard() {
-  const [date, setDate] = useState<Date | undefined>();
+  const [date, setDate] = useState<DateRange | undefined>();
   const [metrics, setMetrics] = useState<CompanyMetrics[]>([]);
   const [loading, setLoading] = useState(false);
 
   const handleViewReport = async () => {
     try {
       setLoading(true);
-      const endDate = date || new Date();
-      const startDate = new Date(endDate);
-      startDate.setMonth(startDate.getMonth() - 1);
+      const startDate = date?.from || new Date();
+      const endDate = date?.to || startDate;
 
       const data = await getCompanyMetrics(startDate, endDate);
       setMetrics(data);
@@ -67,16 +68,28 @@ export function CompanyMetricsCard() {
             <PopoverTrigger asChild>
               <Button className="w-full justify-start" variant="outline">
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {date
-                  ? format(date, "PP", { locale: ptBR })
-                  : "Filtrar por Período"}
+                {date?.from ? (
+                  date.to ? (
+                    <>
+                      {format(date.from, "LLL dd, y", { locale: ptBR })} -{" "}
+                      {format(date.to, "LLL dd, y", { locale: ptBR })}
+                    </>
+                  ) : (
+                    format(date.from, "LLL dd, y", { locale: ptBR })
+                  )
+                ) : (
+                  "Filtrar por Período"
+                )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
+            <PopoverContent className="w-auto p-0" align="start">
               <Calendar
-                mode="single"
+                initialFocus
+                mode="range"
+                defaultMonth={date?.from}
                 selected={date}
                 onSelect={setDate}
+                numberOfMonths={2}
                 locale={ptBR}
               />
             </PopoverContent>

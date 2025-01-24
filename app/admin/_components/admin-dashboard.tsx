@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { ScrollArea } from "@/app/_components/ui/scroll-area";
@@ -20,11 +19,8 @@ import {
   ClipboardList,
   DollarSign,
   FileText,
-  TrendingUp,
   Activity,
   UserPlus,
-  Building,
-  Calendar,
   Shield,
 } from "lucide-react";
 import { Button } from "@/app/_components/ui/button";
@@ -36,7 +32,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/app/_components/ui/table";
-import { formatCurrency } from "@/app/_lib/utils";
+import { formatCurrency, formatExpenseCategory } from "@/app/_lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { AdminDashboardData } from "@/app/_actions/get-admin-dashboard-data";
@@ -197,8 +193,8 @@ export function AdminDashboard({
                       </Card>
                     </div>
 
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-                      <Card className="col-span-4">
+                    <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-7">
+                      <Card className="col-span-4 md:col-span-3">
                         <CardHeader>
                           <CardTitle>Despesas por Categoria</CardTitle>
                           <CardDescription>
@@ -214,6 +210,9 @@ export function AdminDashboard({
                                 fontSize={12}
                                 tickLine={false}
                                 axisLine={false}
+                                tickFormatter={(value) =>
+                                  formatExpenseCategory(value)
+                                }
                               />
                               <YAxis
                                 stroke="#888888"
@@ -222,7 +221,31 @@ export function AdminDashboard({
                                 axisLine={false}
                                 tickFormatter={(value) => `R$${value}`}
                               />
-                              <Tooltip />
+                              <Tooltip
+                                content={({ active, payload }) => {
+                                  if (active && payload && payload.length) {
+                                    const data = payload[0];
+                                    return (
+                                      <div className="rounded-lg border bg-background p-2 shadow-sm">
+                                        <div className="grid gap-2">
+                                          <div className="flex flex-col">
+                                            <span className="text-[0.70rem] uppercase text-muted-foreground">
+                                              {data.stroke}
+                                            </span>
+                                            <span className="font-bold text-muted-foreground">
+                                              R${" "}
+                                              {data.value?.toLocaleString(
+                                                "pt-BR",
+                                              )}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  }
+                                  return null;
+                                }}
+                              />
                               <Bar
                                 dataKey="amount"
                                 fill="currentColor"
@@ -233,7 +256,7 @@ export function AdminDashboard({
                           </ResponsiveContainer>
                         </CardContent>
                       </Card>
-                      <Card className="col-span-3">
+                      <Card className="col-span-4 md:col-span-3">
                         <CardHeader>
                           <CardTitle>Atividade Recente</CardTitle>
                           <CardDescription>

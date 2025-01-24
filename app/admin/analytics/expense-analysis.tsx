@@ -25,6 +25,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { formatExpenseCategory } from "@/app/_lib/utils";
 
 export function ExpenseAnalysisCard() {
   const [analytics, setAnalytics] = useState<ExpenseAnalytics | null>(null);
@@ -92,9 +93,33 @@ export function ExpenseAnalysisCard() {
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={analytics.byCategory}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="category" />
+                    <XAxis
+                      dataKey="category"
+                      tickFormatter={(value) => formatExpenseCategory(value)}
+                    />
                     <YAxis />
-                    <Tooltip />
+                    <Tooltip
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0];
+                          return (
+                            <div className="rounded-lg border bg-background p-2 shadow-sm">
+                              <div className="grid gap-2">
+                                <div className="flex flex-col">
+                                  <span className="text-[0.70rem] uppercase text-muted-foreground">
+                                    Valor
+                                  </span>
+                                  <span className="font-bold text-muted-foreground">
+                                    R$ {data.value?.toLocaleString("pt-BR")}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
                     <Bar dataKey="amount" fill="#8884d8" />
                   </BarChart>
                 </ResponsiveContainer>
@@ -108,7 +133,28 @@ export function ExpenseAnalysisCard() {
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="month" />
                       <YAxis />
-                      <Tooltip />
+                      <Tooltip
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            const data = payload[0];
+                            return (
+                              <div className="rounded-lg border bg-background p-2 shadow-sm">
+                                <div className="grid gap-2">
+                                  <div className="flex flex-col">
+                                    <span className="text-[0.70rem] uppercase text-muted-foreground">
+                                      Valor
+                                    </span>
+                                    <span className="font-bold text-muted-foreground">
+                                      R$ {data.value?.toLocaleString("pt-BR")}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
                       <Line type="monotone" dataKey="amount" stroke="#8884d8" />
                     </LineChart>
                   </ResponsiveContainer>
