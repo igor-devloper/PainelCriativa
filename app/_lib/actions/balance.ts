@@ -125,55 +125,61 @@ export async function editExpense(
   }
 
   try {
-    const result = await db.$transaction(async (prisma) => {
-      const currentExpense = await prisma.expense.findUnique({
-        where: { id: expenseId },
-        include: {
-          block: {
-            include: {
-              request: true,
+    const result = await db.$transaction(
+      async (prisma) => {
+        const currentExpense = await prisma.expense.findUnique({
+          where: { id: expenseId },
+          include: {
+            block: {
+              include: {
+                request: true,
+              },
             },
           },
-        },
-      });
+        });
 
-      if (!currentExpense) {
-        throw new Error("Despesa não encontrada");
-      }
+        if (!currentExpense) {
+          throw new Error("Despesa não encontrada");
+        }
 
-      if (currentExpense.userId !== userId) {
-        throw new Error("Você não tem permissão para editar esta despesa");
-      }
+        if (currentExpense.userId !== userId) {
+          throw new Error("Você não tem permissão para editar esta despesa");
+        }
 
-      const oldAmount = currentExpense.amount;
-      const newAmount = new Prisma.Decimal(data.amount);
-      const difference = newAmount.sub(oldAmount);
+        const oldAmount = currentExpense.amount;
+        const newAmount = new Prisma.Decimal(data.amount);
+        const difference = newAmount.sub(oldAmount);
 
-      const updatedExpense = await prisma.expense.update({
-        where: { id: expenseId },
-        data: {
-          name: data.name,
-          description: data.description,
-          amount: newAmount,
-          category: data.category,
-          paymentMethod: data.paymentMethod,
-          date: data.date,
-          imageUrls: data.imageUrls,
-        },
-      });
+        const updatedExpense = await prisma.expense.update({
+          where: { id: expenseId },
+          data: {
+            name: data.name,
+            description: data.description,
+            amount: newAmount,
+            category: data.category,
+            paymentMethod: data.paymentMethod,
+            date: data.date,
+            imageUrls: data.imageUrls,
+          },
+        });
 
-      if (!difference.equals(new Prisma.Decimal(0))) {
-        await updateBalance(
-          prisma,
-          currentExpense.block.request.userId,
-          currentExpense.company,
-          difference.abs(),
-          difference.isPositive() ? "decrement" : "increment",
-        );
-      }
+        if (!difference.equals(new Prisma.Decimal(0))) {
+          await updateBalance(
+            prisma,
+            currentExpense.block.request.userId,
+            currentExpense.company,
+            difference.abs(),
+            difference.isPositive() ? "decrement" : "increment",
+          );
+        }
 
-      return updatedExpense;
-    });
+        return updatedExpense;
+      },
+      {
+        maxWait: 10000,
+        timeout: 60000,
+      },
+    );
 
     revalidatePath("/");
     revalidatePath("/dashboard");
@@ -197,40 +203,46 @@ export async function deleteExpense(expenseId: string) {
   }
 
   try {
-    const result = await db.$transaction(async (prisma) => {
-      const expense = await prisma.expense.findUnique({
-        where: { id: expenseId },
-        include: {
-          block: {
-            include: {
-              request: true,
+    const result = await db.$transaction(
+      async (prisma) => {
+        const expense = await prisma.expense.findUnique({
+          where: { id: expenseId },
+          include: {
+            block: {
+              include: {
+                request: true,
+              },
             },
           },
-        },
-      });
+        });
 
-      if (!expense) {
-        throw new Error("Despesa não encontrada");
-      }
+        if (!expense) {
+          throw new Error("Despesa não encontrada");
+        }
 
-      if (expense.userId !== userId) {
-        throw new Error("Você não tem permissão para excluir esta despesa");
-      }
+        if (expense.userId !== userId) {
+          throw new Error("Você não tem permissão para excluir esta despesa");
+        }
 
-      await prisma.expense.delete({
-        where: { id: expenseId },
-      });
+        await prisma.expense.delete({
+          where: { id: expenseId },
+        });
 
-      await updateBalance(
-        prisma,
-        expense.block.request.userId,
-        expense.company,
-        expense.amount,
-        "increment",
-      );
+        await updateBalance(
+          prisma,
+          expense.block.request.userId,
+          expense.company,
+          expense.amount,
+          "increment",
+        );
 
-      return expense;
-    });
+        return expense;
+      },
+      {
+        maxWait: 10000,
+        timeout: 60000,
+      },
+    );
 
     revalidatePath("/");
     revalidatePath("/dashboard");
@@ -265,42 +277,48 @@ export async function registerExpense(
   }
 
   try {
-    const result = await db.$transaction(async (prisma) => {
-      const block = await prisma.accountingBlock.findUnique({
-        where: { id: blockId },
-        include: { request: true },
-      });
+    const result = await db.$transaction(
+      async (prisma) => {
+        const block = await prisma.accountingBlock.findUnique({
+          where: { id: blockId },
+          include: { request: true },
+        });
 
-      if (!block) {
-        throw new Error("Bloco contábil não encontrado");
-      }
+        if (!block) {
+          throw new Error("Bloco contábil não encontrado");
+        }
 
-      const expense = await prisma.expense.create({
-        data: {
-          name: data.name,
-          description: data.description,
-          amount: new Prisma.Decimal(data.amount),
-          category: data.category,
-          paymentMethod: data.paymentMethod,
-          date: data.date,
-          blockId: blockId,
-          userId: userId,
-          imageUrls: data.imageUrls,
-          status: "WAITING",
-          company: block.company,
-        },
-      });
+        const expense = await prisma.expense.create({
+          data: {
+            name: data.name,
+            description: data.description,
+            amount: new Prisma.Decimal(data.amount),
+            category: data.category,
+            paymentMethod: data.paymentMethod,
+            date: data.date,
+            blockId: blockId,
+            userId: userId,
+            imageUrls: data.imageUrls,
+            status: "WAITING",
+            company: block.company,
+          },
+        });
 
-      await updateBalance(
-        prisma,
-        block.request.userId,
-        block.company,
-        new Prisma.Decimal(data.amount),
-        "decrement",
-      );
+        await updateBalance(
+          prisma,
+          block.request.userId,
+          block.company,
+          new Prisma.Decimal(data.amount),
+          "decrement",
+        );
 
-      return expense;
-    });
+        return expense;
+      },
+      {
+        maxWait: 10000,
+        timeout: 60000,
+      },
+    );
 
     revalidatePath("/");
     revalidatePath("/dashboard");

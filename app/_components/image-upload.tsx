@@ -10,6 +10,7 @@ interface ImageUploadProps {
   onChange: (files: File[]) => void;
   value: File[];
   maxFiles?: number;
+  disabled?: boolean;
 }
 
 export function ImageUpload({
