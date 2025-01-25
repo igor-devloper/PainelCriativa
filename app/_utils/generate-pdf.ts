@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { AccountingBlock } from "@/app/types";
@@ -10,6 +11,71 @@ const COMPANY_CNPJS = {
   "OESTE BIOGÁS": "41.106.939/0001-12",
   "EXATA I": "38.406.585/0001-17",
 };
+
+async function addReceiptToPage(doc: jsPDF, expense: any, url: string) {
+  try {
+    const img = await loadImage(url);
+
+    // Add new page for each receipt
+    doc.addPage();
+
+    // Set up dimensions
+    const margin = 20;
+    const pageWidth = doc.internal.pageSize.width;
+
+    // Add receipt title
+    doc.setFontSize(12);
+    doc.text("COMPROVANTE", margin, margin);
+
+    // Calculate image dimensions
+    const maxWidth = pageWidth - 2 * margin;
+    const maxHeight = 200; // Fixed maximum height for receipts
+
+    // Calculate scaled dimensions maintaining aspect ratio
+    const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
+    const imgWidth = img.width * scale;
+    const imgHeight = img.height * scale;
+
+    // Center image horizontally
+    const xPos = (pageWidth - imgWidth) / 2;
+
+    // Add image with calculated dimensions
+    doc.addImage(img, "JPEG", xPos, margin + 10, imgWidth, imgHeight);
+
+    // Add expense details below image
+    const textY = margin + imgHeight + 20;
+    doc.setFontSize(10);
+    doc.text(
+      [
+        `Data: ${formatDate(expense.date)}`,
+        `Despesa: ${expense.name}`,
+        `Descrição: ${expense.description}`,
+        `Valor: ${formatCurrency(Number(expense.amount))}`,
+      ],
+      margin,
+      textY,
+    );
+  } catch (error) {
+    console.error("Error loading receipt image:", error);
+    doc.setFontSize(10);
+    doc.setTextColor(255, 0, 0);
+    doc.text("Erro ao carregar imagem do comprovante", 20, 20 + 10);
+    doc.setTextColor(0, 0, 0);
+  }
+}
+
+function loadImage(url: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous"; // Important for CORS
+    img.onload = () => resolve(img);
+    img.onerror = (e) => reject(new Error(`Failed to load image: ${e}`));
+
+    // Add timestamp to URL to prevent caching issues
+    const timestampedUrl = `${url}${url.includes("?") ? "&" : "?"}t=${Date.now()}`;
+    img.src = timestampedUrl;
+  });
+}
 
 export async function generateAccountingPDF(
   block: AccountingBlock,
@@ -126,90 +192,14 @@ export async function generateAccountingPDF(
     },
   });
 
-  // Add receipts section
-  if (block.expenses.some((expense) => expense.imageUrls?.length > 0)) {
-    doc.addPage();
-    doc.setFontSize(14);
-    doc.text("COMPROVANTES", 14, 20);
-  }
-
-  // Add receipts with improved layout
+  // Handle receipts
   for (const expense of block.expenses) {
     if (expense.imageUrls && expense.imageUrls.length > 0) {
       for (const url of expense.imageUrls) {
-        try {
-          const img = await loadImage(url);
-
-          // Calculate image dimensions while maintaining aspect ratio
-          const pageWidth = doc.internal.pageSize.width;
-          const pageHeight = doc.internal.pageSize.height;
-          const margin = 20;
-          const maxWidth = pageWidth - 2 * margin;
-          const maxHeight = pageHeight - 2 * margin - 40; // Leave space for text
-
-          let imgWidth = maxWidth;
-          let imgHeight = (imgWidth * img.height) / img.width;
-
-          // If height exceeds maximum, scale based on height instead
-          if (imgHeight > maxHeight) {
-            imgHeight = maxHeight;
-            imgWidth = (imgHeight * img.width) / img.height;
-          }
-
-          // Center the image horizontally
-          const xPos = (pageWidth - imgWidth) / 2;
-
-          // Add receipt header
-          doc.setFontSize(12);
-          doc.text("Comprovante de Despesa", xPos, margin);
-
-          // Add image
-          doc.addImage(img, "JPEG", xPos, margin + 10, imgWidth, imgHeight);
-
-          // Add expense details below image
-          const textY = margin + imgHeight + 20;
-          doc.setFontSize(10);
-          doc.text(
-            [
-              `Data: ${formatDate(expense.date)}`,
-              `Despesa: ${expense.name}`,
-              `Descrição: ${expense.description}`,
-              `Valor: ${formatCurrency(Number(expense.amount))}`,
-            ],
-            xPos,
-            textY,
-          );
-
-          // Add new page for next receipt
-          if (expense.imageUrls.indexOf(url) < expense.imageUrls.length - 1) {
-            doc.addPage();
-          }
-        } catch (error) {
-          console.error("Error loading receipt image:", error);
-          // Add error message to PDF
-          doc.setFontSize(10);
-          doc.setTextColor(255, 0, 0);
-          doc.text(
-            "Erro ao carregar imagem do comprovante",
-            20,
-            doc.lastAutoTable.finalY + 10,
-          );
-          doc.setTextColor(0, 0, 0);
-        }
+        await addReceiptToPage(doc, expense, url);
       }
     }
   }
 
   return doc;
-}
-
-// Helper function to load images
-function loadImage(url: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => resolve(img);
-    img.onerror = (e) => reject(new Error(`Failed to load image: ${e}`));
-    img.src = url;
-  });
 }
