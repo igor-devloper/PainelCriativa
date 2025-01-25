@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { ScrollArea } from "@/app/_components/ui/scroll-area";
 import {
   Card,
@@ -33,7 +34,6 @@ import {
 import { formatCurrency, formatExpenseCategory } from "@/app/_lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import type { AdminDashboardData } from "@/app/_actions/get-admin-dashboard-data";
 import {
   Bar,
   BarChart,
@@ -42,22 +42,22 @@ import {
   YAxis,
   Tooltip,
 } from "recharts";
-import { CompanyMetricsCard } from "../analytics/company-metrics";
-import { ExpenseAnalysisCard } from "../analytics/expense-analysis";
-import { ExportDataCard } from "../analytics/export-data";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@/app/_components/ui/sidebar";
 import { AppSidebar } from "@/app/_components/app-sidebar";
-import type { UserRole } from "@/app/types";
 import { Separator } from "@/app/_components/ui/separator";
 import { Avatar } from "@/app/_components/ui/avatar";
 import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { NewUserDialog } from "@/app/_components/new-user-dialog";
 import { UserTableRow } from "./user-table-row";
+import type { AdminDashboardData, UserRole } from "@/app/types/dashboard";
+import { CompanyMetricsCard } from "../analytics/company-metrics";
+import { ExpenseAnalysisCard } from "../analytics/expense-analysis";
+import { ExportDataCard } from "../analytics/export-data";
 
 interface AdminDashboardProps {
   data: AdminDashboardData;
@@ -67,9 +67,11 @@ interface AdminDashboardProps {
 
 export function AdminDashboard({
   data,
-  userRole,
   pendingRequestsCount,
+  userRole,
 }: AdminDashboardProps) {
+  const [activeTab, setActiveTab] = useState("overview");
+
   return (
     <SidebarProvider>
       <AppSidebar
@@ -114,7 +116,11 @@ export function AdminDashboard({
               </div>
             </div>
 
-            <Tabs defaultValue="overview" className="space-y-4">
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="space-y-4"
+            >
               <TabsList className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 <TabsTrigger value="overview">Visão Geral</TabsTrigger>
                 <TabsTrigger value="users">Usuários</TabsTrigger>
@@ -193,8 +199,8 @@ export function AdminDashboard({
                       </Card>
                     </div>
 
-                    <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-7">
-                      <Card className="col-span-4 md:col-span-3">
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+                      <Card className="col-span-4">
                         <CardHeader>
                           <CardTitle>Despesas por Categoria</CardTitle>
                           <CardDescription>
@@ -230,12 +236,11 @@ export function AdminDashboard({
                                         <div className="grid gap-2">
                                           <div className="flex flex-col">
                                             <span className="text-[0.70rem] uppercase text-muted-foreground">
-                                              {data.stroke}
+                                              {data.payload.category}
                                             </span>
                                             <span className="font-bold text-muted-foreground">
-                                              R${" "}
-                                              {data.value?.toLocaleString(
-                                                "pt-BR",
+                                              {formatCurrency(
+                                                data.value as number,
                                               )}
                                             </span>
                                           </div>
@@ -256,7 +261,7 @@ export function AdminDashboard({
                           </ResponsiveContainer>
                         </CardContent>
                       </Card>
-                      <Card className="col-span-4 md:col-span-3">
+                      <Card className="col-span-3">
                         <CardHeader>
                           <CardTitle>Atividade Recente</CardTitle>
                           <CardDescription>

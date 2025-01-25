@@ -1,15 +1,17 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use server";
 
 import { clerkClient } from "@clerk/nextjs/server";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import type { UserRole } from "@/app/types";
 
 const userSchema = z.object({
   firstName: z.string().min(1, "O nome é obrigatório"),
   lastName: z.string().min(1, "O sobrenome é obrigatório"),
   email: z.string().email("Email inválido"),
-  role: z.enum(["ADMIN", "USER"]),
+  role: z.enum(["ADMIN", "USER", "FINANCE"] as const),
   password: z.string().min(8, "A senha deve ter no mínimo 8 caracteres"),
 });
 
@@ -61,7 +63,7 @@ export async function updateUser(userId: string, formData: FormData) {
       .object({
         firstName: z.string().min(1, "O nome é obrigatório"),
         lastName: z.string().min(1, "O sobrenome é obrigatório"),
-        role: z.enum(["ADMIN", "USER"]),
+        role: z.enum(["ADMIN", "USER", "FINANCE"] as const),
       })
       .parse({
         firstName: formData.get("firstName"),

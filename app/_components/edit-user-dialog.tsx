@@ -7,9 +7,9 @@ import * as z from "zod";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/app/_components/ui/dialog";
 import {
   Form,
@@ -35,15 +35,17 @@ import { Loader2 } from "lucide-react";
 const formSchema = z.object({
   firstName: z.string().min(1, "O nome é obrigatório"),
   lastName: z.string().min(1, "O sobrenome é obrigatório"),
-  role: z.enum(["ADMIN", "USER"]),
+  role: z.enum(["ADMIN", "USER", "FINANCE"]),
 });
+
+type UserRole = "ADMIN" | "USER" | "FINANCE";
 
 interface EditUserDialogProps {
   user: {
     id: string;
     firstName: string;
     lastName: string;
-    role: "ADMIN" | "USER";
+    role: UserRole;
   };
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -151,6 +153,7 @@ export function EditUserDialog({
                     <SelectContent>
                       <SelectItem value="USER">Usuário</SelectItem>
                       <SelectItem value="ADMIN">Administrador</SelectItem>
+                      <SelectItem value="FINANCE">Financeiro</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

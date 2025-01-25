@@ -38,7 +38,7 @@ const formSchema = z.object({
   lastName: z.string().min(1, "O sobrenome é obrigatório"),
   email: z.string().email("Email inválido"),
   password: z.string().min(8, "A senha deve ter no mínimo 8 caracteres"),
-  role: z.enum(["ADMIN", "USER"]),
+  role: z.enum(["ADMIN", "USER", "FINANCE"]),
 });
 
 export function NewUserDialog() {
@@ -179,6 +179,7 @@ export function NewUserDialog() {
                     <SelectContent>
                       <SelectItem value="USER">Usuário</SelectItem>
                       <SelectItem value="ADMIN">Administrador</SelectItem>
+                      <SelectItem value="FINANCE">Financeiro</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

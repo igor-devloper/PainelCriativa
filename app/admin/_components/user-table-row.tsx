@@ -5,9 +5,9 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Button } from "@/app/_components/ui/button";
 import { TableCell, TableRow } from "@/app/_components/ui/table";
-import { EditUserDialog } from "./edit-user-dialog";
 import { deleteUser } from "@/app/_actions/user-actions";
 import { useToast } from "@/app/_hooks/use-toast";
+import type { DashboardUser } from "@/app/types/dashboard";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,15 +20,10 @@ import {
   AlertDialogTrigger,
 } from "@/app/_components/ui/alert-dialog";
 import { Loader2 } from "lucide-react";
+import { EditUserDialog } from "@/app/_components/edit-user-dialog";
 
 interface UserTableRowProps {
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    role: "ADMIN" | "USER";
-    joinedAt: Date;
-  };
+  user: DashboardUser;
 }
 
 export function UserTableRow({ user }: UserTableRowProps) {
@@ -61,7 +56,11 @@ export function UserTableRow({ user }: UserTableRowProps) {
       <TableRow>
         <TableCell className="font-medium">{user.name}</TableCell>
         <TableCell>{user.email}</TableCell>
-        <TableCell>{user.role}</TableCell>
+        <TableCell>
+          {user.role === "ADMIN" && "Administrador"}
+          {user.role === "USER" && "Usuário"}
+          {user.role === "FINANCE" && "Financeiro"}
+        </TableCell>
         <TableCell>{format(user.joinedAt, "PP", { locale: ptBR })}</TableCell>
         <TableCell className="text-right">
           <div className="flex justify-end gap-2">
@@ -69,12 +68,18 @@ export function UserTableRow({ user }: UserTableRowProps) {
               variant="ghost"
               size="sm"
               onClick={() => setIsEditOpen(true)}
+              aria-label={`Editar usuário ${user.name}`}
             >
               Editar
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="sm" disabled={isDeleting}>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  disabled={isDeleting}
+                  aria-label={`Excluir usuário ${user.name}`}
+                >
                   {isDeleting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -111,8 +116,8 @@ export function UserTableRow({ user }: UserTableRowProps) {
       <EditUserDialog
         user={{
           id: user.id,
-          firstName: user.name.split(" ")[0],
-          lastName: user.name.split(" ").slice(1).join(" "),
+          firstName: user.firstName,
+          lastName: user.lastName,
           role: user.role,
         }}
         open={isEditOpen}
