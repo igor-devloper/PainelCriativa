@@ -300,7 +300,8 @@ export function EditExpenseDialog({
                 <ImageUpload
                   onChange={setImages}
                   value={images}
-                  maxFiles={3 - existingImages.length}
+                  maxFiles={3}
+                  isDisabled={existingImages.length >= 3} // Changed from disabled to isDisabled
                 />
               </FormControl>
               {existingImages.length >= 3 && (
