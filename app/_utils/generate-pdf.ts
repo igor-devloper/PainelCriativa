@@ -91,6 +91,7 @@ export async function generateAccountingPDF(
     body: [
       ["Valor disponibilizado:", formatCurrency(Number(block.request?.amount))],
       ["Saldo:", formatCurrency(remainingBalance)],
+      ["Total das despesas", formatCurrency(totalExpenses)],
     ],
     theme: "plain",
     styles: {
