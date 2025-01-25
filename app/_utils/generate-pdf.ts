@@ -2,7 +2,6 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { AccountingBlock } from "@/app/types";
 import { formatDate, formatCurrency } from "@/app/_lib/utils";
-// import { clerkClient } from "@clerk/nextjs/server";
 
 // Company CNPJs mapping
 const COMPANY_CNPJS = {
@@ -119,6 +118,10 @@ export async function generateAccountingPDF(
     styles: {
       fontSize: 9,
       cellPadding: 2,
+      overflow: "linebreak", // Enable line breaking for long text
+    },
+    columnStyles: {
+      4: { cellWidth: 80 }, // Set wider column for description
     },
   });
 
