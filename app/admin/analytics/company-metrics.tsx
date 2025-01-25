@@ -29,7 +29,14 @@ export function CompanyMetricsCard() {
   const [date, setDate] = useState<DateRange | undefined>();
   const [metrics, setMetrics] = useState<CompanyMetrics[]>([]);
   const [loading, setLoading] = useState(false);
-
+  const options: Intl.DateTimeFormatOptions = {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZoneName: "short",
+  };
   const handleViewReport = async () => {
     try {
       setLoading(true);
@@ -40,7 +47,7 @@ export function CompanyMetricsCard() {
       setMetrics(data);
       toast({
         title: "Sucesso",
-        description: `Relatório por empresas de ${startDate} até ${endDate} gerado com sucesso`,
+        description: `Relatório por empresas de ${startDate.toLocaleString("pt-BR", options)} até ${endDate.toLocaleString("pt-BR", options)} gerado com sucesso`,
       });
     } catch (error) {
       toast({
