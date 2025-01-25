@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { AccountingBlock } from "@/app/types";
@@ -65,7 +66,7 @@ export async function generateAccountingPDF(
       ],
     ],
     body: [
-      ["Colaborador:", name],
+      ["Colaborador:", block.expenses[0].name],
       ["Descrição conta financeira:", `Despesas empresa ${companyName}`],
       [
         "Período:",
