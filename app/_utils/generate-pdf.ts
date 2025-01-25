@@ -89,7 +89,7 @@ export async function generateAccountingPDF(
   autoTable(doc, {
     startY: doc.lastAutoTable.finalY + 10,
     body: [
-      ["Total de adiantamento:", formatCurrency(Number(block.request?.amount))],
+      ["Valor disponibilizado:", formatCurrency(Number(block.request?.amount))],
       ["Saldo:", formatCurrency(remainingBalance)],
     ],
     theme: "plain",
