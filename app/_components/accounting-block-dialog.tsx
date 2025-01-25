@@ -62,6 +62,15 @@ import {
   AlertDialogTrigger,
 } from "@/app/_components/ui/alert-dialog";
 import { DownloadPDFButton } from "./download-pdf-button";
+import { MoreVertical, Pencil, Trash } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/app/_components/ui/dropdown-menu";
+import { EditExpenseDialog } from "./edit-expense-dialog";
+import { deleteExpense } from "@/app/_lib/actions/balance";
 
 interface AccountingBlockDialogProps {
   block: AccountingBlock | null;
@@ -81,6 +90,7 @@ export function AccountingBlockDialog({
   userName,
 }: AccountingBlockDialogProps) {
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const { toast } = useToast();
 
   if (!block) return null;
@@ -107,6 +117,28 @@ export function AccountingBlockDialog({
         title: "Erro ao fechar prestação de contas",
         description:
           "Ocorreu um erro ao fechar a prestação de contas. Por favor, tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEditExpense = (expense: Expense) => {
+    setEditingExpense(expense);
+  };
+
+  const handleDeleteExpense = async (expenseId: string) => {
+    try {
+      await deleteExpense(expenseId);
+      toast({
+        title: "Despesa excluída com sucesso",
+        description: "A despesa foi removida da prestação de contas.",
+      });
+      // You might want to refresh the block data here or update the local state
+    } catch (error) {
+      toast({
+        title: "Erro ao excluir despesa",
+        description:
+          "Ocorreu um erro ao excluir a despesa. Por favor, tente novamente.",
         variant: "destructive",
       });
     }
@@ -262,15 +294,12 @@ export function AccountingBlockDialog({
                       </TableHead>
                       <TableHead>Valor</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead className="w-[100px]">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {block.expenses.map((expense) => (
-                      <TableRow
-                        key={expense.id}
-                        className="cursor-pointer hover:bg-muted"
-                        onClick={() => setSelectedExpense(expense)}
-                      >
+                      <TableRow key={expense.id}>
                         <TableCell className="font-medium">
                           {formatDate(expense.date)}
                         </TableCell>
@@ -296,6 +325,30 @@ export function AccountingBlockDialog({
                           >
                             {EXPENSE_STATUS_LABELS[expense.status]}
                           </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">Abrir menu</span>
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => handleEditExpense(expense)}
+                              >
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Editar
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteExpense(expense.id)}
+                              >
+                                <Trash className="mr-2 h-4 w-4" />
+                                Excluir
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -354,6 +407,16 @@ export function AccountingBlockDialog({
           </TabsContent>
         </Tabs>
       </DialogContent>
+      {editingExpense && (
+        <EditExpenseDialog
+          expense={editingExpense}
+          onClose={() => setEditingExpense(null)}
+          onSuccess={() => {
+            setEditingExpense(null);
+            // You might want to refresh the block data here or update the local state
+          }}
+        />
+      )}
     </Dialog>
   );
 }

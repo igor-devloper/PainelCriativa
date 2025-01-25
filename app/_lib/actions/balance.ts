@@ -11,7 +11,18 @@ import { revalidatePath } from "next/cache";
 
 interface RegisterExpenseData {
   name: string;
-  description: string;
+  description: string | null;
+  amount: number;
+  category: ExpenseCategory;
+  paymentMethod: PaymentMethod;
+  date: Date;
+  imageUrls: string[];
+}
+
+interface EditExpenseData {
+  id: string;
+  name: string;
+  description: string | null;
   amount: number;
   category: ExpenseCategory;
   paymentMethod: PaymentMethod;
@@ -169,5 +180,124 @@ export async function registerExpense(
     throw error instanceof Error
       ? new Error(`Erro ao registrar despesa: ${error.message}`)
       : new Error("Erro ao registrar despesa");
+  }
+}
+export async function editExpense(data: EditExpenseData) {
+  const { userId } = auth();
+
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  try {
+    const result = await db.$transaction(async (prisma) => {
+      const oldExpense = await prisma.expense.findUnique({
+        where: { id: data.id },
+        include: { block: true },
+      });
+
+      if (!oldExpense) {
+        throw new Error("Despesa não encontrada");
+      }
+
+      if (oldExpense.userId !== userId) {
+        throw new Error("Você não tem permissão para editar esta despesa");
+      }
+
+      const updatedExpense = await prisma.expense.update({
+        where: { id: data.id },
+        data: {
+          name: data.name,
+          description: data.description,
+          amount: new Prisma.Decimal(data.amount),
+          category: data.category,
+          paymentMethod: data.paymentMethod,
+          date: data.date,
+          imageUrls: data.imageUrls,
+        },
+      });
+
+      // Update the balance of the block creator
+      const balanceDifference = oldExpense.amount.sub(
+        new Prisma.Decimal(data.amount),
+      );
+      await prisma.userBalance.updateMany({
+        where: {
+          userId: oldExpense.block.requestId,
+          company: oldExpense.company,
+        },
+        data: {
+          balance: {
+            increment: balanceDifference,
+          },
+        },
+      });
+
+      return updatedExpense;
+    });
+
+    revalidatePath("/accounting");
+    revalidatePath(`/accounting/${result.blockId}`);
+
+    return { success: true, data: result };
+  } catch (error) {
+    console.error("Error editing expense:", error);
+    throw error instanceof Error
+      ? new Error(`Erro ao editar despesa: ${error.message}`)
+      : new Error("Erro ao editar despesa");
+  }
+}
+
+export async function deleteExpense(expenseId: string) {
+  const { userId } = auth();
+
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  try {
+    const result = await db.$transaction(async (prisma) => {
+      const expense = await prisma.expense.findUnique({
+        where: { id: expenseId },
+        include: { block: true },
+      });
+
+      if (!expense) {
+        throw new Error("Despesa não encontrada");
+      }
+
+      if (expense.userId !== userId) {
+        throw new Error("Você não tem permissão para excluir esta despesa");
+      }
+
+      await prisma.expense.delete({
+        where: { id: expenseId },
+      });
+
+      // Update the balance of the block creator
+      await prisma.userBalance.updateMany({
+        where: {
+          userId: expense.block.requestId,
+          company: expense.company,
+        },
+        data: {
+          balance: {
+            increment: expense.amount,
+          },
+        },
+      });
+
+      return expense;
+    });
+
+    revalidatePath("/accounting");
+    revalidatePath(`/accounting/${result.blockId}`);
+
+    return { success: true, data: result };
+  } catch (error) {
+    console.error("Error deleting expense:", error);
+    throw error instanceof Error
+      ? new Error(`Erro ao excluir despesa: ${error.message}`)
+      : new Error("Erro ao excluir despesa");
   }
 }
