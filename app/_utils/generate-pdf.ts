@@ -135,9 +135,9 @@ export async function generateAccountingPDF(
           // Start a new page for each receipt
           doc.addPage();
 
-          // Add receipt image
+          // Add receipt image with reduced size
           const margin = 20;
-          const imgWidth = 160; // Adjusted image width
+          const imgWidth = 120; // Adjusted image width for smaller size
           const imgHeight = (imgWidth * img.height) / img.width; // Maintain aspect ratio
           doc.addImage(img, "JPEG", margin, margin, imgWidth, imgHeight);
 
