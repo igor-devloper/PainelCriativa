@@ -67,7 +67,7 @@ export async function generateAccountingPDF(
     ],
     body: [
       ["Colaborador:", block.expenses[0].name],
-      ["Descrição conta financeira:", `Despesas empresa ${companyName}`],
+      ["Descrição conta financeira:", `Despesas empresa ${block.company}`],
       [
         "Período:",
         `${formatDate(block.createdAt)} à ${formatDate(new Date())}`,
