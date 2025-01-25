@@ -21,7 +21,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { getCompanyMetrics } from "@/app/_actions/admin-analytics";
 import type { CompanyMetrics } from "@/app/_actions/admin-analytics";
-import { toast } from "sonner";
+import { toast } from "@/app/_hooks/use-toast";
 import type { DateRange } from "react-day-picker";
 import { cn } from "@/app/_lib/utils";
 
@@ -38,8 +38,16 @@ export function CompanyMetricsCard() {
 
       const data = await getCompanyMetrics(startDate, endDate);
       setMetrics(data);
+      toast({
+        title: "Sucesso",
+        description: `Relatório por empresas de ${startDate} até ${endDate} gerado com sucesso`,
+      });
     } catch (error) {
-      toast.error("Erro ao carregar métricas");
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: `Erro ao carregar métricas`,
+      });
     } finally {
       setLoading(false);
     }

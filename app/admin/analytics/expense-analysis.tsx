@@ -13,7 +13,7 @@ import { Button } from "@/app/_components/ui/button";
 import { DollarSign, TrendingUp } from "lucide-react";
 import { getExpenseAnalytics } from "@/app/_actions/admin-analytics";
 import type { ExpenseAnalytics } from "@/app/_actions/admin-analytics";
-import { toast } from "sonner";
+import { toast } from "@/app/_hooks/use-toast";
 import {
   LineChart,
   Line,
@@ -36,8 +36,16 @@ export function ExpenseAnalysisCard() {
       setLoading(true);
       const data = await getExpenseAnalytics();
       setAnalytics(data);
+      toast({
+        title: "Sucesso",
+        description: `Relatório despesas gerado com sucesso`,
+      });
     } catch (error) {
-      toast.error("Erro ao carregar análise de despesas");
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: `Erro ao carregar relatóeo de despesas: ${error}`,
+      });
     } finally {
       setLoading(false);
     }
@@ -52,8 +60,16 @@ export function ExpenseAnalysisCard() {
 
       const data = await getExpenseAnalytics(startDate, endDate);
       setAnalytics(data);
+      toast({
+        title: "Sucesso",
+        description: `Análise de tendências gerado com sucesso`,
+      });
     } catch (error) {
-      toast.error("Erro ao carregar tendências");
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: `Erro ao carregar tendências`,
+      });
     } finally {
       setLoading(false);
     }
