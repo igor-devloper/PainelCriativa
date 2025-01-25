@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { AccountingBlock } from "@/app/types";
@@ -66,8 +65,8 @@ export async function generateAccountingPDF(
       ],
     ],
     body: [
-      ["Colaborador:", block.expenses[0].name],
-      ["Descrição conta financeira:", `Despesas empresa ${block.company}`],
+      ["Colaborador:", name],
+      ["Descrição conta financeira:", `Despesas empresa ${companyName}`],
       [
         "Período:",
         `${formatDate(block.createdAt)} à ${formatDate(new Date())}`,
@@ -136,9 +135,9 @@ export async function generateAccountingPDF(
           // Start a new page for each receipt
           doc.addPage();
 
-          // Add receipt image with reduced size
+          // Add receipt image with further reduced size
           const margin = 20;
-          const imgWidth = 120; // Adjusted image width for smaller size
+          const imgWidth = 100; // Reduced image width
           const imgHeight = (imgWidth * img.height) / img.width; // Maintain aspect ratio
           doc.addImage(img, "JPEG", margin, margin, imgWidth, imgHeight);
 
