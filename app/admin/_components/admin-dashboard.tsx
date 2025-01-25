@@ -20,14 +20,12 @@ import {
   DollarSign,
   FileText,
   Activity,
-  UserPlus,
   Shield,
 } from "lucide-react";
 import { Button } from "@/app/_components/ui/button";
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
@@ -58,6 +56,8 @@ import { Separator } from "@/app/_components/ui/separator";
 import { Avatar } from "@/app/_components/ui/avatar";
 import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
+import { NewUserDialog } from "@/app/_components/new-user-dialog";
+import { UserTableRow } from "./user-table-row";
 
 interface AdminDashboardProps {
   data: AdminDashboardData;
@@ -303,10 +303,7 @@ export function AdminDashboard({
                             Gerencie os usuários e seus respectivos cargos
                           </CardDescription>
                         </div>
-                        <Button>
-                          <UserPlus className="mr-2 h-4 w-4" />
-                          Novo Usuário
-                        </Button>
+                        <NewUserDialog />
                       </CardHeader>
                       <CardContent>
                         <Table>
@@ -316,28 +313,14 @@ export function AdminDashboard({
                               <TableHead>Email</TableHead>
                               <TableHead>Cargo</TableHead>
                               <TableHead>Data de Cadastro</TableHead>
-                              <TableHead>Ações</TableHead>
+                              <TableHead className="text-right">
+                                Ações
+                              </TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
                             {data.recentUsers.map((user) => (
-                              <TableRow key={user.id}>
-                                <TableCell className="font-medium">
-                                  {user.name}
-                                </TableCell>
-                                <TableCell>{user.email}</TableCell>
-                                <TableCell>{user.role}</TableCell>
-                                <TableCell>
-                                  {format(user.joinedAt, "PP", {
-                                    locale: ptBR,
-                                  })}
-                                </TableCell>
-                                <TableCell>
-                                  <Button variant="ghost" size="sm">
-                                    Editar
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
+                              <UserTableRow key={user.id} user={user} />
                             ))}
                           </TableBody>
                         </Table>
