@@ -91,7 +91,7 @@ export async function generateAccountingPDF(
     body: [
       ["Valor disponibilizado:", formatCurrency(Number(block.request?.amount))],
       ["Saldo:", formatCurrency(remainingBalance)],
-      ["Total das despesas", formatCurrency(totalExpenses)],
+      ["Total das despesas:", formatCurrency(totalExpenses)],
     ],
     theme: "plain",
     styles: {
@@ -119,41 +119,82 @@ export async function generateAccountingPDF(
     styles: {
       fontSize: 9,
       cellPadding: 2,
-      overflow: "linebreak", // Enable line breaking for long text
+      overflow: "linebreak",
     },
     columnStyles: {
-      4: { cellWidth: 80 }, // Set wider column for description
+      4: { cellWidth: 80 },
     },
   });
 
-  // Add receipts, one per page
+  // Add receipts section
+  if (block.expenses.some((expense) => expense.imageUrls?.length > 0)) {
+    doc.addPage();
+    doc.setFontSize(14);
+    doc.text("COMPROVANTES", 14, 20);
+  }
+
+  // Add receipts with improved layout
   for (const expense of block.expenses) {
     if (expense.imageUrls && expense.imageUrls.length > 0) {
       for (const url of expense.imageUrls) {
         try {
           const img = await loadImage(url);
 
-          // Start a new page for each receipt
-          doc.addPage();
-
-          // Add receipt image with further reduced size
+          // Calculate image dimensions while maintaining aspect ratio
+          const pageWidth = doc.internal.pageSize.width;
+          const pageHeight = doc.internal.pageSize.height;
           const margin = 20;
-          const imgWidth = 100; // Reduced image width
-          const imgHeight = (imgWidth * img.height) / img.width; // Maintain aspect ratio
-          doc.addImage(img, "JPEG", margin, margin, imgWidth, imgHeight);
+          const maxWidth = pageWidth - 2 * margin;
+          const maxHeight = pageHeight - 2 * margin - 40; // Leave space for text
 
-          // Add expense info below the image
-          const textY = margin + imgHeight + 10;
+          let imgWidth = maxWidth;
+          let imgHeight = (imgWidth * img.height) / img.width;
+
+          // If height exceeds maximum, scale based on height instead
+          if (imgHeight > maxHeight) {
+            imgHeight = maxHeight;
+            imgWidth = (imgHeight * img.width) / img.height;
+          }
+
+          // Center the image horizontally
+          const xPos = (pageWidth - imgWidth) / 2;
+
+          // Add receipt header
+          doc.setFontSize(12);
+          doc.text("Comprovante de Despesa", xPos, margin);
+
+          // Add image
+          doc.addImage(img, "JPEG", xPos, margin + 10, imgWidth, imgHeight);
+
+          // Add expense details below image
+          const textY = margin + imgHeight + 20;
           doc.setFontSize(10);
           doc.text(
-            `Despesa: ${expense.name}\nDescrição: ${expense.description}\nValor: ${formatCurrency(
-              Number(expense.amount),
-            )}`,
-            margin,
+            [
+              `Data: ${formatDate(expense.date)}`,
+              `Despesa: ${expense.name}`,
+              `Descrição: ${expense.description}`,
+              `Valor: ${formatCurrency(Number(expense.amount))}`,
+            ],
+            xPos,
             textY,
           );
+
+          // Add new page for next receipt
+          if (expense.imageUrls.indexOf(url) < expense.imageUrls.length - 1) {
+            doc.addPage();
+          }
         } catch (error) {
           console.error("Error loading receipt image:", error);
+          // Add error message to PDF
+          doc.setFontSize(10);
+          doc.setTextColor(255, 0, 0);
+          doc.text(
+            "Erro ao carregar imagem do comprovante",
+            20,
+            doc.lastAutoTable.finalY + 10,
+          );
+          doc.setTextColor(0, 0, 0);
         }
       }
     }
@@ -168,7 +209,7 @@ function loadImage(url: string): Promise<HTMLImageElement> {
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => resolve(img);
-    img.onerror = reject;
+    img.onerror = (e) => reject(new Error(`Failed to load image: ${e}`));
     img.src = url;
   });
 }

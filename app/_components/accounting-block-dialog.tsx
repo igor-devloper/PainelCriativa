@@ -299,7 +299,11 @@ export function AccountingBlockDialog({
                   </TableHeader>
                   <TableBody>
                     {block.expenses.map((expense) => (
-                      <TableRow key={expense.id}>
+                      <TableRow
+                        key={expense.id}
+                        className="cursor-pointer hover:bg-muted"
+                        onClick={() => setSelectedExpense(expense)}
+                      >
                         <TableCell className="font-medium">
                           {formatDate(expense.date)}
                         </TableCell>

@@ -110,9 +110,8 @@ export function EditExpenseDialog({
       );
       const existingImages = expense.imageUrls || [];
 
-      await editExpense({
+      await editExpense(expense.id, {
         ...data,
-        id: expense.id,
         name: expense.name,
         imageUrls: [...existingImages, ...imagesBase64],
       });
