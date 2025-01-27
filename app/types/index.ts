@@ -1,19 +1,24 @@
-import {
+import type {
   Request as PrismaRequest,
   AccountingBlock as PrismaAccountingBlock,
   Expense as PrismaExpense,
   RequestStatus as PrismaRequestStatus,
   BlockStatus as PrismaBlockStatus,
+  ExpenseCategory,
+  PaymentMethod,
   Prisma,
 } from "@prisma/client";
 
+// User and Role types
 export type UserRole = "ADMIN" | "FINANCE" | "USER";
 
-export interface AdminStats {
-  totalUsers: number;
-  pendingRequests: number;
-  totalApprovedAmount: number;
-  openAccountingBlocks: number;
+export interface User {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: UserRole;
+  joinedAt: string;
 }
 
 export interface FormattedUser {
@@ -23,9 +28,19 @@ export interface FormattedUser {
   role: UserRole;
 }
 
+// Stats interface
+export interface AdminStats {
+  totalUsers: number;
+  pendingRequests: number;
+  totalApprovedAmount: number;
+  openAccountingBlocks: number;
+}
+
+// Status types
 export type RequestStatus = PrismaRequestStatus;
 export type BlockStatus = PrismaBlockStatus;
 
+// Base interfaces extending Prisma types
 interface BaseRequest
   extends Omit<PrismaRequest, "amount" | "currentBalance" | "expectedDate"> {
   amount: number;
@@ -47,6 +62,7 @@ interface BaseExpense
   updatedAt: Date;
 }
 
+// Main interfaces with relationships
 export interface Request extends BaseRequest {
   id: string;
   amount: number;
@@ -65,7 +81,18 @@ export interface Expense extends BaseExpense {
   block?: AccountingBlock;
 }
 
-// Update the RequestWithFullDetails type to include the correct expense structure
+// Serialization-safe interfaces for client-server communication
+export interface ExpenseEdit {
+  name: string;
+  description: string | null;
+  amount: number;
+  category: ExpenseCategory;
+  paymentMethod: PaymentMethod;
+  date: string;
+  imageUrls: string[];
+}
+
+// Prisma payload types
 export type RequestWithFullDetails = Prisma.RequestGetPayload<{
   include: {
     accountingBlock: {

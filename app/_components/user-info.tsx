@@ -1,63 +1,109 @@
-"use client";
-export const revalidate = 0;
-export const dynamic = "force-dynamic";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+"use server";
 
-import { useState, useEffect } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { clerkClient } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
+import type { UserRole } from "@/app/types";
 
-interface UserInfoProps {
-  userId: string;
-}
+const userSchema = z.object({
+  firstName: z.string().min(1, "O nome é obrigatório"),
+  lastName: z.string().min(1, "O sobrenome é obrigatório"),
+  email: z.string().email("Email inválido"),
+  role: z.enum(["ADMIN", "USER", "FINANCE"] as const),
+  password: z.string().min(8, "A senha deve ter no mínimo 8 caracteres"),
+});
 
-interface UserData {
-  firstName: string | null;
-  lastName: string | null;
-  imageUrl: string;
-}
+export async function createUser(formData: FormData) {
+  const { userId } = auth();
 
-export default function UserInfo({ userId }: UserInfoProps) {
-  const [userData, setUserData] = useState<UserData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchUserInfo() {
-      try {
-        const response = await fetch(`/api/users/${userId}`);
-        if (!response.ok) throw new Error("Failed to fetch user");
-        const data = await response.json();
-        setUserData(data);
-      } catch (error) {
-        console.error("Erro ao buscar informações do usuário:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    fetchUserInfo();
-  }, [userId]);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center gap-2">
-        <div className="h-8 w-8 animate-pulse rounded-full bg-muted"></div>
-        <div className="h-4 w-24 animate-pulse rounded bg-muted"></div>
-      </div>
-    );
+  if (!userId) {
+    throw new Error("Não autorizado");
   }
 
-  if (!userData) {
-    return <div>Usuário não encontrado</div>;
+  try {
+    const validatedFields = userSchema.parse({
+      firstName: formData.get("firstName"),
+      lastName: formData.get("lastName"),
+      email: formData.get("email"),
+      password: formData.get("password"),
+      role: formData.get("role"),
+    });
+
+    const user = await clerkClient.users.createUser({
+      firstName: validatedFields.firstName,
+      lastName: validatedFields.lastName,
+      emailAddress: [validatedFields.email],
+      password: validatedFields.password,
+      publicMetadata: {
+        role: validatedFields.role,
+      },
+    });
+
+    revalidatePath("/users");
+    return { success: true, data: JSON.parse(JSON.stringify(user)) };
+  } catch (error) {
+    console.error("Error creating user:", error);
+    throw error instanceof Error
+      ? new Error(`Erro ao criar usuário: ${error.message}`)
+      : new Error("Erro ao criar usuário");
+  }
+}
+
+export async function updateUser(userId: string, formData: FormData) {
+  const { userId: currentUserId } = auth();
+
+  if (!currentUserId) {
+    throw new Error("Não autorizado");
   }
 
-  return (
-    <div className="flex items-center space-x-2">
-      <span className="flex items-center justify-center gap-2">
-        <Avatar>
-          <AvatarImage src={userData.imageUrl} />
-          <AvatarFallback>CN</AvatarFallback>
-        </Avatar>
-        {userData.firstName} {userData.lastName}
-      </span>
-    </div>
-  );
+  try {
+    const validatedFields = z
+      .object({
+        firstName: z.string().min(1, "O nome é obrigatório"),
+        lastName: z.string().min(1, "O sobrenome é obrigatório"),
+        role: z.enum(["ADMIN", "USER", "FINANCE"] as const),
+      })
+      .parse({
+        firstName: formData.get("firstName"),
+        lastName: formData.get("lastName"),
+        role: formData.get("role"),
+      });
+
+    const user = await clerkClient.users.updateUser(userId, {
+      firstName: validatedFields.firstName,
+      lastName: validatedFields.lastName,
+      publicMetadata: {
+        role: validatedFields.role,
+      },
+    });
+
+    revalidatePath("/users");
+    return { success: true, data: JSON.parse(JSON.stringify(user)) };
+  } catch (error) {
+    console.error("Error updating user:", error);
+    throw error instanceof Error
+      ? new Error(`Erro ao atualizar usuário: ${error.message}`)
+      : new Error("Erro ao atualizar usuário");
+  }
+}
+
+export async function deleteUser(userId: string) {
+  const { userId: currentUserId } = auth();
+
+  if (!currentUserId) {
+    throw new Error("Não autorizado");
+  }
+
+  try {
+    await clerkClient.users.deleteUser(userId);
+    revalidatePath("/users");
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    throw error instanceof Error
+      ? new Error(`Erro ao excluir usuário: ${error.message}`)
+      : new Error("Erro ao excluir usuário");
+  }
 }

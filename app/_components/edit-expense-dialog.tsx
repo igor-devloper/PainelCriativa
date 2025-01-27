@@ -29,8 +29,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/app/_components/ui/select";
-import { ExpenseCategory, PaymentMethod } from "@prisma/client";
-import { editExpense } from "@/app/_lib/actions/balance";
 import { useToast } from "@/app/_hooks/use-toast";
 import { DatePicker } from "./ui/date-picker";
 import { ImageUpload } from "./image-upload";
@@ -40,16 +38,15 @@ import {
   EXPENSE_CATEGORY_OPTIONS,
   PAYMENT_METHOD_OPTIONS,
 } from "@/app/_constants/transactions";
+import { type Expense } from "@/app/types";
+import { ExpenseCategory, PaymentMethod } from "@prisma/client";
+import { editExpense } from "../_lib/actions/balance";
 
 const formSchema = z.object({
   description: z.string().nullable(),
   amount: z.number().min(0.01, "O valor deve ser maior que zero"),
-  category: z.nativeEnum(ExpenseCategory, {
-    errorMap: () => ({ message: "A categoria é obrigatória" }),
-  }),
-  paymentMethod: z.nativeEnum(PaymentMethod, {
-    errorMap: () => ({ message: "O método de pagamento é obrigatório" }),
-  }),
+  category: z.nativeEnum(ExpenseCategory),
+  paymentMethod: z.nativeEnum(PaymentMethod),
   date: z.date({
     required_error: "A data é obrigatória",
   }),
@@ -58,16 +55,7 @@ const formSchema = z.object({
 type FormSchema = z.infer<typeof formSchema>;
 
 interface EditExpenseDialogProps {
-  expense: {
-    id: string;
-    name: string;
-    description: string | null;
-    amount: number;
-    category: ExpenseCategory;
-    paymentMethod: PaymentMethod;
-    date: Date;
-    imageUrls: string[];
-  };
+  expense: Expense;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -91,7 +79,7 @@ export function EditExpenseDialog({
       amount: expense.amount,
       category: expense.category,
       paymentMethod: expense.paymentMethod,
-      date: expense.date,
+      date: new Date(expense.date),
     },
   });
 
@@ -122,6 +110,7 @@ export function EditExpenseDialog({
         ...data,
         name: expense.name,
         imageUrls: [...existingImages, ...newImagesBase64],
+        date: data.date.toISOString(), // Convert Date to string for serialization
       });
 
       toast({
@@ -301,7 +290,7 @@ export function EditExpenseDialog({
                   onChange={setImages}
                   value={images}
                   maxFiles={3}
-                  isDisabled={existingImages.length >= 3} // Changed from disabled to isDisabled
+                  isDisabled={existingImages.length >= 3}
                 />
               </FormControl>
               {existingImages.length >= 3 && (

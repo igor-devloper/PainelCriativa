@@ -31,14 +31,13 @@ import { Button } from "@/app/_components/ui/button";
 import { updateUser } from "@/app/_actions/user-actions";
 import { useToast } from "@/app/_hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import type { UserRole } from "@/app/types";
 
 const formSchema = z.object({
   firstName: z.string().min(1, "O nome é obrigatório"),
   lastName: z.string().min(1, "O sobrenome é obrigatório"),
-  role: z.enum(["ADMIN", "USER", "FINANCE"]),
+  role: z.enum(["ADMIN", "USER", "FINANCE"] as const),
 });
-
-type UserRole = "ADMIN" | "USER" | "FINANCE";
 
 interface EditUserDialogProps {
   user: {
