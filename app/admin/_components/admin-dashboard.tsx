@@ -63,12 +63,17 @@ interface AdminDashboardProps {
   data: AdminDashboardData;
   pendingRequestsCount: number;
   userRole: UserRole;
+  expensesByCategory: {
+    category: string;
+    amount: number;
+  }[];
 }
 
 export function AdminDashboard({
   data,
   pendingRequestsCount,
   userRole,
+  expensesByCategory,
 }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -209,7 +214,7 @@ export function AdminDashboard({
                         </CardHeader>
                         <CardContent className="pl-2">
                           <ResponsiveContainer width="100%" height={350}>
-                            <BarChart data={data.expensesByCategory}>
+                            <BarChart data={expensesByCategory}>
                               <XAxis
                                 dataKey="category"
                                 stroke="#888888"

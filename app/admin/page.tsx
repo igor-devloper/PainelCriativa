@@ -6,6 +6,7 @@ import type { AdminDashboardData, UserRole } from "@/app/types/dashboard";
 import { AdminDashboard } from "./_components/admin-dashboard";
 import { getDashboardOverview } from "../_actions/get-dashboard-overview";
 import { getUserRole } from "../_lib/utils";
+import { getFinancialDashboardData } from "../_actions/get-financial-dashboard-data";
 
 export const metadata = {
   title: "Painel Administrativo - Painel Criativa",
@@ -31,13 +32,16 @@ export default async function AdminPage() {
     }
 
     // Fetch dashboard data in parallel
-    const [dashboardData, dashboardOverview] = await Promise.all([
-      getAdminDashboardData() as Promise<AdminDashboardData>,
-      getDashboardOverview(),
-    ]);
+    const [dashboardData, dashboardOverview, expensesByCategory] =
+      await Promise.all([
+        getAdminDashboardData() as Promise<AdminDashboardData>,
+        getDashboardOverview(),
+        getFinancialDashboardData(),
+      ]);
 
     return (
       <AdminDashboard
+        expensesByCategory={expensesByCategory.expensesByCategory}
         data={dashboardData}
         pendingRequestsCount={dashboardOverview.pendingRequests.count}
         userRole={userRole}
