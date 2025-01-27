@@ -25,6 +25,7 @@ import {
 import { RequestStatusDialog } from "./request-status-dialog";
 import { DenialReasonDialog } from "./denial-reason-dialog";
 import { REQUEST_STATUS_LABELS } from "../_constants/transactions";
+import create from "./user-info";
 import UserInfo from "./user-info";
 
 interface RequestsListProps {

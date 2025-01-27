@@ -42,7 +42,7 @@ export async function createUser(formData: FormData) {
     });
 
     revalidatePath("/users");
-    return { success: true, data: user };
+    return { success: true, data: JSON.parse(JSON.stringify(user)) };
   } catch (error) {
     console.error("Error creating user:", error);
     throw error instanceof Error
@@ -80,7 +80,7 @@ export async function updateUser(userId: string, formData: FormData) {
     });
 
     revalidatePath("/users");
-    return { success: true, data: user };
+    return { success: true, data: JSON.parse(JSON.stringify(user)) };
   } catch (error) {
     console.error("Error updating user:", error);
     throw error instanceof Error
