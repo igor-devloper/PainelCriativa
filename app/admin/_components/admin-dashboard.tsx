@@ -57,7 +57,7 @@ import { UserTableRow } from "./user-table-row";
 import type { AdminDashboardData, UserRole } from "@/app/types/dashboard";
 import { CompanyMetricsCard } from "../analytics/company-metrics";
 import { ExpenseAnalysisCard } from "../analytics/expense-analysis";
-import { ExportDataCard } from "../analytics/export-data";
+// import { ExportDataCard } from "../analytics/export-data";
 
 interface AdminDashboardProps {
   data: AdminDashboardData;
@@ -345,7 +345,7 @@ export function AdminDashboard({
                   <div className="grid gap-4 p-1 md:grid-cols-2 lg:grid-cols-3">
                     <CompanyMetricsCard />
                     <ExpenseAnalysisCard />
-                    <ExportDataCard />
+                    {/* <ExportDataCard /> */}
                   </div>
                 </ScrollArea>
               </TabsContent>
