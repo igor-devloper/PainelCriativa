@@ -21,7 +21,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/app/_components/ui/card";
-import { ScrollArea } from "@/app/_components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/app/_components/ui/scroll-area";
 import {
   Table,
   TableBody,
@@ -359,6 +359,7 @@ export function AccountingBlockDialog({
                   </TableBody>
                 </Table>
               </div>
+              <ScrollBar orientation="horizontal" />
             </ScrollArea>
           </TabsContent>
 
