@@ -12,7 +12,6 @@ import type { AdminStats, UserRole } from "@/app/types";
 import { DashboardOverview } from "./dashboard-overview";
 import { HomeIcon } from "lucide-react";
 import { Avatar } from "@/app/_components/ui/avatar";
-import UserInfo from "./user-info";
 import { UserButton } from "@clerk/nextjs";
 import { Separator } from "./ui/separator";
 
