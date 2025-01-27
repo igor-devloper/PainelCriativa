@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Card,
   CardContent,
@@ -24,6 +25,12 @@ interface ExpensesByCompanyProps {
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
 
 export const ExpensesByCompany = ({ expenseData }: ExpensesByCompanyProps) => {
+  // Custom renderer for the legend text
+  const renderLegendText = (value: string, entry: any) => {
+    const { payload } = entry;
+    return `${payload.company} (${formatCurrency(payload.amount)})`;
+  };
+
   return (
     <Card className="h-[400px]">
       <CardHeader>
@@ -40,7 +47,8 @@ export const ExpensesByCompany = ({ expenseData }: ExpensesByCompanyProps) => {
               outerRadius={80}
               fill="#8884d8"
               dataKey="amount"
-              label={({ percent }) => `${(percent * 100).toFixed(0)}%`} // Update 1
+              nameKey="company"
+              label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
             >
               {expenseData.map((entry, index) => (
                 <Cell
@@ -51,10 +59,9 @@ export const ExpensesByCompany = ({ expenseData }: ExpensesByCompanyProps) => {
             </Pie>
             <Tooltip
               formatter={(value: number) => [formatCurrency(value), "Valor"]}
-              labelFormatter={(company) => `Empresa: ${company}`} // Update 3
+              labelFormatter={(company) => `Empresa: ${company}`}
             />
-            <Legend formatter={(value, entry) => entry.value} />{" "}
-            {/* Update 2 */}
+            <Legend formatter={renderLegendText} />
           </PieChart>
         </ResponsiveContainer>
       </CardContent>
