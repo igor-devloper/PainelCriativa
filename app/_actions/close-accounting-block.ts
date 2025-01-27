@@ -4,6 +4,7 @@ import { db } from "@/app/_lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
+import { trackCloseBlock } from "../_lib/analytics";
 
 export async function closeAccountingBlock(blockId: string) {
   const { userId } = auth();
@@ -57,14 +58,16 @@ export async function closeAccountingBlock(blockId: string) {
 
     await db.$transaction(async (tx) => {
       // Update the accounting block
-      await tx.accountingBlock.update({
+      const closedBlock = await tx.accountingBlock.update({
         where: { id: blockId },
         data: {
           status: "CLOSED",
           currentBalance: remainingBalance,
         },
       });
-
+      if (closedBlock) {
+        trackCloseBlock(closedBlock.code, Number(closedBlock.currentBalance));
+      }
       // Update the request
       await tx.request.update({
         where: { id: block.request.id },

@@ -5,6 +5,7 @@ import { Prisma } from "@prisma/client";
 import { auth, clerkClient, type User } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { sendGZappyMessage } from "@/app/_lib/gzappy";
+import { trackCreateRequest } from "../_lib/analytics";
 
 interface CreateRequestData {
   name: string;
@@ -132,6 +133,10 @@ export async function createRequest(data: CreateRequestData) {
           balanceDeducted: new Prisma.Decimal(0),
         },
       });
+
+      if (request) {
+        trackCreateRequest(data.amount);
+      }
 
       return {
         request,
