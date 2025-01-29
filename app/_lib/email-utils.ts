@@ -14,7 +14,7 @@ export async function sendApprovedRequestEmail(
 ) {
   try {
     const { data, error } = await resend.emails.send({
-      from: "Criativa Energia <noreply@criativaenergia.com>",
+      from: "Criativa Energia <noreply@painel-criativa.vercel>",
       to: [to],
       subject: "Sua solicitação foi aprovada",
       html: approvedRequestTemplate(
@@ -47,7 +47,7 @@ export async function sendDeniedRequestEmail(
 ) {
   try {
     const { data, error } = await resend.emails.send({
-      from: "Criativa Energia <noreply@criativaenergia.com>",
+      from: "Criativa Energia <noreply@painel-criativa.vercel>",
       to: [to],
       subject: "Atualização sobre sua solicitação",
       html: deniedRequestTemplate(userName, requestId, amount, reason),
@@ -74,7 +74,7 @@ export async function sendAcceptedRequestEmail(
 ) {
   try {
     const { data, error } = await resend.emails.send({
-      from: "Criativa Energia <noreply@criativaenergia.com>",
+      from: "Criativa Energia <noreply@painel-criativa.vercel>",
       to: [to],
       subject: "Sua solicitação foi aceita",
       html: acceptedRequestTemplate(userName, requestId, amount),
