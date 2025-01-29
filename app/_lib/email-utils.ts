@@ -7,11 +7,10 @@ import {
 
 const isDevelopment = process.env.NODE_ENV === "development";
 const testEmailAddress = "wagnerigor9@gmail.com";
+const productionFromAddress = "Painel Criativa <noreply@resend.dev>";
 
 async function sendEmail(to: string, subject: string, html: string) {
-  const fromAddress = isDevelopment
-    ? testEmailAddress
-    : "Criativa Energia <noreply@resend.dev>";
+  const fromAddress = isDevelopment ? testEmailAddress : productionFromAddress;
   const toAddress = isDevelopment ? testEmailAddress : to;
 
   try {
