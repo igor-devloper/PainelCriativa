@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 export const revalidate = 0;
@@ -90,20 +91,19 @@ export function AppSidebar({
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild className="bg-white p-4">
-              <Link href="/" className="flex items-center justify-center">
-                <div className="text-sm leading-tight">
-                  <Image
-                    src="/logo.png"
-                    width={100}
-                    height={10}
-                    alt="NE"
-                    className="p-4"
-                  />
-                </div>
-              </Link>
-            </SidebarMenuButton>
+          <SidebarMenuItem className="">
+            <Link href="/" className="flex items-center justify-center">
+              <div className="text-sm leading-tight">
+                <Image
+                  src="/logo.png"
+                  width={100}
+                  height={10}
+                  alt="NE"
+                  className="p-4"
+                />
+              </div>
+            </Link>
+            <p className="text-xs text-muted-foreground">Versão Beta</p>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
