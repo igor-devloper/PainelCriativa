@@ -14,7 +14,7 @@ export async function sendApprovedRequestEmail(
 ) {
   try {
     const { data, error } = await resend.emails.send({
-      from: "Criativa Energia <noreply@criativaenergia.com.br>",
+      from: "Criativa Energia <noreply@resend.dev>",
       to: [to],
       subject: "Sua solicitação foi aprovada",
       html: approvedRequestTemplate(
