@@ -1,14 +1,16 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
 import { db } from "@/app/_lib/prisma";
 import type { Request, RequestStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
-import { sendGZappyMessage } from "@/app/_lib/gzappy";
 import { clerkClient } from "@clerk/nextjs/server";
-import { REQUEST_STATUS_LABELS } from "../_constants/transactions";
+// import { REQUEST_STATUS_LABELS } from "../_constants/transactions"
+import {
+  sendApprovedRequestEmail,
+  sendDeniedRequestEmail,
+  sendAcceptedRequestEmail,
+} from "@/app/_lib/email-utils";
 
 export async function updateRequestStatus(
   requestId: string,
@@ -48,7 +50,7 @@ export async function updateRequestStatus(
 
     await db.$transaction(
       async (tx) => {
-        await tx.request.update({
+        const updatedRequest = await tx.request.update({
           where: { id: requestId },
           data: updateData,
         });
@@ -56,15 +58,15 @@ export async function updateRequestStatus(
         if (newStatus === "ACCEPTED" || newStatus === "COMPLETED") {
           const userBalance = await tx.userBalance.findFirst({
             where: {
-              userId: request.userId,
-              company: request.responsibleCompany,
+              userId: updatedRequest.userId,
+              company: updatedRequest.responsibleCompany,
             },
           });
 
           const currentBalance = userBalance
             ? userBalance.balance
             : new Prisma.Decimal(0);
-          const requestedAmount = request.currentBalance;
+          const requestedAmount = updatedRequest.currentBalance;
           let balanceDeducted = new Prisma.Decimal(0);
 
           if (currentBalance.gte(requestedAmount)) {
@@ -79,15 +81,15 @@ export async function updateRequestStatus(
                 id: userBalance.id,
               },
               data: {
-                balance: request.amount,
+                balance: updatedRequest.amount,
               },
             });
           } else {
             await tx.userBalance.create({
               data: {
-                userId: request.userId,
-                company: request.responsibleCompany,
-                balance: request.currentBalance,
+                userId: updatedRequest.userId,
+                company: updatedRequest.responsibleCompany,
+                balance: updatedRequest.currentBalance,
               },
             });
           }
@@ -110,25 +112,27 @@ export async function updateRequestStatus(
                 status: "OPEN",
                 initialAmount: requestedAmount,
                 currentBalance: requestedAmount,
-                company: request.responsibleCompany,
+                company: updatedRequest.responsibleCompany,
               },
             });
           }
         }
 
-        const message = await getGZappyMessage(
-          request,
+        // Fetch user data from Clerk
+        const user = await clerkClient.users.getUser(updatedRequest.userId);
+
+        // Send email notification
+        await sendEmailNotification(
+          updatedRequest,
+          user.emailAddresses[0].emailAddress,
+          user.firstName || "Usuário",
           newStatus,
           denialReason,
           proofBase64,
         );
 
-        await sendMessageThroughGZappy(
-          tx,
-          request.phoneNumber,
-          message,
-          requestId,
-        );
+        revalidatePath("/requests");
+        revalidatePath(`/requests/${requestId}`);
       },
       {
         maxWait: 10000,
@@ -136,105 +140,53 @@ export async function updateRequestStatus(
       },
     );
 
-    revalidatePath("/requests");
-    revalidatePath(`/requests/${requestId}`);
-
-    return {
-      success: true,
-      request: {
-        ...request,
-        // Converta os objetos Decimal para string
-        currentBalance: request.currentBalance.toString(),
-        initialUserBalance: request.initialUserBalance.toString(),
-        balanceDeducted: request.balanceDeducted.toString(),
-        amount: request.amount.toString(),
-      },
-    };
+    return { success: true };
   } catch (error) {
     console.error("Error updating request status:", error);
     throw new Error("Failed to update request status");
   }
 }
 
-async function getGZappyMessage(
+async function sendEmailNotification(
   request: Request,
+  userEmail: string,
+  userName: string,
   status: RequestStatus,
   denialReason?: string,
   proofBase64?: string,
-): Promise<string> {
-  const user = await (await clerkClient.users.getUser(request.userId)).fullName;
+) {
+  const { id, amount } = request;
+
   switch (status) {
     case "ACCEPTED":
-      return (
-        `🔔 Solicitação de Verba Aceita\n\n` +
-        `👤 Usuário: ${user}\n` +
-        `💰 Valor: R$ ${request.amount.toFixed(2)}\n` +
-        `🏢 Empresa: ${request.responsibleCompany}\n\n` +
-        `Sua solicitação de verba foi aceita e está em processamento. Em breve você receberá mais informações.\n\n` +
-        `Acesse o painel para mais detalhes.`
+      await sendAcceptedRequestEmail(
+        userEmail,
+        userName,
+        id,
+        amount.toNumber(),
       );
-
+      break;
     case "DENIED":
-      return (
-        `🔔 Solicitação de Verba Negada\n\n` +
-        `👤 Usuário: ${user}\n` +
-        `💰 Valor: R$ ${request.amount.toFixed(2)}\n` +
-        `🏢 Empresa: ${request.responsibleCompany}\n\n` +
-        `Infelizmente, sua solicitação de verba foi negada.\n\n` +
-        `Motivo: ${denialReason}\n\n` +
-        `Se você tiver alguma dúvida, por favor, entre em contato com nossa equipe de suporte.`
+      await sendDeniedRequestEmail(
+        userEmail,
+        userName,
+        id,
+        amount.toNumber(),
+        denialReason || "",
       );
-
+      break;
     case "COMPLETED":
-      return (
-        `🔔 Solicitação de Verba Concluída\n\n` +
-        `👤 Usuário: ${user}\n` +
-        `💰 Valor: R$ ${request.amount.toFixed(2)}\n` +
-        `🏢 Empresa: ${request.responsibleCompany}\n\n` +
-        `${proofBase64 ? `💵 Link do comprovante: ${proofBase64}\n\n` : ""}` +
-        `Sua solicitação de verba foi finalizada com sucesso!\n\n` +
-        `Você pode acessar os detalhes da transação no painel.\n\n` +
-        `https://painel-criativa.vercel.app/accounting \n\n` +
-        `Obrigado por sua paciência.\n\n`
+      await sendApprovedRequestEmail(
+        userEmail,
+        userName,
+        id,
+        amount.toNumber(),
+        proofBase64 || "",
       );
-
+      break;
     default:
-      return (
-        `🔔 Atualização sobre Solicitação de Verba\n\n` +
-        `👤 Usuário: ${user}\n` +
-        `💰 Valor: R$ ${request.amount.toFixed(2)}\n` +
-        `🏢 Empresa: ${request.responsibleCompany}\n\n` +
-        `O status da sua solicitação de verba foi atualizado para ${REQUEST_STATUS_LABELS[status]}.\n\n` +
-        `Acesse o painel para mais detalhes.`
-      );
-  }
-}
-
-async function sendMessageThroughGZappy(
-  tx: Prisma.TransactionClient,
-  phoneNumber: string,
-  message: string,
-  requestId: string,
-) {
-  try {
-    const gZappyResponse = await sendGZappyMessage(phoneNumber, message);
-    await tx.request.update({
-      where: { id: requestId },
-      data: {
-        whatsappMessageId: gZappyResponse.id,
-        whatsappMessageStatus: gZappyResponse.status,
-      },
-    });
-  } catch (error) {
-    console.error("Error sending gZappy message:", error);
-    await tx.request.update({
-      where: { id: requestId },
-      data: {
-        whatsappMessageError:
-          error instanceof Error ? error.message : String(error),
-        whatsappMessageStatus: "ERROR",
-      },
-    });
+      // For other statuses, you might want to implement a generic status update email
+      break;
   }
 }
 
