@@ -5,24 +5,30 @@ import {
   acceptedRequestTemplate,
 } from "./email-templates";
 
-const isDevelopment = process.env.NODE_ENV === "development";
-const testEmailAddress = "wagnerigor9@gmail.com";
-const productionFromAddress = "Painel Criativa <noreply@resend.dev>";
+// Usando o email verificado do Resend para desenvolvimento e produção
+// até que tenhamos um domínio verificado
+const VERIFIED_EMAIL = "wagnerigor9@gmail.com";
 
 async function sendEmail(to: string, subject: string, html: string) {
-  const fromAddress = isDevelopment ? testEmailAddress : productionFromAddress;
-  const toAddress = isDevelopment ? testEmailAddress : to;
-
   try {
+    // Sempre enviamos do email verificado
     const { data, error } = await resend.emails.send({
-      from: fromAddress,
-      to: [toAddress],
+      from: VERIFIED_EMAIL,
+      to: [to],
       subject: subject,
       html: html,
+      // Adicionando reply-to para que as respostas vão para o endereço correto
+      replyTo: "noreply@criativaenergia.com.br",
     });
 
     if (error) {
       console.error("Error sending email:", error);
+      // Log adicional para debug em produção
+      console.error("Email details:", {
+        to,
+        subject,
+        error: JSON.stringify(error),
+      });
       return false;
     }
 
@@ -30,6 +36,12 @@ async function sendEmail(to: string, subject: string, html: string) {
     return true;
   } catch (error) {
     console.error("Error sending email:", error);
+    // Log adicional para debug em produção
+    console.error("Email sending error details:", {
+      to,
+      subject,
+      error: JSON.stringify(error),
+    });
     return false;
   }
 }
