@@ -93,7 +93,7 @@ export function AppSidebar({
         <SidebarMenu>
           <SidebarMenuItem>
             <Link href="/" className="flex items-center justify-center">
-              <div className="text-sm leading-tight">
+              <div className="text-xs leading-tight">
                 <Image
                   src="/logo.png"
                   width={100}
