@@ -69,7 +69,11 @@ const ExpensesPage = async () => {
               <div className="flex justify-between">
                 <div className="flex h-16 items-center gap-4 px-4">
                   <Receipt className="h-6 w-6" />
-                  <h1 className="text-xl font-semibold">Suas Despesas</h1>
+                  {userRole === "USER" ? (
+                    <h1 className="text-xl font-semibold">Suas Despesas</h1>
+                  ) : (
+                    <h1 className="text-xl font-semibold">Despesas</h1>
+                  )}
                 </div>
               </div>
               <ScrollArea className="h-full">
