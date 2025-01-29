@@ -91,7 +91,7 @@ export function AppSidebar({
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
         <SidebarMenu>
-          <SidebarMenuItem className="">
+          <SidebarMenuItem>
             <Link href="/" className="flex items-center justify-center">
               <div className="text-sm leading-tight">
                 <Image
@@ -103,7 +103,7 @@ export function AppSidebar({
                 />
               </div>
             </Link>
-            <p className="text-xs text-muted-foreground">Versão Beta</p>
+            <p className="text- text-muted-foreground">Versão Beta</p>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
