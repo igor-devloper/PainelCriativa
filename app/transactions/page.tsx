@@ -26,11 +26,13 @@ const ExpensesPage = async () => {
   if (!userId) {
     redirect("/login");
   }
-
+  const user = await clerkClient.users.getUser(userId);
+  const userRole = getUserRole(user.publicMetadata);
+  const pendingRequestsCount = await getPendingRequestsCount();
+  const where =
+    userRole === "ADMIN" || userRole === "FINANCE" ? undefined : { userId };
   const expenses = await db.expense.findMany({
-    where: {
-      userId,
-    },
+    where,
     orderBy: {
       date: "desc",
     },
@@ -47,10 +49,6 @@ const ExpensesPage = async () => {
       },
     },
   });
-
-  const user = await clerkClient.users.getUser(userId);
-  const userRole = getUserRole(user.publicMetadata);
-  const pendingRequestsCount = await getPendingRequestsCount();
 
   return (
     <SidebarProvider>
