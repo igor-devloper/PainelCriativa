@@ -7,7 +7,7 @@ import {
 
 // Usando o email verificado do Resend para desenvolvimento e produção
 // até que tenhamos um domínio verificado
-const VERIFIED_EMAIL = "Painel Criativa <onboarding@resend.dev>";
+const VERIFIED_EMAIL = "Painel Criativa <notificacoes@nucleoenergy.com>";
 
 async function sendEmail(to: string, subject: string, html: string) {
   try {
