@@ -6,19 +6,19 @@ Data: Janeiro 2024
 ### Situação Atual
 - Armazenamento: 0.09GB de 0.5GB (18%)
 - Computação: 8.43h de 191.9h (4.4%)
-- Transferência de Dados: 3.98GB de 5GB (79.6%) ⚠️ CRÍTICO
+- Transferência de Dados: 5.19GB de 5GB (103.8%) ⚠️ CRÍTICO
 - Projetos: 2 de 10 (20%)
 
-### Plano Recomendado: Pro
-- Custo: $4/mês
+### Plano Recomendado: Launch
+- Custo: $19/mês
 - Características:
-  - 100GB de armazenamento
-  - Transferência de dados ilimitada
-  - Backups diários
-  - Suporte prioritário
-  - Monitoramento avançado
+  - 10GB de armazenamento
+  - 300 horas de computação
+  - Autoscaling até 4 CU
+  - Contas organizacionais
+  - Suporte padrão
 
-**Custo Mensal: R$ 20,00** (considerando $1 = R$ 5,00)
+**Custo Mensal: R$ 111,53** (considerando $1 = R$ 5,87)
 
 ## 2. Autenticação (Clerk)
 
@@ -37,7 +37,7 @@ Data: Janeiro 2024
   - Customização avançada
   - Suporte prioritário
 
-**Custo Mensal: R$ 125,00**
+**Custo Mensal: R$ 146,75**
 
 ## 3. Email (Resend)
 
@@ -55,7 +55,7 @@ Data: Janeiro 2024
   - API dedicada
   - Suporte prioritário
 
-**Custo Mensal: R$ 100,00**
+**Custo Mensal: R$ 117,40**
 
 ## 4. Hospedagem (Vercel)
 
@@ -76,28 +76,28 @@ Data: Janeiro 2024
   - Proteção de senha
   - Métricas avançadas
 
-**Custo Mensal: R$ 100,00**
+**Custo Mensal: R$ 117,40**
 
 ## Resumo dos Custos Mensais
 
-| Serviço    | Plano | Custo (R$) |
-|------------|-------|------------|
-| NeonDB     | Pro   | R$ 20,00   |
-| Clerk      | Pro   | R$ 125,00  |
-| Resend     | Pro   | R$ 100,00  |
-| Vercel     | Pro   | R$ 100,00  |
-| **Total**  |       | R$ 345,00  |
+| Serviço    | Plano   | Custo (R$) |
+|------------|---------|------------|
+| NeonDB     | Launch  | R$ 111,53  |
+| Clerk      | Pro     | R$ 146,75  |
+| Resend     | Pro     | R$ 117,40  |
+| Vercel     | Pro     | R$ 117,40  |
+| **Total**  |         | R$ 493,08  |
 
 ## Custo Anual
-- Custo Mensal: R$ 345,00
-- **Custo Anual: R$ 4.140,00**
+- Custo Mensal: R$ 493,08
+- **Custo Anual: R$ 5.916,96**
 
 ## Recomendações e Observações
 
 ### Prioridades de Upgrade
 1. **NeonDB** (URGENTE)
-   - O limite de transferência de dados está quase esgotado (79.6%)
-   - Upgrade necessário para evitar interrupções
+   - O limite de transferência de dados está ultrapassado (103.8%)
+   - Upgrade necessário IMEDIATAMENTE para evitar interrupções
 
 2. **Resend** (ALTA)
    - Necessário para garantir entrega confiável de emails
@@ -112,12 +112,12 @@ Data: Janeiro 2024
    - Upgrade recomendado apenas quando necessitar de recursos avançados
 
 ### Economia Possível
-1. Manter Vercel no plano gratuito inicialmente: -R$ 100,00
-2. Manter Clerk no plano gratuito temporariamente: -R$ 125,00
+1. Manter Vercel no plano gratuito inicialmente: -R$ 117,40
+2. Manter Clerk no plano gratuito temporariamente: -R$ 146,75
 
-**Custo Mensal Mínimo (Apenas Essenciais)**: R$ 120,00
-- NeonDB Pro: R$ 20,00
-- Resend Pro: R$ 100,00
+**Custo Mensal Mínimo (Apenas Essenciais)**: R$ 228,93
+- NeonDB Launch: R$ 111,53
+- Resend Pro: R$ 117,40
 
 ### Projeção de Crescimento
 - Considerar upgrade do NeonDB se o crescimento de dados continuar no ritmo atual
@@ -132,6 +132,6 @@ Data: Janeiro 2024
 
 ## Conclusão
 
-O investimento mínimo necessário para manter a aplicação funcionando adequadamente é de R$ 120,00 mensais, focando nos serviços essenciais (NeonDB e Resend). Este valor pode subir para R$ 345,00 mensais com todos os recursos premium ativados.
+O investimento mínimo necessário para manter a aplicação funcionando adequadamente é de R$ 228,93 mensais, focando nos serviços essenciais (NeonDB e Resend). Este valor pode subir para R$ 493,08 mensais com todos os recursos premium ativados.
 
 Recomenda-se começar com o plano mínimo e escalar conforme necessidade, mantendo monitoramento constante dos limites de uso para evitar interrupções no serviço.
