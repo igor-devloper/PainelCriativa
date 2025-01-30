@@ -6,7 +6,7 @@ function getBaseUrl() {
     return window.location.origin;
   }
   // Fallback para ambiente de servidor
-  return process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  return process.env.NEXT_PUBLIC_BASE_URL || "https://nucleoenergy.com";
 }
 
 export function approvedRequestTemplate(
@@ -46,7 +46,7 @@ export function approvedRequestTemplate(
           <p>Se você tiver alguma dúvida, por favor, entre em contato conosco.</p>
         </div>
         <div class="footer">
-          <p>&copy; 2023 Sua Empresa. Todos os direitos reservados.</p>
+          <p>&copy; 2023 Criativa Energia. Todos os direitos reservados.</p>
         </div>
       </div>
     </body>
@@ -93,7 +93,7 @@ export function deniedRequestTemplate(
           <p>Se você tiver alguma dúvida ou quiser mais informações, por favor, entre em contato conosco.</p>
         </div>
         <div class="footer">
-          <p>&copy; 2023 Sua Empresa. Todos os direitos reservados.</p>
+          <p>&copy; 2023 Criativa Energia. Todos os direitos reservados.</p>
         </div>
       </div>
     </body>
@@ -135,7 +135,7 @@ export function acceptedRequestTemplate(
           <p>Se você tiver alguma dúvida, por favor, entre em contato conosco.</p>
         </div>
         <div class="footer">
-          <p>&copy; 2023 Sua Empresa. Todos os direitos reservados.</p>
+          <p>&copy; 2023 Criativa Energia. Todos os direitos reservados.</p>
         </div>
       </div>
     </body>
