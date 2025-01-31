@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import type {
   Request as PrismaRequest,
   AccountingBlock as PrismaAccountingBlock,
@@ -8,6 +9,8 @@ import type {
   PaymentMethod,
   Prisma,
 } from "@prisma/client";
+
+import { Decimal } from "@prisma/client/runtime/library"; // Importação do Decimal
 
 // User and Role types
 export type UserRole = "ADMIN" | "FINANCE" | "USER";
@@ -43,20 +46,24 @@ export type BlockStatus = PrismaBlockStatus;
 // Base interfaces extending Prisma types
 interface BaseRequest
   extends Omit<PrismaRequest, "amount" | "currentBalance" | "expectedDate"> {
-  amount: number;
-  currentBalance: number | null;
+  amount: number; // Converte Decimal para number
+  currentBalance: number | null; // Converte Decimal para number
   expectedDate: Date | null;
 }
 
 interface BaseAccountingBlock
-  extends Omit<PrismaAccountingBlock, "createdAt" | "updatedAt"> {
+  extends Omit<
+    PrismaAccountingBlock,
+    "createdAt" | "updatedAt" | "totalAmount"
+  > {
   createdAt: Date;
   updatedAt: Date;
+  totalAmount: number; // Converte Decimal para number
 }
 
 interface BaseExpense
   extends Omit<PrismaExpense, "amount" | "date" | "createdAt" | "updatedAt"> {
-  amount: number;
+  amount: number; // Converte Decimal para number
   date: Date;
   createdAt: Date;
   updatedAt: Date;

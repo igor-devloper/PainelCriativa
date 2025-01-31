@@ -1,11 +1,12 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { formatDate, formatCurrency } from "@/app/_lib/utils";
+import type { Decimal } from "@prisma/client/runtime/library";
 
 interface Expense {
   date: string;
   name: string;
-  amount: number;
+  amount: number | Decimal;
   description: string;
   imageUrls?: string[];
 }
@@ -13,10 +14,10 @@ interface Expense {
 interface AccountingBlock {
   code: string;
   createdAt: string | Date;
-  initialAmount: number;
+  initialAmount?: number | Decimal;
   expenses: Expense[];
   request?: {
-    amount: number;
+    amount: number | Decimal;
   };
 }
 
@@ -102,15 +103,19 @@ export async function generateAccountingPDF(
 
   // Resumo financeiro
   const totalExpenses = block.expenses.reduce(
-    (total, expense) => total + Number(expense.amount),
+    (total, expense) => total + Number(expense.amount.toString()),
     0,
   );
-  const remainingBalance = Number(block.initialAmount) - totalExpenses;
+  const remainingBalance =
+    Number(block.initialAmount?.toString()) - totalExpenses;
 
   autoTable(doc, {
     startY: doc.lastAutoTable.finalY + 10,
     body: [
-      ["Valor disponibilizado:", formatCurrency(Number(block.request?.amount))],
+      [
+        "Valor disponibilizado:",
+        formatCurrency(Number(block.request?.amount?.toString())),
+      ],
       ["Saldo:", formatCurrency(remainingBalance)],
       ["Total das despesas", formatCurrency(totalExpenses)],
     ],
@@ -128,8 +133,8 @@ export async function generateAccountingPDF(
     body: block.expenses.map((expense) => [
       formatDate(expense.date),
       expense.name,
-      formatCurrency(Number(expense.amount)),
-      formatCurrency(Number(expense.amount)),
+      formatCurrency(Number(expense.amount.toString())),
+      formatCurrency(Number(expense.amount.toString())),
       expense.description,
     ]),
     headStyles: {
@@ -197,7 +202,7 @@ export async function generateAccountingPDF(
           doc.setFontSize(10);
           doc.text(
             `Despesa: ${expense.name}\nDescrição: ${expense.description}\nValor: ${formatCurrency(
-              Number(expense.amount),
+              Number(expense.amount.toString()),
             )}`,
             margin,
             textY,

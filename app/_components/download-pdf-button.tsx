@@ -3,6 +3,7 @@
 import { Button } from "@/app/_components/ui/button";
 import { Download } from "lucide-react";
 import { generateAccountingPDF } from "@/app/_utils/generate-pdf";
+import { Decimal } from "@prisma/client/runtime/library";
 
 interface Expense {
   date: string;
@@ -16,7 +17,7 @@ interface AccountingBlock {
   code: string;
   createdAt: string | Date;
   company: string;
-  initialAmount: number;
+  initialAmount: number | Decimal;
   expenses: Expense[];
   request?: {
     amount: number;
