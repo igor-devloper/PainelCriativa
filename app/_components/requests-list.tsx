@@ -200,9 +200,7 @@ export function RequestsList({
               <TableCell>{request.responsibleCompany}</TableCell>
               <TableCell>{request.description.split(" - ")[0]}</TableCell>
               <TableCell>
-                {request.description.includes("Saldo")
-                  ? request.description.split("Saldo")[1].trim()
-                  : ""}
+                {request.description.split("Saldo").pop()?.trim()}
               </TableCell>
               <TableCell>{formatDate(request.createdAt)}</TableCell>
               <TableCell>{formatCurrency(request.amount)}</TableCell>
