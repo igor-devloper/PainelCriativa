@@ -3,7 +3,25 @@
 import { Button } from "@/app/_components/ui/button";
 import { Download } from "lucide-react";
 import { generateAccountingPDF } from "@/app/_utils/generate-pdf";
-import type { AccountingBlock } from "@/app/types";
+
+interface Expense {
+  date: string;
+  name: string;
+  amount: number;
+  description: string;
+  imageUrls?: string[];
+}
+
+interface AccountingBlock {
+  code: string;
+  createdAt: string | Date;
+  company: string;
+  initialAmount: number;
+  expenses: Expense[];
+  request?: {
+    amount: number;
+  };
+}
 
 interface DownloadPDFButtonProps {
   block: AccountingBlock;

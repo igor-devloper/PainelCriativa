@@ -12,7 +12,7 @@ interface Expense {
 
 interface AccountingBlock {
   code: string;
-  createdAt: string;
+  createdAt: string | Date;
   initialAmount: number;
   expenses: Expense[];
   request?: {
@@ -26,6 +26,17 @@ const COMPANY_CNPJS: Record<string, string> = {
   "OESTE BIOGÁS": "41.106.939/0001-12",
   "EXATA I": "38.406.585/0001-17",
 };
+
+function getBase64ImageFormat(base64String: string): string {
+  // Extract image format from base64 string
+  const match = base64String.match(/^data:image\/(\w+);base64,/);
+  return match ? match[1].toUpperCase() : "JPEG"; // Default to JPEG if format not found
+}
+
+function cleanBase64String(base64String: string): string {
+  // Remove data URL prefix if present
+  return base64String.replace(/^data:image\/\w+;base64,/, "");
+}
 
 export async function generateAccountingPDF(
   block: AccountingBlock,
@@ -136,23 +147,52 @@ export async function generateAccountingPDF(
     },
   });
 
-  // Pré-carregamento de imagens
-  const preloadedImages = await preloadImages(
-    block.expenses.flatMap((expense) => expense.imageUrls || []),
-  );
-
-  // Adicionar recibos
+  // Handle base64 images
   for (const expense of block.expenses) {
     if (expense.imageUrls && expense.imageUrls.length > 0) {
-      for (const url of expense.imageUrls) {
-        const img = preloadedImages[url];
-        if (img) {
+      for (const base64Data of expense.imageUrls) {
+        try {
           doc.addPage();
           const margin = 20;
           const imgWidth = 100;
-          const imgHeight = (imgWidth * img.height) / img.width;
-          doc.addImage(img, "JPEG", margin, margin, imgWidth, imgHeight);
 
+          // Clean base64 string and get format
+          const cleanBase64 = cleanBase64String(base64Data);
+          const imageFormat = getBase64ImageFormat(base64Data);
+
+          // Create a temporary canvas to get image dimensions
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+          const img = new Image();
+
+          await new Promise<void>((resolve, reject) => {
+            img.onload = () => {
+              canvas.width = img.width;
+              canvas.height = img.height;
+              ctx?.drawImage(img, 0, 0);
+              resolve();
+            };
+            img.onerror = reject;
+            // Important: Set crossOrigin to avoid CORS issues
+            img.crossOrigin = "anonymous";
+            img.src = base64Data;
+          });
+
+          const imgHeight = (imgWidth * img.height) / img.width;
+
+          // Add image to PDF using the cleaned base64 string
+          doc.addImage(
+            cleanBase64,
+            imageFormat,
+            margin,
+            margin,
+            imgWidth,
+            imgHeight,
+            undefined,
+            "FAST",
+          );
+
+          // Add expense details below image
           const textY = margin + imgHeight + 10;
           doc.setFontSize(10);
           doc.text(
@@ -162,31 +202,13 @@ export async function generateAccountingPDF(
             margin,
             textY,
           );
+        } catch (error) {
+          console.error("Error adding image to PDF:", error);
+          continue;
         }
       }
     }
   }
 
   return doc;
-}
-
-async function preloadImages(
-  urls: string[],
-): Promise<Record<string, HTMLImageElement>> {
-  const imageMap: Record<string, HTMLImageElement> = {};
-  const promises = urls.map(
-    (url) =>
-      new Promise<void>((resolve) => {
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.onload = () => {
-          imageMap[url] = img;
-          resolve();
-        };
-        img.onerror = () => resolve();
-        img.src = url;
-      }),
-  );
-  await Promise.all(promises);
-  return imageMap;
 }

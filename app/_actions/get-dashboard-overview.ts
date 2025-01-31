@@ -19,7 +19,11 @@ export interface DashboardOverviewData {
   };
   recentActivity: {
     id: string;
-    type: "REQUEST_CREATED" | "STATEMENT_APPROVED" | "USER_REGISTERED";
+    type:
+      | "REQUEST_CREATED"
+      | "STATEMENT_APPROVED"
+      | "USER_REGISTERED"
+      | "EXPENSE_CREATED";
     description: string;
     userFullName: string;
     createdAt: Date;
@@ -102,8 +106,8 @@ export async function getDashboardOverview(): Promise<DashboardOverviewData> {
     }),
   ]);
 
-  // Get recent activity using Prisma queries instead of raw SQL
-  const [recentRequests, recentBlocks] = await Promise.all([
+  // Get recent activity using Prisma queries
+  const [recentRequests, recentBlocks, recentExpenses] = await Promise.all([
     db.request.findMany({
       where: {
         createdAt: {
@@ -143,6 +147,23 @@ export async function getDashboardOverview(): Promise<DashboardOverviewData> {
       },
       take: 2,
     }),
+    db.expense.findMany({
+      where: {
+        createdAt: {
+          gte: previousMonthStart,
+        },
+      },
+      select: {
+        id: true,
+        description: true,
+        userId: true,
+        createdAt: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 2,
+    }),
   ]);
 
   // Combine and sort recent activity
@@ -160,6 +181,13 @@ export async function getDashboardOverview(): Promise<DashboardOverviewData> {
       description: block.code,
       userId: block.request.userId,
       createdAt: block.createdAt,
+    })),
+    ...recentExpenses.map((expense) => ({
+      id: expense.id,
+      type: "EXPENSE_CREATED" as const,
+      description: expense.description || "Despesa sem descrição",
+      userId: expense.userId,
+      createdAt: expense.createdAt,
     })),
   ]
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())

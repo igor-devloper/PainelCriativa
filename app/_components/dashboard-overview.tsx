@@ -31,7 +31,11 @@ interface DashboardOverviewProps {
   accountStatementsChange: number;
   recentActivity: {
     id: string;
-    type: "REQUEST_CREATED" | "STATEMENT_APPROVED" | "USER_REGISTERED";
+    type:
+      | "REQUEST_CREATED"
+      | "STATEMENT_APPROVED"
+      | "USER_REGISTERED"
+      | "EXPENSE_CREATED";
     description: string;
     userFullName: string;
     createdAt: Date;
@@ -132,37 +136,41 @@ export function DashboardOverview({
             )}
           </CardContent>
         </Card>
-        <Card className="col-span-4">
-          <CardHeader>
-            <CardTitle>Atividade Recente</CardTitle>
-            <CardDescription>Últimas atualizações do sistema</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recentActivity.map((activity) => (
-                <div key={activity.id} className="flex items-center">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      {activity.type === "REQUEST_CREATED" &&
-                        "Nova solicitação criada"}
-                      {activity.type === "STATEMENT_APPROVED" &&
-                        "Prestação de contas aprovada"}
-                      {activity.type === "USER_REGISTERED" &&
-                        "Novo usuário registrado"}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {formatDistanceToNow(activity.createdAt, {
-                        addSuffix: true,
-                        locale: ptBR,
-                      })}{" "}
-                      por {activity.userFullName}
-                    </p>
+        {userRole === "ADMIN" && (
+          <Card className="col-span-3">
+            <CardHeader>
+              <CardTitle>Atividade Recente</CardTitle>
+              <CardDescription>Últimas atualizações do sistema</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {recentActivity.map((activity) => (
+                  <div key={activity.id} className="flex items-center">
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {activity.type === "REQUEST_CREATED" &&
+                          "Nova solicitação criada"}
+                        {activity.type === "STATEMENT_APPROVED" &&
+                          "Prestação de contas aprovada"}
+                        {activity.type === "USER_REGISTERED" &&
+                          "Novo usuário registrado"}
+                        {activity.type === "EXPENSE_CREATED" &&
+                          "Nova despesa criada"}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {formatDistanceToNow(activity.createdAt, {
+                          addSuffix: true,
+                          locale: ptBR,
+                        })}{" "}
+                        por {activity.userFullName}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

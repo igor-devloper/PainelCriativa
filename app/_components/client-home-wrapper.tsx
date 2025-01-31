@@ -33,7 +33,11 @@ interface ClientHomeWrapperProps {
   accountStatementsChange: number;
   recentActivity: {
     id: string;
-    type: "REQUEST_CREATED" | "STATEMENT_APPROVED" | "USER_REGISTERED";
+    type:
+      | "REQUEST_CREATED"
+      | "STATEMENT_APPROVED"
+      | "USER_REGISTERED"
+      | "EXPENSE_CREATED";
     description: string;
     userFullName: string;
     createdAt: Date;
