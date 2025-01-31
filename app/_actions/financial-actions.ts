@@ -9,7 +9,7 @@ export async function getApprovedValues() {
 
     const approvedRequests = await db.request.findMany({
       where: {
-        OR: [{ status: "ACCEPTED" }, { status: "COMPLETED" }],
+        OR: [{ status: "ACCEPTS" }, { status: "COMPLETED" }],
         createdAt: {
           gte: sixMonthsAgo,
         },
