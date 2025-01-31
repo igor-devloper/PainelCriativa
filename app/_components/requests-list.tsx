@@ -198,8 +198,8 @@ export function RequestsList({
           {requests.map((request) => (
             <TableRow key={request.id}>
               <TableCell>{request.responsibleCompany}</TableCell>
-              <TableCell>{request.name}</TableCell>
-              <TableCell>{request.description}</TableCell>
+              <TableCell>{request.description.replace(/ -$/, "")}</TableCell>
+              <TableCell>{request.description.split("Saldo").pop()}</TableCell>
               <TableCell>{formatDate(request.createdAt)}</TableCell>
               <TableCell>{formatCurrency(request.amount)}</TableCell>
               <TableCell>
