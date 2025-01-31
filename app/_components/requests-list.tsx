@@ -198,8 +198,12 @@ export function RequestsList({
           {requests.map((request) => (
             <TableRow key={request.id}>
               <TableCell>{request.responsibleCompany}</TableCell>
-              <TableCell>{request.description.replace(/ -$/, "")}</TableCell>
-              <TableCell>{request.description.split("Saldo").pop()}</TableCell>
+              <TableCell>{request.description.split(" - ")[0]}</TableCell>
+              <TableCell>
+                {request.description.includes("Saldo")
+                  ? request.description.split("Saldo")[1].trim()
+                  : ""}
+              </TableCell>
               <TableCell>{formatDate(request.createdAt)}</TableCell>
               <TableCell>{formatCurrency(request.amount)}</TableCell>
               <TableCell>
