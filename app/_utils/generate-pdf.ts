@@ -1,10 +1,26 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import type { AccountingBlock } from "@/app/types";
 import { formatDate, formatCurrency } from "@/app/_lib/utils";
 
-// Company CNPJs mapping
-const COMPANY_CNPJS = {
+interface Expense {
+  date: string;
+  name: string;
+  amount: number;
+  description: string;
+  imageUrls?: string[];
+}
+
+interface AccountingBlock {
+  code: string;
+  createdAt: string;
+  initialAmount: number;
+  expenses: Expense[];
+  request?: {
+    amount: number;
+  };
+}
+
+const COMPANY_CNPJS: Record<string, string> = {
   "GSM SOLARION 02": "44.910.546/0001-55",
   "CRIATIVA ENERGIA": "Não consta",
   "OESTE BIOGÁS": "41.106.939/0001-12",
@@ -18,20 +34,14 @@ export async function generateAccountingPDF(
 ) {
   const doc = new jsPDF();
 
-  // Logo settings
+  // Adicionar imagem
   const logoWidth = 30;
   const logoHeight = logoWidth * (551 / 453);
   doc.addImage("/logo.png", "PNG", 140, 10, logoWidth, logoHeight);
 
-  const getCompanyCNPJ = (companyName: string): string => {
-    return companyName in COMPANY_CNPJS
-      ? COMPANY_CNPJS[companyName as keyof typeof COMPANY_CNPJS]
-      : "";
-  };
+  const companyCNPJ = COMPANY_CNPJS[companyName] || "";
 
-  const companyCNPJ = getCompanyCNPJ(companyName);
-
-  // Header table
+  // Cabeçalho
   autoTable(doc, {
     startY: 10 + logoHeight + 5,
     body: [
@@ -48,7 +58,7 @@ export async function generateAccountingPDF(
     margin: { right: 70 },
   });
 
-  // Colaborador data
+  // Colaborador
   autoTable(doc, {
     startY: doc.lastAutoTable.finalY + 10,
     head: [
@@ -79,7 +89,7 @@ export async function generateAccountingPDF(
     },
   });
 
-  // Financial summary
+  // Resumo financeiro
   const totalExpenses = block.expenses.reduce(
     (total, expense) => total + Number(expense.amount),
     0,
@@ -100,7 +110,7 @@ export async function generateAccountingPDF(
     },
   });
 
-  // Expenses table
+  // Despesas
   autoTable(doc, {
     startY: doc.lastAutoTable.finalY + 10,
     head: [["Data", "Fonte", "Crédito", "Valor despesa", "Descrição Despesa"]],
@@ -119,30 +129,30 @@ export async function generateAccountingPDF(
     styles: {
       fontSize: 9,
       cellPadding: 2,
-      overflow: "linebreak", // Enable line breaking for long text
+      overflow: "linebreak",
     },
     columnStyles: {
-      4: { cellWidth: 80 }, // Set wider column for description
+      4: { cellWidth: 80 },
     },
   });
 
-  // Add receipts, one per page
+  // Pré-carregamento de imagens
+  const preloadedImages = await preloadImages(
+    block.expenses.flatMap((expense) => expense.imageUrls || []),
+  );
+
+  // Adicionar recibos
   for (const expense of block.expenses) {
     if (expense.imageUrls && expense.imageUrls.length > 0) {
       for (const url of expense.imageUrls) {
-        try {
-          const img = await loadImage(url);
-
-          // Start a new page for each receipt
+        const img = preloadedImages[url];
+        if (img) {
           doc.addPage();
-
-          // Add receipt image with further reduced size
           const margin = 20;
-          const imgWidth = 100; // Reduced image width
-          const imgHeight = (imgWidth * img.height) / img.width; // Maintain aspect ratio
+          const imgWidth = 100;
+          const imgHeight = (imgWidth * img.height) / img.width;
           doc.addImage(img, "JPEG", margin, margin, imgWidth, imgHeight);
 
-          // Add expense info below the image
           const textY = margin + imgHeight + 10;
           doc.setFontSize(10);
           doc.text(
@@ -152,8 +162,6 @@ export async function generateAccountingPDF(
             margin,
             textY,
           );
-        } catch (error) {
-          console.error("Error loading receipt image:", error);
         }
       }
     }
@@ -162,13 +170,23 @@ export async function generateAccountingPDF(
   return doc;
 }
 
-// Helper function to load images
-function loadImage(url: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = url;
-  });
+async function preloadImages(
+  urls: string[],
+): Promise<Record<string, HTMLImageElement>> {
+  const imageMap: Record<string, HTMLImageElement> = {};
+  const promises = urls.map(
+    (url) =>
+      new Promise<void>((resolve) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          imageMap[url] = img;
+          resolve();
+        };
+        img.onerror = () => resolve();
+        img.src = url;
+      }),
+  );
+  await Promise.all(promises);
+  return imageMap;
 }
