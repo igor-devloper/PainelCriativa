@@ -13,7 +13,17 @@ import {
 } from "./ui/tooltip";
 import { CreateRequestDialog } from "./create-request-dialog";
 
-export function CreateRequestButton() {
+interface User {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  imageUrl: string;
+}
+interface CreateRequestButtonProps {
+  users: User[];
+}
+
+export function CreateRequestButton({ users }: CreateRequestButtonProps) {
   const [dialogIsOpen, setDialogIsOpen] = useState(false);
 
   const handleClick = () => {
@@ -33,7 +43,11 @@ export function CreateRequestButton() {
           <TooltipContent>Crie uma nova solicitação</TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      <CreateRequestDialog isOpen={dialogIsOpen} setIsOpen={setDialogIsOpen} />
+      <CreateRequestDialog
+        isOpen={dialogIsOpen}
+        setIsOpen={setDialogIsOpen}
+        users={users}
+      />
     </>
   );
 }

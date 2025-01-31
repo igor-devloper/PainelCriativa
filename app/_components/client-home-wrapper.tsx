@@ -15,9 +15,17 @@ import { Avatar } from "@/app/_components/ui/avatar";
 import { UserButton } from "@clerk/nextjs";
 import { Separator } from "./ui/separator";
 
+interface User {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  imageUrl: string;
+}
+
 interface ClientHomeWrapperProps {
   userRole: UserRole;
   userName: string;
+  users: User[];
   pendingRequestsCount: number;
   activeUsersCount: number;
   activeUsersChange: number;
@@ -36,6 +44,7 @@ export function ClientHomeWrapper({
   userName,
   pendingRequestsCount,
   userRole,
+  users,
   activeUsersCount,
   activeUsersChange,
   accountStatementsCount,
@@ -77,6 +86,7 @@ export function ClientHomeWrapper({
         <ScrollArea className="flex-1">
           <div className="container mx-auto p-6">
             <DashboardOverview
+              users={users}
               userRole={userRole}
               userName={userName}
               pendingRequestsCount={pendingRequestsCount}

@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -9,12 +11,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/app/_components/ui/table";
-import { UserRole, Request, RequestStatus } from "@/app/types";
-import { formatCurrency, formatDate } from "@/app/_lib/utils";
-import { updateRequestStatus } from "@/app/_actions/update-request-status";
-import { toast } from "@/app/_hooks/use-toast";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   Select,
   SelectContent,
@@ -22,38 +18,87 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/app/_components/ui/select";
+import { Badge } from "@/app/_components/ui/badge";
+import type { UserRole, Request, RequestStatus } from "@/app/types";
+import { formatCurrency, formatDate } from "@/app/_lib/utils";
+import { updateRequestStatus } from "@/app/_actions/update-request-status";
+import { toast } from "@/app/_hooks/use-toast";
+import { ValidationUserDialog } from "./validation-user-dialog";
 import { RequestStatusDialog } from "./request-status-dialog";
 import { DenialReasonDialog } from "./denial-reason-dialog";
 import { REQUEST_STATUS_LABELS } from "../_constants/transactions";
-import create from "./user-info";
 import UserInfo from "./user-info";
+
+interface User {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  imageUrl: string;
+}
 
 interface RequestsListProps {
   requests: Request[];
   userRole: UserRole;
-  user: string;
+  userId: string;
+  users: User[];
 }
 
-export function RequestsList({ requests, userRole, user }: RequestsListProps) {
+export function RequestsList({
+  requests,
+  userRole,
+  userId,
+  users,
+}: RequestsListProps) {
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [validationDialogOpen, setValidationDialogOpen] = useState(false);
   const [denialDialogOpen, setDenialDialogOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
   const router = useRouter();
 
-  async function handleStatusChange(
+  const handleValidationUserSelect = async (selectedUserId: string) => {
+    if (!selectedRequest) return;
+
+    try {
+      await updateRequestStatus(
+        selectedRequest.id,
+        "VALIDATES",
+        undefined,
+        undefined,
+        selectedUserId,
+      );
+      toast({
+        title: "Sucesso",
+        description: "Solicitação validada e enviada para autorização",
+      });
+      router.refresh();
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar status da solicitação",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleStatusChange = async (
     requestId: string,
     newStatus: RequestStatus,
     denialReason?: string,
-  ) {
+  ) => {
     setIsUpdating(requestId);
     try {
+      if (newStatus === "VALIDATES") {
+        setSelectedRequest(requests.find((r) => r.id === requestId) || null);
+        setValidationDialogOpen(true);
+        return;
+      }
+
       const result = await updateRequestStatus(
         requestId,
         newStatus,
         denialReason,
       );
-
       if (result.success) {
         toast({
           title: "Status atualizado",
@@ -64,45 +109,74 @@ export function RequestsList({ requests, userRole, user }: RequestsListProps) {
     } catch (error) {
       toast({
         title: "Erro ao atualizar status",
-        description:
-          "Ocorreu um erro ao atualizar o status da solicitação. Tente novamente.",
+        description: "Ocorreu um erro ao atualizar o status da solicitação.",
         variant: "destructive",
       });
     } finally {
       setIsUpdating(null);
     }
-  }
-
-  const handleStatusComplete = (
-    requestId: string,
-    newStatus: RequestStatus,
-  ) => {
-    if (newStatus === "COMPLETED") {
-      const request = requests.find((r) => r.id === requestId);
-      if (request) {
-        setSelectedRequest(request);
-        setDialogOpen(true); // Garantir que o estado seja setado para abrir o diálogo
-      }
-    }
   };
 
-  const handleStatusSelect = (requestId: string, newStatus: RequestStatus) => {
-    if (newStatus === "DENIED") {
-      setSelectedRequest(requests.find((r) => r.id === requestId) || null);
-      setDenialDialogOpen(true);
-    } else if (newStatus === "COMPLETED") {
-      handleStatusComplete(requestId, newStatus);
-    } else {
-      handleStatusChange(requestId, newStatus);
-    }
+  const getStatusBadge = (status: RequestStatus) => {
+    const badgeVariants = {
+      WAITING: "bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
+      VALIDATES: "bg-blue-100 text-blue-800 hover:bg-blue-200",
+      AUTHORIZES: "bg-green-100 text-green-800 hover:bg-green-200",
+      ACCEPTS: "bg-purple-100 text-purple-800 hover:bg-purple-200",
+      COMPLETED: "bg-gray-100 text-gray-800 hover:bg-gray-200",
+    };
+
+    return (
+      <Badge className={`${badgeVariants[status]} font-medium`}>
+        {REQUEST_STATUS_LABELS[status]}
+      </Badge>
+    );
   };
 
   const canChangeStatus = (request: Request) => {
-    return (
-      (userRole === "FINANCE" || userRole === "ADMIN") &&
-      request.status !== "COMPLETED" &&
-      !isUpdating
-    );
+    if (isUpdating === request.id) return false;
+
+    // Gestor can only validate their assigned requests
+    if (request.gestor === userId && request.status === "WAITING") return true;
+
+    // Responsible user can only authorize their assigned requests
+    if (
+      request.responsibleValidationUserID === userId &&
+      request.status === "VALIDATES"
+    )
+      return true;
+
+    // Finance can handle authorized and accepted requests
+    if (
+      userRole === "FINANCE" &&
+      ["AUTHORIZES", "ACCEPTS"].includes(request.status)
+    )
+      return true;
+
+    // Admin can do everything
+    if (userRole === "ADMIN") return true;
+
+    return false;
+  };
+
+  const getAvailableStatuses = (request: Request): RequestStatus[] => {
+    if (userRole === "ADMIN")
+      return ["WAITING", "VALIDATES", "AUTHORIZES", "ACCEPTS", "COMPLETED"];
+
+    if (userRole === "FINANCE" && request.status === "AUTHORIZES")
+      return ["ACCEPTS"];
+    if (userRole === "FINANCE" && request.status === "ACCEPTS")
+      return ["COMPLETED"];
+
+    if (request.gestor === userId && request.status === "WAITING")
+      return ["VALIDATES"];
+    if (
+      request.responsibleValidationUserID === userId &&
+      request.status === "VALIDATES"
+    )
+      return ["AUTHORIZES"];
+
+    return [];
   };
 
   return (
@@ -110,7 +184,7 @@ export function RequestsList({ requests, userRole, user }: RequestsListProps) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Empresa Responsalvel</TableHead>
+            <TableHead>Empresa Responsável</TableHead>
             <TableHead>Motivo da solicitação</TableHead>
             <TableHead>Observação</TableHead>
             <TableHead>Data</TableHead>
@@ -121,61 +195,51 @@ export function RequestsList({ requests, userRole, user }: RequestsListProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {requests.map((request) => {
-            const startIndex = request.description
-              .toLowerCase()
-              .indexOf("saldo");
-            const startIndex2 = request.description.lastIndexOf("-");
-            return (
-              <TableRow key={request.id}>
-                <TableCell>{request.responsibleCompany}</TableCell>
-                <TableCell>
-                  {startIndex !== -1
-                    ? request.description.slice(0, startIndex)
-                    : "Nenhuma descrição"}
-                </TableCell>
-                <TableCell>
-                  {startIndex !== -1
-                    ? request.description.slice(startIndex)
-                    : "Nenhuma observação"}
-                </TableCell>
-                <TableCell>{formatDate(request.createdAt)}</TableCell>
-                <TableCell>{formatCurrency(request.amount)}</TableCell>
-                <TableCell>
-                  <UserInfo userId={request.userId} />
-                </TableCell>
-                <TableCell>{REQUEST_STATUS_LABELS[request.status]}</TableCell>
-                <TableCell>
-                  {canChangeStatus(request) && (
-                    <Select
-                      value={request.status}
-                      onValueChange={(value: RequestStatus) =>
-                        handleStatusSelect(request.id, value)
-                      }
-                      disabled={isUpdating === request.id}
-                    >
-                      <SelectTrigger className="ml-2 w-[180px]">
-                        <SelectValue placeholder="Alterar status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="WAITING">
-                          Aguardando análise
+          {requests.map((request) => (
+            <TableRow key={request.id}>
+              <TableCell>{request.responsibleCompany}</TableCell>
+              <TableCell>{request.name}</TableCell>
+              <TableCell>{request.description}</TableCell>
+              <TableCell>{formatDate(request.createdAt)}</TableCell>
+              <TableCell>{formatCurrency(request.amount)}</TableCell>
+              <TableCell>
+                <UserInfo userId={request.userId} />
+              </TableCell>
+              <TableCell>{getStatusBadge(request.status)}</TableCell>
+              <TableCell>
+                {canChangeStatus(request) && (
+                  <Select
+                    value={request.status}
+                    onValueChange={(value: RequestStatus) =>
+                      handleStatusChange(request.id, value)
+                    }
+                    disabled={isUpdating === request.id}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Alterar status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getAvailableStatuses(request).map((status) => (
+                        <SelectItem key={status} value={status}>
+                          {REQUEST_STATUS_LABELS[status]}
                         </SelectItem>
-                        <SelectItem value="RECEIVED">
-                          Recebida pelo financeiro
-                        </SelectItem>
-                        <SelectItem value="ACCEPTED">Aceita</SelectItem>
-                        <SelectItem value="DENIED">Não aceita</SelectItem>
-                        <SelectItem value="COMPLETED">Finalizada</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                </TableCell>
-              </TableRow>
-            );
-          })}
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </TableCell>
+            </TableRow>
+          ))}
         </TableBody>
       </Table>
+
+      <ValidationUserDialog
+        isOpen={validationDialogOpen}
+        setIsOpen={setValidationDialogOpen}
+        onConfirm={handleValidationUserSelect}
+        users={users}
+      />
+
       <RequestStatusDialog
         isOpen={dialogOpen}
         setIsOpen={setDialogOpen}
@@ -185,17 +249,16 @@ export function RequestsList({ requests, userRole, user }: RequestsListProps) {
             handleStatusChange(selectedRequest.id, "COMPLETED");
           }
           setDialogOpen(false);
-
           setSelectedRequest(null);
-          router.refresh();
         }}
       />
+
       <DenialReasonDialog
         isOpen={denialDialogOpen}
         setIsOpen={setDenialDialogOpen}
         onConfirm={(reason) => {
           if (selectedRequest) {
-            handleStatusChange(selectedRequest.id, "DENIED", reason);
+            handleStatusChange(selectedRequest.id, "ACCEPTS", reason);
           }
           setDenialDialogOpen(false);
           setSelectedRequest(null);

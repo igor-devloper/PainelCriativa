@@ -13,9 +13,17 @@ import { CreateRequestButton } from "./create-request-button";
 import Link from "next/link";
 import { Button } from "./ui/button";
 
+interface User {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  imageUrl: string;
+}
+
 interface DashboardOverviewProps {
   userRole: UserRole;
   userName: string;
+  users: User[];
   pendingRequestsCount: number;
   activeUsersCount: number;
   activeUsersChange: number;
@@ -32,6 +40,7 @@ interface DashboardOverviewProps {
 
 export function DashboardOverview({
   userName,
+  users,
   pendingRequestsCount,
   activeUsersCount,
   activeUsersChange,
@@ -46,7 +55,7 @@ export function DashboardOverview({
         <h2 className="text-2xl font-bold tracking-tight">
           Bem-vindo, {userName}!
         </h2>
-        <CreateRequestButton />
+        <CreateRequestButton users={users} />
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
@@ -98,7 +107,7 @@ export function DashboardOverview({
             <CardTitle>Ações Rápidas</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
-            <CreateRequestButton />
+            <CreateRequestButton users={users} />
             <Link href="/requests">
               <Button className="flex w-full justify-start" variant="outline">
                 <ClipboardList className="mr-2 h-4 w-4" />

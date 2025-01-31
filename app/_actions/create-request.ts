@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use server";
 
 import { db } from "@/app/_lib/prisma";
@@ -13,6 +14,7 @@ interface CreateRequestData {
   amount: number;
   responsibleCompany: string;
   phoneNumber: string;
+  gestor: string;
 }
 
 interface NotificationData {
@@ -131,12 +133,14 @@ export async function createRequest(data: CreateRequestData) {
           phoneNumber: data.phoneNumber,
           initialUserBalance: balance,
           balanceDeducted: new Prisma.Decimal(0),
+          gestor: data.gestor,
+          responsibleValidationUserID: "",
         },
       });
 
-      if (request) {
-        trackCreateRequest(data.amount);
-      }
+      // if (request) {
+      //   trackCreateRequest(data.amount);
+      // }
 
       return {
         request,

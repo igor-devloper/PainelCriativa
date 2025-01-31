@@ -8,7 +8,6 @@ import { clerkClient } from "@clerk/nextjs/server";
 // import { REQUEST_STATUS_LABELS } from "../_constants/transactions"
 import {
   sendApprovedRequestEmail,
-  sendDeniedRequestEmail,
   sendAcceptedRequestEmail,
 } from "@/app/_lib/email-utils";
 
@@ -17,6 +16,7 @@ export async function updateRequestStatus(
   newStatus: RequestStatus,
   denialReason?: string,
   proofBase64?: string,
+  responsibleValidationUserID?: string,
 ) {
   try {
     const request = await db.request.findUnique({
@@ -36,18 +36,17 @@ export async function updateRequestStatus(
       status: RequestStatus;
       denialReason?: string | null;
       proofUrl?: string | null;
+      responsibleValidationUserID?: string | null;
     } = {
       status: newStatus,
     };
 
-    if (newStatus === "DENIED") {
-      updateData.denialReason = denialReason;
-    }
-
     if (newStatus === "COMPLETED" && proofBase64) {
       updateData.proofUrl = proofBase64;
     }
-
+    if (newStatus === "VALIDATES" && responsibleValidationUserID) {
+      updateData.responsibleValidationUserID = responsibleValidationUserID;
+    }
     await db.$transaction(
       async (tx) => {
         const updatedRequest = await tx.request.update({
@@ -55,7 +54,7 @@ export async function updateRequestStatus(
           data: updateData,
         });
 
-        if (newStatus === "ACCEPTED" || newStatus === "COMPLETED") {
+        if (newStatus === "COMPLETED") {
           const userBalance = await tx.userBalance.findFirst({
             where: {
               userId: updatedRequest.userId,
@@ -158,21 +157,12 @@ async function sendEmailNotification(
   const { id, amount } = request;
 
   switch (status) {
-    case "ACCEPTED":
+    case "ACCEPTS":
       await sendAcceptedRequestEmail(
         userEmail,
         userName,
         id,
         amount.toNumber(),
-      );
-      break;
-    case "DENIED":
-      await sendDeniedRequestEmail(
-        userEmail,
-        userName,
-        id,
-        amount.toNumber(),
-        denialReason || "",
       );
       break;
     case "COMPLETED":

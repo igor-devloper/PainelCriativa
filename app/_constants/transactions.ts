@@ -37,9 +37,9 @@ export const EXPENSE_CATEGORY_LABELS: Record<ExpenseCategory, string> = {
 
 export const REQUEST_STATUS_LABELS: { [key in RequestStatus]: string } = {
   WAITING: "Aguardando análise",
-  RECEIVED: "Recebida pelo financeiro",
-  ACCEPTED: "Aceita",
-  DENIED: "Não aceita",
+  VALIDATES: "Validada",
+  AUTHORIZES: "Autorizada",
+  ACCEPTS: "Aceita",
   COMPLETED: "Finalizada",
 };
 

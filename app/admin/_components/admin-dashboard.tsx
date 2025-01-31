@@ -23,7 +23,6 @@ import {
   Activity,
   Shield,
 } from "lucide-react";
-import { Button } from "@/app/_components/ui/button";
 import {
   Table,
   TableBody,
@@ -51,7 +50,6 @@ import { AppSidebar } from "@/app/_components/app-sidebar";
 import { Separator } from "@/app/_components/ui/separator";
 import { Avatar } from "@/app/_components/ui/avatar";
 import { UserButton } from "@clerk/nextjs";
-import Link from "next/link";
 import { NewUserDialog } from "@/app/_components/new-user-dialog";
 import { UserTableRow } from "./user-table-row";
 import type { AdminDashboardData, UserRole } from "@/app/types/dashboard";
@@ -110,14 +108,6 @@ export function AdminDashboard({
               <div className="flex items-center gap-4">
                 <Shield className="h-5 w-5" />
                 <h1 className="text-lg font-semibold">Painel administrativo</h1>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Link href="/admin/users">
-                  <Button>
-                    <Users className="mr-2 h-4 w-4" />
-                    Gerenciar Cargos
-                  </Button>
-                </Link>
               </div>
             </div>
 

@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -37,9 +38,19 @@ import {
 } from "./ui/select";
 import { Loader2 } from "lucide-react";
 import { PhoneInput } from "./phone-input";
+import UserInfo from "./user-info";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+
+interface User {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  imageUrl: string;
+}
 
 const formSchema = z.object({
   name: z.string().min(1, "O nome é obrigatório"),
+  gestor: z.string().min(1, "O gestor é obrigatório"),
   phoneNumber: z
     .string()
     .min(10, "Número de telefone inválido")
@@ -65,11 +76,13 @@ type RequestFormData = z.infer<typeof formSchema>;
 interface CreateRequestDialogProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
+  users: User[];
 }
 
 export function CreateRequestDialog({
   isOpen,
   setIsOpen,
+  users,
 }: CreateRequestDialogProps) {
   const [isPending, setIsPending] = useState(false);
   const router = useRouter();
@@ -82,6 +95,7 @@ export function CreateRequestDialog({
       description: "",
       name: "",
       phoneNumber: "",
+      gestor: "",
     },
   });
 
@@ -100,7 +114,6 @@ export function CreateRequestDialog({
             "Não foi possível verificar seu saldo atual. Deseja continuar mesmo assim?",
           variant: "destructive",
         });
-        // Allow the request to continue even if balance check fails
         userBalance = 0;
       }
 
@@ -110,9 +123,9 @@ export function CreateRequestDialog({
           `Você possui um saldo negativo de ${new Intl.NumberFormat("pt-BR", {
             style: "currency",
             currency: "BRL",
-          }).format(
-            negativeBalance,
-          )} para a empresa ${data.responsibleCompany}. Este valor será deduzido da sua solicitação quando for aprovada. Deseja continuar?`,
+          }).format(negativeBalance)} para a empresa ${
+            data.responsibleCompany
+          }. Este valor será deduzido da sua solicitação quando for aprovada. Deseja continuar?`,
         );
 
         if (!confirm) {
@@ -127,6 +140,7 @@ export function CreateRequestDialog({
         amount: data.amount,
         responsibleCompany: data.responsibleCompany,
         phoneNumber: data.phoneNumber,
+        gestor: data.gestor,
       });
 
       if (result.success) {
@@ -242,6 +256,44 @@ export function CreateRequestDialog({
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="gestor"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Gestor Responsável</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o gestor">
+                          {field.value && <UserInfo userId={field.value} />}
+                        </SelectValue>
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {users.map((user) => (
+                        <SelectItem key={user.id} value={user.id}>
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-6 w-6">
+                              <AvatarImage src={user.imageUrl} />
+                              <AvatarFallback>
+                                {user.firstName?.[0]}
+                                {user.lastName?.[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span>
+                              {user.firstName} {user.lastName}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}

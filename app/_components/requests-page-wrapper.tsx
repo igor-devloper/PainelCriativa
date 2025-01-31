@@ -12,19 +12,28 @@ import { UserRole, Request } from "@/app/types";
 import { RequestsList } from "./requests-list";
 import { Siren } from "lucide-react";
 
+interface User {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  imageUrl: string;
+}
+
 interface RequestsPageWrapperProps {
   userRole: UserRole;
   requests: Request[];
-  user: string;
+  users: User[];
+  userId: string;
 }
 
 export function RequestsPageWrapper({
   userRole,
   requests,
-  user,
+  users,
+  userId,
 }: RequestsPageWrapperProps) {
   const pendingRequestsCount = requests.filter(
-    (r) => r.status === "DENIED",
+    (r) => r.status === "WAITING",
   ).length;
 
   return (
@@ -59,7 +68,8 @@ export function RequestsPageWrapper({
                 <RequestsList
                   requests={requests}
                   userRole={userRole}
-                  user={user}
+                  users={users}
+                  userId={userId}
                 />
               </div>
               <ScrollBar orientation="horizontal" />

@@ -8,27 +8,29 @@ datasource db {
 }
 
 model Request {
-  id                    String           @id @default(cuid())
-  name                  String
-  description           String
-  amount                Decimal          @db.Decimal(10, 2)
-  currentBalance        Decimal          @db.Decimal(10, 2)
-  initialUserBalance    Decimal          @db.Decimal(10, 2)
-  balanceDeducted       Decimal          @db.Decimal(10, 2)
-  status                RequestStatus    @default(WAITING)
-  userId                String
-  phoneNumber           String
-  financeId             String?
-  expectedDate          DateTime?
-  denialReason          String?
-  proofUrl              String?
-  accountingBlock       AccountingBlock?
-  createdAt             DateTime         @default(now())
-  updatedAt             DateTime         @updatedAt
-  responsibleCompany    String
-  whatsappMessageId     String?
-  whatsappMessageStatus String?
-  whatsappMessageError  String?
+  id                          String           @id @default(cuid())
+  name                        String
+  description                 String
+  amount                      Decimal          @db.Decimal(10, 2)
+  currentBalance              Decimal          @db.Decimal(10, 2)
+  initialUserBalance          Decimal          @db.Decimal(10, 2)
+  balanceDeducted             Decimal          @db.Decimal(10, 2)
+  status                      RequestStatus    @default(WAITING)
+  userId                      String
+  phoneNumber                 String
+  financeId                   String?
+  expectedDate                DateTime?
+  denialReason                String?
+  proofUrl                    String?
+  accountingBlock             AccountingBlock?
+  createdAt                   DateTime         @default(now())
+  updatedAt                   DateTime         @updatedAt
+  responsibleCompany          String
+  whatsappMessageId           String?
+  whatsappMessageStatus       String?
+  whatsappMessageError        String?
+  gestor                      String?
+  responsibleValidationUserID String?
 }
 
 model AccountingBlock {
@@ -60,23 +62,22 @@ model Expense {
   imageUrls     String[] // URLs dos comprovantes
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
-  company        String
+  company       String
 }
 
 model UserBalance {
   id      String  @id @default(cuid())
-  userId  String  
+  userId  String
   balance Decimal @default(0) @db.Decimal(10, 2)
-  company        String
-  
+  company String
 }
 
 enum RequestStatus {
-  WAITING // Aguardando análise
-  RECEIVED // Recebida pelo financeiro
-  ACCEPTED // Aceita
-  DENIED // Não aceita
-  COMPLETED // Finalizada
+  WAITING
+  VALIDATES
+  AUTHORIZES
+  ACCEPTS
+  COMPLETED
 }
 
 enum BlockStatus {

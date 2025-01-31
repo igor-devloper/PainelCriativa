@@ -1,15 +1,25 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
 import { db } from "@/app/_lib/prisma";
-import { UserRole, Request, RequestWithFullDetails } from "@/app/types";
+import type { UserRole, Request, RequestWithFullDetails } from "@/app/types";
 
 export async function getRequests(
   userRole: UserRole,
   userId: string,
 ): Promise<Request[]> {
   try {
-    const where =
-      userRole === "ADMIN" || userRole === "FINANCE" ? undefined : { userId };
+    const where: any = {
+      OR: [
+        { userId: userId }, // My requests
+        { gestor: userId }, // Requests where I'm the manager
+      ],
+    };
+
+    // If user is FINANCE or ADMIN, include all authorized requests
+    if (userRole === "FINANCE" || userRole === "ADMIN") {
+      where.OR.push({ status: { in: ["AUTHORIZES", "ACCEPTS", "COMPLETED"] } });
+    }
 
     const requests = await db.request.findMany({
       where,
