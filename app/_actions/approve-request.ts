@@ -15,7 +15,7 @@ export async function approveRequest(requestId: string) {
     const request = await db.request.update({
       where: { id: requestId },
       data: {
-        status: "ACCEPTED",
+        status: "ACCEPTS",
         financeId: userId,
       },
     });
