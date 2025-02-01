@@ -19,7 +19,7 @@ import { Separator } from "@/app/_components/ui/separator";
 import { Copy, Download } from "lucide-react";
 import type { Request } from "@/app/types";
 import { formatCurrency } from "@/app/_lib/utils";
-import { generatePixQRCode } from "@/utils/pix";
+import { generatePixQRCode } from "../_utils/pix";
 
 interface RequestStatusDialogProps {
   isOpen: boolean;
