@@ -76,6 +76,7 @@ export function ExportDataCard() {
 
       downloadFile(data, fileName, mimeType);
       toast({
+        variant: "success",
         title: "Sucesso",
         description: `Relatório ${fileType.toUpperCase()} exportado com sucesso`,
       });

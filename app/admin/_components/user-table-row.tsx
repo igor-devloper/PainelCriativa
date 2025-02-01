@@ -36,6 +36,7 @@ export function UserTableRow({ user }: UserTableRowProps) {
     try {
       await deleteUser(user.id);
       toast({
+        variant: "success",
         title: "Usuário excluído",
         description: "O usuário foi excluído com sucesso.",
       });

@@ -37,6 +37,7 @@ export function ExpenseAnalysisCard() {
       const data = await getExpenseAnalytics();
       setAnalytics(data);
       toast({
+        variant: "success",
         title: "Sucesso",
         description: `Relatório despesas gerado com sucesso`,
       });
@@ -61,6 +62,7 @@ export function ExpenseAnalysisCard() {
       const data = await getExpenseAnalytics(startDate, endDate);
       setAnalytics(data);
       toast({
+        variant: "success",
         title: "Sucesso",
         description: `Análise de tendências gerado com sucesso`,
       });

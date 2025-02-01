@@ -116,6 +116,7 @@ export function UpsertExpenseDialog({
       });
 
       toast({
+        variant: "success",
         title: "Sucesso",
         description: "Despesa registrada com sucesso!",
       });

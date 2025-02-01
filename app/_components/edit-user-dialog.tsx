@@ -78,6 +78,7 @@ export function EditUserDialog({
       await updateUser(user.id, formData);
 
       toast({
+        variant: "success",
         title: "Sucesso",
         description: "Usuário atualizado com sucesso!",
       });

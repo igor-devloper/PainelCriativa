@@ -113,6 +113,7 @@ export function CreateRequestDialog({
       const result = await createRequest(data);
       if (result.success) {
         toast({
+          variant: "success",
           title: "Sucesso",
           description: "Solicitação criada com sucesso!",
         });

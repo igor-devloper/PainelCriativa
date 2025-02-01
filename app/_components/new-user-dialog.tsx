@@ -70,6 +70,7 @@ export function NewUserDialog() {
       await createUser(formData);
 
       toast({
+        variant: "success",
         title: "Sucesso",
         description: "Usuário criado com sucesso!",
       });

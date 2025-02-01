@@ -54,6 +54,7 @@ export function RequestStatusDialog({
       setIsOpen(false);
       setProofImage("");
       toast({
+        variant: "success",
         title: "Sucesso",
         description: "Solicitação finalizada com sucesso",
       });
@@ -71,6 +72,7 @@ export function RequestStatusDialog({
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast({
+      variant: "success",
       title: "Copiado!",
       description: "Informação copiada para a área de transferência",
     });

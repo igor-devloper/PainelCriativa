@@ -114,6 +114,7 @@ export function EditExpenseDialog({
       });
 
       toast({
+        variant: "success",
         title: "Sucesso",
         description: "Despesa atualizada com sucesso!",
       });

@@ -46,6 +46,7 @@ export function CompanyMetricsCard() {
       const data = await getCompanyMetrics(startDate, endDate);
       setMetrics(data);
       toast({
+        variant: "success",
         title: "Sucesso",
         description: `Relatório por empresas de ${startDate.toLocaleString("pt-BR", options)} até ${endDate.toLocaleString("pt-BR", options)} gerado com sucesso`,
       });

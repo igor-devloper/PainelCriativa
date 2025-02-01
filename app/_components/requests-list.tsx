@@ -68,6 +68,7 @@ export function RequestsList({
         selectedUserId,
       );
       toast({
+        variant: "success",
         title: "Sucesso",
         description: "Solicitação validada e enviada para autorização",
       });
@@ -107,6 +108,7 @@ export function RequestsList({
       );
       if (result.success) {
         toast({
+          variant: "success",
           title: "Status atualizado",
           description: "O status da solicitação foi atualizado com sucesso.",
         });
