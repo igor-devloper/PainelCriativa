@@ -20,6 +20,7 @@ import { Copy, Download } from "lucide-react";
 import type { Request } from "@/app/types";
 import { formatCurrency } from "@/app/_lib/utils";
 import { ScrollArea } from "./ui/scroll-area";
+import { generatePixPayload } from "../_utils/pix";
 
 interface RequestStatusDialogProps {
   isOpen: boolean;
@@ -76,18 +77,12 @@ export function RequestStatusDialog({
   };
 
   const generatePixQRCode = (pixKey: string, amount: number) => {
-    const payload = {
+    return generatePixPayload(
       pixKey,
-      description: "Pagamento PIX",
-      merchantName: request?.accountHolderName ?? "",
-      merchantCity: "BRASIL",
-      amount: amount.toFixed(2),
-      transactionId: `TX${Date.now()}`,
-    };
-
-    const formattedPayload = `00020126580014br.gov.bcb.pix0136${pixKey}5204000053039865802BR5913${payload.merchantName.toLocaleUpperCase}6009${payload.merchantCity}62070503***6304`;
-
-    return formattedPayload;
+      amount,
+      request?.accountHolderName ?? "Nome do Titular",
+      "BRASIL",
+    );
   };
 
   const downloadQRCode = () => {
