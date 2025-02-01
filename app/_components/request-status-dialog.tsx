@@ -101,7 +101,7 @@ export function RequestStatusDialog({
       merchantName: request.accountHolderName,
     });
   };
-
+  console.log(getPixQRCodeValue());
   if (!request) return null;
 
   return (
