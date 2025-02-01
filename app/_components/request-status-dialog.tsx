@@ -84,7 +84,7 @@ export function RequestStatusDialog({
       transactionId: `TX${Date.now()}`,
     };
 
-    const formattedPayload = `00020126580014br.gov.bcb.pix0136${pixKey}5204000053039865802BR5913${payload.merchantName}6008${payload.merchantCity}62070503***6304`;
+    const formattedPayload = `00020126580014br.gov.bcb.pix0136${pixKey}5204000053039865802BR5913${payload.merchantName.toLocaleUpperCase}6009${payload.merchantCity}62070503***6304`;
 
     return formattedPayload;
   };
@@ -105,7 +105,7 @@ export function RequestStatusDialog({
   };
 
   if (!request) return null;
-
+  console.log(generatePixQRCode(request.pixKey ?? "", request.amount));
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="max-h-[90vh] w-[95vw] overflow-y-auto p-4 sm:max-w-[600px] sm:p-6">
