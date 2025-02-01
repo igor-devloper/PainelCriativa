@@ -55,6 +55,7 @@ export function RequestStatusDialog({
       toast({
         title: "Sucesso",
         description: "Solicitação finalizada com sucesso",
+        variant: "success",
       });
     } catch (error) {
       toast({

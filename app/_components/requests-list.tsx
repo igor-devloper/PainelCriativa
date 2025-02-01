@@ -86,6 +86,7 @@ export function RequestsList({
     requestId: string,
     newStatus: RequestStatus,
     denialReason?: string,
+    proofBase64?: string,
   ) => {
     setIsUpdating(requestId);
     try {
@@ -105,7 +106,9 @@ export function RequestsList({
         requestId,
         newStatus,
         denialReason,
+        proofBase64,
       );
+
       if (result.success) {
         toast({
           variant: "success",
@@ -254,9 +257,14 @@ export function RequestsList({
         isOpen={dialogOpen}
         setIsOpen={setDialogOpen}
         request={selectedRequest}
-        onConfirm={() => {
+        onConfirm={(proofBase64) => {
           if (selectedRequest) {
-            handleStatusChange(selectedRequest.id, "COMPLETED");
+            handleStatusChange(
+              selectedRequest.id,
+              "COMPLETED",
+              undefined,
+              proofBase64,
+            );
           }
           setDialogOpen(false);
           setSelectedRequest(null);
