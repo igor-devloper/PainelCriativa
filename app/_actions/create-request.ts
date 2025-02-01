@@ -40,7 +40,7 @@ async function notifyManager(requestData: {
 }) {
   try {
     await resend.emails.send({
-      from: "Painel Criativa <noreply@nucleoenergy.com>",
+      from: "Painel Criativa <notificacoes@nucleoenergy.com>",
       to: requestData.managerEmail,
       subject: "Nova Solicitação de Verba para Aprovação",
       react: RequestNotificationEmail({
