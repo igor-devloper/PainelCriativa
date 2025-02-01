@@ -31,6 +31,11 @@ model Request {
   whatsappMessageError        String?
   gestor                      String?
   responsibleValidationUserID String?
+  bankName                   String?
+  accountType                 String?
+  accountNumber               String?
+  accountHolderName           String?
+  pixKey                      String?
 }
 
 model AccountingBlock {
@@ -79,7 +84,6 @@ enum RequestStatus {
   ACCEPTS
   COMPLETED
 }
-
 
 enum BlockStatus {
   OPEN

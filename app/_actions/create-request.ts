@@ -7,6 +7,8 @@ import { auth, clerkClient, type User } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { sendGZappyMessage } from "@/app/_lib/gzappy";
 import { trackCreateRequest } from "../_lib/analytics";
+import { RequestNotificationEmail } from "../_components/email-templates/request-notification-email";
+import resend from "../_lib/resend-config";
 
 interface CreateRequestData {
   name: string;
@@ -15,6 +17,11 @@ interface CreateRequestData {
   responsibleCompany: string;
   phoneNumber: string;
   gestor: string;
+  bankName: string;
+  accountType: string;
+  accountNumber: string;
+  accountHolderName: string;
+  pixKey: string;
 }
 
 interface NotificationData {
@@ -23,43 +30,30 @@ interface NotificationData {
   company: string;
 }
 
-async function notifyAdminsAndFinance(requestData: NotificationData) {
+async function notifyManager(requestData: {
+  userName: string;
+  amount: number;
+  company: string;
+  requestName: string;
+  description: string;
+  managerEmail: string;
+}) {
   try {
-    // Get all users with proper typing
-    const users = await clerkClient.users.getUserList({
-      limit: 100,
+    await resend.emails.send({
+      from: "Painel Criativa <noreply@nucleoenergy.com>",
+      to: requestData.managerEmail,
+      subject: "Nova Solicitação de Verba para Aprovação",
+      react: RequestNotificationEmail({
+        userName: requestData.userName,
+        amount: requestData.amount,
+        company: requestData.company,
+        requestName: requestData.requestName,
+        description: requestData.description,
+      }),
     });
-
-    // Filter users with ADMIN or FINANCE role with type checking
-    const adminsAndFinance = users.data.filter((user: User) => {
-      const role = user.publicMetadata.role as string | undefined;
-      return role === "ADMIN" || role === "FINANCE";
-    });
-
-    // Format the notification message
-    const message =
-      `🔔 Nova Solicitação de Verba\n\n` +
-      `👤 Usuário: ${requestData.userName}\n` +
-      `💰 Valor: R$ ${requestData.amount.toFixed(2)}\n` +
-      `🏢 Empresa: ${requestData.company}\n\n` +
-      `Acesse o painel para mais detalhes.`;
-
-    // Send notifications to all admins and finance users
-    const notifications = adminsAndFinance.map(async (user: User) => {
-      const phoneNumber = user.phoneNumbers[0]?.phoneNumber;
-      if (phoneNumber) {
-        try {
-          await sendGZappyMessage(phoneNumber, message);
-        } catch (error) {
-          console.error(`Failed to send notification to ${user.id}:`, error);
-        }
-      }
-    });
-
-    await Promise.all(notifications);
   } catch (error) {
-    console.error("Error sending notifications:", error);
-    // Don't throw the error to avoid blocking the request creation
+    console.error("Error sending email notification:", error);
+    // Não lançamos o erro para não bloquear a criação da solicitação
   }
 }
 
@@ -135,6 +129,11 @@ export async function createRequest(data: CreateRequestData) {
           balanceDeducted: new Prisma.Decimal(0),
           gestor: data.gestor,
           responsibleValidationUserID: "",
+          bankName: data.bankName,
+          accountType: data.accountType,
+          accountNumber: data.accountNumber,
+          accountHolderName: data.accountHolderName,
+          pixKey: data.pixKey,
         },
       });
 
@@ -148,11 +147,16 @@ export async function createRequest(data: CreateRequestData) {
       };
     });
 
+    const userManager = await clerkClient.users.getUser(data.gestor);
+    const managerEmail = userManager.emailAddresses[0]?.emailAddress;
     // Send notifications after successful request creation
-    await notifyAdminsAndFinance({
+    await notifyManager({
       userName: user.firstName ?? "Usuário",
       amount: data.amount,
       company: data.responsibleCompany,
+      description: data.description,
+      managerEmail: managerEmail,
+      requestName: data.name,
     });
 
     revalidatePath("/requests");

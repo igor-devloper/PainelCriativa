@@ -94,6 +94,12 @@ export function RequestsList({
         return;
       }
 
+      if (newStatus === "COMPLETED") {
+        setSelectedRequest(requests.find((r) => r.id === requestId) || null);
+        setDialogOpen(true);
+        return;
+      }
+
       const result = await updateRequestStatus(
         requestId,
         newStatus,
