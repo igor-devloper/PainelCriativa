@@ -13,51 +13,62 @@ export function generatePixQRCode({
   pixKey,
   amount,
   merchantName,
+  city = "BRASIL",
 }: PixData): string {
   // Format amount with exactly 2 decimal places
   const formattedAmount = amount.toFixed(2);
 
-  // Clean merchant name - remove all non-alphanumeric characters and spaces
+  // Clean merchant name - remove accents and special characters
   const cleanName = merchantName
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^A-Z0-9]/gi, "")
+    .replace(/[^A-Z0-9\s]/gi, "")
+    .substring(0, 25)
+    .trim()
     .toUpperCase();
 
-  // Merchant Account Information - GUI + BR.GOV.BCB.PIX + PIX Key
-  const gui = "br.gov.bcb.pix";
-  const merchantAccInfo = `${gui}${padNumber(pixKey.length)}${pixKey}`;
-
-  // Build the basic payload
-  const payload = [
-    "00020126", // Version + Initiation Method
-    "580014", // GUI
-    merchantAccInfo,
-    "52040000", // Category Code
-    "5303986", // Currency (BRL)
-    `54${padNumber(formattedAmount.length)}${formattedAmount}`, // Amount
-    "5802BR", // Country Code
-    `59${padNumber(cleanName.length)}${cleanName}`, // Merchant Name
-    "60065BRASIL", // City
-    "62070503***", // Additional Data
-    "6304", // CRC16
+  // Merchant Account Information for PIX
+  // ID "26" for Merchant Account Information
+  // "00" (ID) + "14" (length of "br.gov.bcb.pix") + "br.gov.bcb.pix"
+  // "01" (ID) + "XX" (length of PIX key) + PIX key
+  const pixDomain = "br.gov.bcb.pix";
+  const merchantAccInfo = [
+    "00", // ID for GUI
+    padNumber(pixDomain.length),
+    pixDomain,
+    "01", // ID for PIX key
+    padNumber(pixKey.length),
+    pixKey,
   ].join("");
 
-  // Calculate CRC16 and append it
+  // Build the payload
+  const payload = [
+    "00020126", // Version "01" + Initiation Method "26"
+    `58${padNumber(merchantAccInfo.length)}${merchantAccInfo}`,
+    "52040000", // Category Code "0000"
+    "5303986", // Currency "986" (BRL)
+    `54${padNumber(formattedAmount.length)}${formattedAmount}`,
+    "5802BR", // Country Code
+    `59${padNumber(cleanName.length)}${cleanName}`,
+    `60${padNumber(city.length)}${city}`,
+    "6304", // CRC16 (to be filled)
+  ].join("");
+
+  // Calculate and append CRC16
   const crc16 = calculateCRC16(payload);
   return payload + crc16;
 }
 
 function calculateCRC16(str: string): string {
-  const polynomial = 0x1021;
   let crc = 0xffff;
+  const polynomial = 0x1021;
 
-  for (let i = 0; i < str.length; i++) {
-    crc ^= str.charCodeAt(i) << 8;
-    for (let j = 0; j < 8; j++) {
-      crc = crc & 0x8000 ? (crc << 1) ^ polynomial : crc << 1;
+  for (let pos = 0; pos < str.length; pos++) {
+    crc ^= str.charCodeAt(pos) << 8;
+    for (let i = 0; i < 8; i++) {
+      crc = ((crc << 1) ^ (crc & 0x8000 ? polynomial : 0)) & 0xffff;
     }
   }
 
-  return (crc & 0xffff).toString(16).toUpperCase().padStart(4, "0");
+  return crc.toString(16).toUpperCase().padStart(4, "0");
 }

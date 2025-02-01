@@ -13,6 +13,7 @@ export async function getRequests(
       OR: [
         { userId: userId }, // My requests
         { gestor: userId }, // Requests where I'm the manager
+        { responsibleValidationUserID: userId }, // Requests where I'm the validator
       ],
     };
 

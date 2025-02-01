@@ -102,22 +102,14 @@ export function RequestsList({
         return;
       }
 
-      const result = await updateRequestStatus(
+      await updateRequestStatusAndRefresh(
         requestId,
         newStatus,
         denialReason,
         proofBase64,
       );
-
-      if (result.success) {
-        toast({
-          variant: "success",
-          title: "Status atualizado",
-          description: "O status da solicitação foi atualizado com sucesso.",
-        });
-        router.refresh();
-      }
     } catch (error) {
+      console.error("Erro ao atualizar status:", error);
       toast({
         title: "Erro ao atualizar status",
         description: "Ocorreu um erro ao atualizar o status da solicitação.",
@@ -125,6 +117,28 @@ export function RequestsList({
       });
     } finally {
       setIsUpdating(null);
+    }
+  };
+
+  const updateRequestStatusAndRefresh = async (
+    requestId: string,
+    newStatus: RequestStatus,
+    denialReason?: string,
+    proofBase64?: string,
+  ) => {
+    const result = await updateRequestStatus(
+      requestId,
+      newStatus,
+      denialReason,
+      proofBase64,
+    );
+    if (result.success) {
+      toast({
+        variant: "success",
+        title: "Status atualizado",
+        description: "O status da solicitação foi atualizado com sucesso.",
+      });
+      await router.refresh();
     }
   };
 
@@ -211,7 +225,9 @@ export function RequestsList({
               <TableCell>{request.responsibleCompany}</TableCell>
               <TableCell>{request.description.split(" - ")[0]}</TableCell>
               <TableCell>
-                {request.description.split("Saldo").pop()?.trim()}
+                {request.description.includes("Saldo")
+                  ? `Saldo ${request.description.split("Saldo")[1]}`
+                  : request.description}
               </TableCell>
               <TableCell>{formatDate(request.createdAt)}</TableCell>
               <TableCell>{formatCurrency(request.amount)}</TableCell>
@@ -257,17 +273,21 @@ export function RequestsList({
         isOpen={dialogOpen}
         setIsOpen={setDialogOpen}
         request={selectedRequest}
-        onConfirm={(proofBase64) => {
+        onConfirm={async (proofBase64) => {
           if (selectedRequest) {
-            handleStatusChange(
-              selectedRequest.id,
-              "COMPLETED",
-              undefined,
-              proofBase64,
-            );
+            try {
+              await updateRequestStatusAndRefresh(
+                selectedRequest.id,
+                "COMPLETED",
+                undefined,
+                proofBase64,
+              );
+              setDialogOpen(false);
+              setSelectedRequest(null);
+            } catch (error) {
+              console.error("Erro ao completar solicitação:", error);
+            }
           }
-          setDialogOpen(false);
-          setSelectedRequest(null);
         }}
       />
 

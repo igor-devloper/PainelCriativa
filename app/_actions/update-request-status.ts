@@ -47,9 +47,12 @@ export async function updateRequestStatus(
     if (newStatus === "VALIDATES" && responsibleValidationUserID) {
       updateData.responsibleValidationUserID = responsibleValidationUserID;
     }
+
+    let updatedRequest: Request;
+
     await db.$transaction(
       async (tx) => {
-        const updatedRequest = await tx.request.update({
+        updatedRequest = await tx.request.update({
           where: { id: requestId },
           data: updateData,
         });
@@ -65,7 +68,8 @@ export async function updateRequestStatus(
           const currentBalance = userBalance
             ? userBalance.balance
             : new Prisma.Decimal(0);
-          const requestedAmount = updatedRequest.currentBalance;
+          const requestedAmount =
+            updatedRequest.currentBalance || new Prisma.Decimal(0);
           let balanceDeducted = new Prisma.Decimal(0);
 
           if (currentBalance.gte(requestedAmount)) {
@@ -88,12 +92,12 @@ export async function updateRequestStatus(
               data: {
                 userId: updatedRequest.userId,
                 company: updatedRequest.responsibleCompany,
-                balance: updatedRequest.currentBalance,
+                balance: updatedRequest.currentBalance || new Prisma.Decimal(0),
               },
             });
           }
 
-          await tx.request.update({
+          updatedRequest = await tx.request.update({
             where: { id: requestId },
             data: {
               balanceDeducted: balanceDeducted,
@@ -129,15 +133,16 @@ export async function updateRequestStatus(
           denialReason,
           proofBase64,
         );
-
-        revalidatePath("/requests");
-        revalidatePath(`/requests/${requestId}`);
       },
       {
         maxWait: 10000,
         timeout: 60000,
       },
     );
+
+    // Force revalidation after the transaction is complete
+    revalidatePath("/requests");
+    revalidatePath(`/requests/${requestId}`);
 
     return { success: true };
   } catch (error) {
@@ -179,7 +184,6 @@ async function sendEmailNotification(
       break;
   }
 }
-
 async function generateAccountingBlockCode(): Promise<string> {
   const latestBlock = await db.accountingBlock.findFirst({
     orderBy: { createdAt: "desc" },

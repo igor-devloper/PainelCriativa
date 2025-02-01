@@ -58,6 +58,7 @@ export function RequestStatusDialog({
         variant: "success",
       });
     } catch (error) {
+      console.error("Erro ao finalizar solicitação:", error);
       toast({
         title: "Erro",
         description: "Erro ao finalizar solicitação",
@@ -67,7 +68,6 @@ export function RequestStatusDialog({
       setIsSubmitting(false);
     }
   };
-
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast({
