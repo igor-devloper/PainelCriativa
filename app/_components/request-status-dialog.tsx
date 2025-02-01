@@ -19,7 +19,7 @@ import { Separator } from "@/app/_components/ui/separator";
 import { Copy, Download } from "lucide-react";
 import type { Request } from "@/app/types";
 import { formatCurrency } from "@/app/_lib/utils";
-import { generatePixPayload } from "../_utils/pix";
+import { generatePixQRCode } from "../_utils/pix";
 
 interface RequestStatusDialogProps {
   isOpen: boolean;
@@ -55,7 +55,6 @@ export function RequestStatusDialog({
       toast({
         title: "Sucesso",
         description: "Solicitação finalizada com sucesso",
-        variant: "success",
       });
     } catch (error) {
       toast({
@@ -77,14 +76,6 @@ export function RequestStatusDialog({
     });
   };
 
-  const generatePixQRCode = (pixKey: string, amount: number) => {
-    return generatePixPayload(
-      pixKey,
-      amount,
-      request?.accountHolderName ?? "Nome do Titular",
-    );
-  };
-
   const downloadQRCode = () => {
     const canvas = document.querySelector("canvas");
     if (canvas) {
@@ -100,8 +91,19 @@ export function RequestStatusDialog({
     }
   };
 
+  const getPixQRCodeValue = () => {
+    if (!request) return "";
+
+    return generatePixQRCode({
+      pixKey: request.pixKey ?? "",
+      amount: request.amount,
+      merchantName: request.accountHolderName ?? "",
+      city: "BRASIL",
+    });
+  };
+
   if (!request) return null;
-  console.log(generatePixQRCode(request.pixKey ?? "", request.amount));
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="max-h-[90vh] w-[95vw] overflow-y-auto p-4 sm:max-w-[600px] sm:p-6">
@@ -196,10 +198,7 @@ export function RequestStatusDialog({
                   </div>
                   <div className="flex flex-col items-center gap-2">
                     <QRCodeSVG
-                      value={generatePixQRCode(
-                        request.pixKey ?? "",
-                        request.amount,
-                      )}
+                      value={getPixQRCodeValue()}
                       size={120}
                       level="H"
                       includeMargin

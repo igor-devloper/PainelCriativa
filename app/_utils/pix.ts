@@ -1,39 +1,81 @@
-export function generatePixPayload(
-  pixKey: string,
-  amount: number,
-  merchantName: string,
-): string {
-  // Format amount to always have 2 decimal places
-  const formattedAmount = amount.toFixed(2);
+interface PixData {
+  pixKey: string;
+  amount: number;
+  merchantName: string;
+  city?: string;
+}
 
-  // Clean up merchant name - remove accents and special characters
-  const cleanMerchantName = merchantName
+function createCRC16(str: string): string {
+  const polynomial = 0x1021;
+  let crc = 0xffff;
+
+  for (let i = 0; i < str.length; i++) {
+    crc ^= str.charCodeAt(i) << 8;
+    for (let j = 0; j < 8; j++) {
+      if (crc & 0x8000) {
+        crc = ((crc << 1) ^ polynomial) & 0xffff;
+      } else {
+        crc = (crc << 1) & 0xffff;
+      }
+    }
+  }
+  return crc.toString(16).toUpperCase().padStart(4, "0");
+}
+
+export function generatePixQRCode({
+  pixKey,
+  amount,
+  merchantName,
+  city = "BRASIL",
+}: PixData): string {
+  // Clean and format merchant name (remove accents and special chars)
+  const cleanName = merchantName
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-zA-Z0-9\s]/g, "")
-    .substring(0, 25); // Max 25 characters
+    .replace(/[^A-Z0-9 ]/gi, "")
+    .trim()
+    .substring(0, 25)
+    .toUpperCase();
 
-  // Build the payload following PIX dynamic QR code specification
-  const payload = [
-    "00020126", // versão do payload + initiation method
-    "33", // merchant account information length
-    `0014BR.GOV.BCB.PIX01${pixKey.length}${pixKey}`, // PIX key info
-    "52040000", // merchant category code
-    "5303986", // currency (986 = BRL)
-    "54", // amount
-    String(formattedAmount.length).padStart(2, "0"),
-    formattedAmount,
-    "5802BR", // country code
-    "59", // merchant name
-    String(cleanMerchantName.length).padStart(2, "0"),
-    cleanMerchantName,
-    "60", // merchant city
-    "07",
-    "BRASIL",
-    "6207", // additional data field
-    "0503***",
-    "6304", // CRC16 (will be calculated)
+  // Format amount with exactly 2 decimal places
+  const formattedAmount = amount.toFixed(2);
+
+  // Build the payload parts
+  const payloadParts = {
+    formatIndicator: "000201",
+    merchantAccountInfo: {
+      gui: "26",
+      specificData: [
+        "0014BR.GOV.BCB.PIX",
+        `01${pixKey.length.toString().padStart(2, "0")}${pixKey}`,
+      ].join(""),
+    },
+    merchantCategCode: "52040000",
+    transactionCurrency: "5303986",
+    transactionAmount: `54${formattedAmount.length.toString().padStart(2, "0")}${formattedAmount}`,
+    countryCode: "5802BR",
+    merchantName: `59${cleanName.length.toString().padStart(2, "0")}${cleanName}`,
+    merchantCity: `60${city.length.toString().padStart(2, "0")}${city}`,
+    additionDataField: "62070503***",
+  };
+
+  // Combine all parts
+  const basePayload = [
+    payloadParts.formatIndicator,
+    payloadParts.merchantAccountInfo.gui +
+      payloadParts.merchantAccountInfo.specificData,
+    payloadParts.merchantCategCode,
+    payloadParts.transactionCurrency,
+    payloadParts.transactionAmount,
+    payloadParts.countryCode,
+    payloadParts.merchantName,
+    payloadParts.merchantCity,
+    payloadParts.additionDataField,
   ].join("");
 
-  return payload;
+  // Add CRC
+  const payloadWithCRC = basePayload + "6304";
+  const crc = createCRC16(payloadWithCRC);
+
+  return payloadWithCRC + crc;
 }
