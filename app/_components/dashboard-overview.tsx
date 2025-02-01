@@ -137,7 +137,7 @@ export function DashboardOverview({
           </CardContent>
         </Card>
         {userRole === "ADMIN" && (
-          <Card className="col-span-3">
+          <Card className="col-span-4 md:col-span-3">
             <CardHeader>
               <CardTitle>Atividade Recente</CardTitle>
               <CardDescription>Últimas atualizações do sistema</CardDescription>
