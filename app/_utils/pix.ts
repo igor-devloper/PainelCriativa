@@ -5,77 +5,59 @@ interface PixData {
   city?: string;
 }
 
-function createCRC16(str: string): string {
-  const polynomial = 0x1021;
-  let crc = 0xffff;
-
-  for (let i = 0; i < str.length; i++) {
-    crc ^= str.charCodeAt(i) << 8;
-    for (let j = 0; j < 8; j++) {
-      if (crc & 0x8000) {
-        crc = ((crc << 1) ^ polynomial) & 0xffff;
-      } else {
-        crc = (crc << 1) & 0xffff;
-      }
-    }
-  }
-  return crc.toString(16).toUpperCase().padStart(4, "0");
+function padNumber(num: number): string {
+  return num.toString().padStart(2, "0");
 }
 
 export function generatePixQRCode({
   pixKey,
   amount,
   merchantName,
-  city = "BRASIL",
 }: PixData): string {
-  // Clean and format merchant name (remove accents and special chars)
-  const cleanName = merchantName
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^A-Z0-9 ]/gi, "")
-    .trim()
-    .substring(0, 25)
-    .toUpperCase();
-
   // Format amount with exactly 2 decimal places
   const formattedAmount = amount.toFixed(2);
 
-  // Build the payload parts
-  const payloadParts = {
-    formatIndicator: "000201",
-    merchantAccountInfo: {
-      gui: "26",
-      specificData: [
-        "0014BR.GOV.BCB.PIX",
-        `01${pixKey.length.toString().padStart(2, "0")}${pixKey}`,
-      ].join(""),
-    },
-    merchantCategCode: "52040000",
-    transactionCurrency: "5303986",
-    transactionAmount: `54${formattedAmount.length.toString().padStart(2, "0")}${formattedAmount}`,
-    countryCode: "5802BR",
-    merchantName: `59${cleanName.length.toString().padStart(2, "0")}${cleanName}`,
-    merchantCity: `60${city.length.toString().padStart(2, "0")}${city}`,
-    additionDataField: "62070503***",
-  };
+  // Clean merchant name - remove all non-alphanumeric characters and spaces
+  const cleanName = merchantName
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^A-Z0-9]/gi, "")
+    .toUpperCase();
 
-  // Combine all parts
-  const basePayload = [
-    payloadParts.formatIndicator,
-    payloadParts.merchantAccountInfo.gui +
-      payloadParts.merchantAccountInfo.specificData,
-    payloadParts.merchantCategCode,
-    payloadParts.transactionCurrency,
-    payloadParts.transactionAmount,
-    payloadParts.countryCode,
-    payloadParts.merchantName,
-    payloadParts.merchantCity,
-    payloadParts.additionDataField,
+  // Merchant Account Information - GUI + BR.GOV.BCB.PIX + PIX Key
+  const gui = "br.gov.bcb.pix";
+  const merchantAccInfo = `${gui}${padNumber(pixKey.length)}${pixKey}`;
+
+  // Build the basic payload
+  const payload = [
+    "00020126", // Version + Initiation Method
+    "580014", // GUI
+    merchantAccInfo,
+    "52040000", // Category Code
+    "5303986", // Currency (BRL)
+    `54${padNumber(formattedAmount.length)}${formattedAmount}`, // Amount
+    "5802BR", // Country Code
+    `59${padNumber(cleanName.length)}${cleanName}`, // Merchant Name
+    "60065BRASIL", // City
+    "62070503***", // Additional Data
+    "6304", // CRC16
   ].join("");
 
-  // Add CRC
-  const payloadWithCRC = basePayload + "6304";
-  const crc = createCRC16(payloadWithCRC);
+  // Calculate CRC16 and append it
+  const crc16 = calculateCRC16(payload);
+  return payload + crc16;
+}
 
-  return payloadWithCRC + crc;
+function calculateCRC16(str: string): string {
+  const polynomial = 0x1021;
+  let crc = 0xffff;
+
+  for (let i = 0; i < str.length; i++) {
+    crc ^= str.charCodeAt(i) << 8;
+    for (let j = 0; j < 8; j++) {
+      crc = crc & 0x8000 ? (crc << 1) ^ polynomial : crc << 1;
+    }
+  }
+
+  return (crc & 0xffff).toString(16).toUpperCase().padStart(4, "0");
 }

@@ -19,7 +19,7 @@ import { Separator } from "@/app/_components/ui/separator";
 import { Copy, Download } from "lucide-react";
 import type { Request } from "@/app/types";
 import { formatCurrency } from "@/app/_lib/utils";
-import { generatePixQRCode } from "../_utils/pix";
+import { generatePixQRCode } from "@/utils/pix";
 
 interface RequestStatusDialogProps {
   isOpen: boolean;
@@ -72,7 +72,6 @@ export function RequestStatusDialog({
     toast({
       title: "Copiado!",
       description: "Informação copiada para a área de transferência",
-      variant: "success",
     });
   };
 
@@ -90,19 +89,20 @@ export function RequestStatusDialog({
       document.body.removeChild(downloadLink);
     }
   };
+
   const getPixQRCodeValue = () => {
-    if (!request) return "";
+    if (!request?.pixKey || !request?.amount || !request?.accountHolderName)
+      return "";
 
     return generatePixQRCode({
-      pixKey: request.pixKey ?? "",
+      pixKey: request.pixKey,
       amount: request.amount,
-      merchantName: request.accountHolderName ?? "",
-      city: "BRASIL",
+      merchantName: request.accountHolderName,
     });
   };
 
   if (!request) return null;
-  console.log(getPixQRCodeValue());
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="max-h-[90vh] w-[95vw] overflow-y-auto p-4 sm:max-w-[600px] sm:p-6">
