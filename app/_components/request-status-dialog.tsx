@@ -109,8 +109,8 @@ export function RequestStatusDialog({
   console.log(generatePixQRCode(request.pixKey ?? "", request.amount));
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <ScrollArea className="max-h-[90vh] w-[95vw] overflow-y-auto p-4 sm:max-w-[600px] sm:p-6">
-        <DialogContent>
+      <ScrollArea>
+        <DialogContent className="max-h-[90vh] w-[95vw] overflow-y-auto p-4 sm:max-w-[600px] sm:p-6">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold sm:text-2xl">
               Finalizar Solicitação
