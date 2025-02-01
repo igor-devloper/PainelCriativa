@@ -90,7 +90,6 @@ export function RequestStatusDialog({
       document.body.removeChild(downloadLink);
     }
   };
-
   const getPixQRCodeValue = () => {
     if (!request) return "";
 
@@ -103,7 +102,7 @@ export function RequestStatusDialog({
   };
 
   if (!request) return null;
-
+  console.log(getPixQRCodeValue());
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="max-h-[90vh] w-[95vw] overflow-y-auto p-4 sm:max-w-[600px] sm:p-6">
