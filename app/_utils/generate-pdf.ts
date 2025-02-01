@@ -18,6 +18,11 @@ interface AccountingBlock {
   expenses: Expense[];
   request?: {
     amount: number | Decimal;
+    bankName?: string;
+    accountType?: string;
+    accountNumber?: string;
+    accountHolderName?: string;
+    pixKey?: string;
   };
 }
 
@@ -79,7 +84,6 @@ async function normalizeBase64Image(base64Data: string): Promise<string> {
 export async function generateAccountingPDF(
   block: AccountingBlock,
   companyName: string,
-  name: string,
 ) {
   const doc = new jsPDF();
 
@@ -102,21 +106,13 @@ export async function generateAccountingPDF(
 
   autoTable(doc, {
     startY: doc.lastAutoTable.finalY + 10,
-    head: [
-      [
-        {
-          content: "DADOS COLABORADOR",
-          styles: { fillColor: [240, 240, 240], fontStyle: "bold" },
-        },
-      ],
-    ],
+    head: [["DADOS BANCÁRIOS DO COLABORADOR"]],
     body: [
-      ["Colaborador:", name],
-      ["Descrição conta financeira:", `Despesas empresa ${companyName}`],
-      [
-        "Período:",
-        `${formatDate(block.createdAt)} à ${formatDate(new Date())}`,
-      ],
+      ["Banco:", block.request?.bankName || "Não informado"],
+      ["Tipo de Conta:", block.request?.accountType || "Não informado"],
+      ["Número da Conta:", block.request?.accountNumber || "Não informado"],
+      ["Titular:", block.request?.accountHolderName || "Não informado"],
+      ["Chave PIX:", block.request?.pixKey || "Não informado"],
     ],
     theme: "plain",
     styles: { fontSize: 10, cellPadding: 2 },

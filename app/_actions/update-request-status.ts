@@ -106,7 +106,9 @@ export async function updateRequestStatus(
           });
 
           if (!request.accountingBlock) {
-            const blockCode = await generateAccountingBlockCode();
+            const blockCode = await generateAccountingBlockCode(
+              request.responsibleCompany,
+            );
 
             await tx.accountingBlock.create({
               data: {
@@ -184,16 +186,26 @@ async function sendEmailNotification(
       break;
   }
 }
-async function generateAccountingBlockCode(): Promise<string> {
+const COMPANY_PREFIXES: Record<string, string> = {
+  "GSM SOLARION 02": "SOL",
+  "CRIATIVA ENERGIA": "CRIA",
+  "OESTE BIOGÁS": "BIO",
+  "EXATA I": "EXA",
+};
+
+async function generateAccountingBlockCode(
+  companyName: string,
+): Promise<string> {
   const latestBlock = await db.accountingBlock.findFirst({
     orderBy: { createdAt: "desc" },
   });
 
-  if (!latestBlock) {
-    return "01-PRC";
-  }
+  const latestNumber = latestBlock
+    ? parseInt(latestBlock.code.split(" ")[1])
+    : 0;
+  const newNumber = (latestNumber + 1).toString().padStart(3, "0");
 
-  const latestNumber = Number.parseInt(latestBlock.code.split("-")[0]);
-  const newNumber = latestNumber + 1;
-  return `${newNumber.toString().padStart(2, "0")}-PRC`;
+  const prefix = COMPANY_PREFIXES[companyName] || "GEN";
+
+  return `PC ${newNumber} ${prefix}`;
 }
