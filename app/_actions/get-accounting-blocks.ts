@@ -43,6 +43,14 @@ export async function getAccountingBlocks(): Promise<AccountingBlock[]> {
     JSON.stringify(
       blocks.map((block) => ({
         ...block,
+        request: {
+          bankName: block.request?.bankName || "Não informado",
+          accountType: block.request?.accountType || "Não informado",
+          accountNumber: block.request?.accountNumber || "Não informado",
+          accountHolderName:
+            block.request?.accountHolderName || "Não informado",
+          pixKey: block.request?.pixKey || "Não informado",
+        },
         totalAmount: block.expenses.reduce(
           (sum, expense) => sum + Number(expense.amount),
           0,
