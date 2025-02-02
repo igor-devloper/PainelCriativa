@@ -89,14 +89,6 @@ export async function createRequest(data: CreateRequestData) {
     const balance = userBalance ? userBalance.balance : new Prisma.Decimal(0);
     const requestedAmount = new Prisma.Decimal(data.amount);
 
-    let totalRequestAmount: Prisma.Decimal;
-
-    if (balance.isNegative()) {
-      totalRequestAmount = requestedAmount.minus(balance);
-    } else {
-      totalRequestAmount = requestedAmount;
-    }
-
     // Create the request
     const result = await db.$transaction(async (tx) => {
       let updatedDescription = data.description;
@@ -110,7 +102,7 @@ export async function createRequest(data: CreateRequestData) {
           userId,
           name: data.name,
           description: updatedDescription,
-          amount: totalRequestAmount,
+          amount: data.amount,
           currentBalance: requestedAmount,
           responsibleCompany: data.responsibleCompany,
           status: "WAITING",

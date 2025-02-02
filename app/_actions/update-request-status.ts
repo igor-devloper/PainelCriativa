@@ -5,7 +5,6 @@ import type { Request, RequestStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
 import { clerkClient } from "@clerk/nextjs/server";
-// import { REQUEST_STATUS_LABELS } from "../_constants/transactions"
 import {
   sendApprovedRequestEmail,
   sendAcceptedRequestEmail,
@@ -68,14 +67,16 @@ export async function updateRequestStatus(
           const currentBalance = userBalance
             ? userBalance.balance
             : new Prisma.Decimal(0);
-          const requestedAmount =
-            updatedRequest.currentBalance || new Prisma.Decimal(0);
-          let balanceDeducted = new Prisma.Decimal(0);
+          const requestedAmount = updatedRequest.amount;
 
-          if (currentBalance.gte(requestedAmount)) {
-            balanceDeducted = requestedAmount;
+          let newBalance: Prisma.Decimal;
+
+          if (currentBalance.isNegative()) {
+            // If balance is negative, add the requested amount
+            newBalance = currentBalance.plus(requestedAmount);
           } else {
-            balanceDeducted = currentBalance;
+            // If balance is zero or positive, just set it to the requested amount
+            newBalance = requestedAmount;
           }
 
           if (userBalance) {
@@ -84,7 +85,7 @@ export async function updateRequestStatus(
                 id: userBalance.id,
               },
               data: {
-                balance: updatedRequest.amount,
+                balance: newBalance,
               },
             });
           } else {
@@ -92,7 +93,7 @@ export async function updateRequestStatus(
               data: {
                 userId: updatedRequest.userId,
                 company: updatedRequest.responsibleCompany,
-                balance: updatedRequest.currentBalance || new Prisma.Decimal(0),
+                balance: newBalance,
               },
             });
           }
@@ -100,8 +101,10 @@ export async function updateRequestStatus(
           updatedRequest = await tx.request.update({
             where: { id: requestId },
             data: {
-              balanceDeducted: balanceDeducted,
-              currentBalance: requestedAmount.minus(balanceDeducted),
+              balanceDeducted: currentBalance.isNegative()
+                ? currentBalance.abs()
+                : new Prisma.Decimal(0),
+              currentBalance: newBalance,
             },
           });
 
@@ -116,7 +119,7 @@ export async function updateRequestStatus(
                 requestId: requestId,
                 status: "OPEN",
                 initialAmount: requestedAmount,
-                currentBalance: requestedAmount,
+                currentBalance: newBalance,
                 company: updatedRequest.responsibleCompany,
               },
             });
@@ -186,6 +189,7 @@ async function sendEmailNotification(
       break;
   }
 }
+
 const COMPANY_PREFIXES: Record<string, string> = {
   "GSM SOLARION 02": "SOL",
   "CRIATIVA ENERGIA": "CRIA",
@@ -201,7 +205,7 @@ async function generateAccountingBlockCode(
   });
 
   const latestNumber = latestBlock
-    ? parseInt(latestBlock.code.split(" ")[1])
+    ? Number.parseInt(latestBlock.code.split(" ")[1])
     : 0;
   const newNumber = (latestNumber + 1).toString().padStart(3, "0");
 
