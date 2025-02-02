@@ -21,11 +21,11 @@ interface AccountingBlock {
   expenses: Expense[];
   request?: {
     amount: number | Decimal;
-    bankName?: string;
-    accountType?: string;
-    accountNumber?: string;
-    accountHolderName?: string;
-    pixKey?: string;
+    bankName?: string | null; // Alterado para incluir null
+    accountType?: string | null; // Alterado para incluir null
+    accountNumber?: string | null; // Alterado para incluir null
+    accountHolderName?: string | null; // Alterado para incluir null
+    pixKey?: string | null; // Alterado para incluir null
   };
 }
 
@@ -35,11 +35,26 @@ interface DownloadPDFButtonProps {
 }
 
 export function DownloadPDFButton({ block }: DownloadPDFButtonProps) {
+  // Sanitize the request object
+  const sanitizedBlock: AccountingBlock = {
+    ...block,
+    request: block.request
+      ? {
+          ...block.request,
+          bankName: block.request.bankName || undefined,
+          accountType: block.request.accountType || undefined,
+          accountNumber: block.request.accountNumber || undefined,
+          accountHolderName: block.request.accountHolderName || undefined,
+          pixKey: block.request.pixKey || undefined,
+        }
+      : undefined,
+  };
+
   const handleDownload = async () => {
     try {
-      const companyName = block.company;
-      const doc = await generateAccountingPDF(block, companyName);
-      doc.save(`prestacao-de-contas-${block.code}.pdf`);
+      const companyName = sanitizedBlock.company;
+      const doc = await generateAccountingPDF(sanitizedBlock, companyName);
+      doc.save(`prestacao-de-contas-${sanitizedBlock.code}.pdf`);
     } catch (error) {
       console.error("Error generating PDF:", error);
     }

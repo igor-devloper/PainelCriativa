@@ -18,11 +18,11 @@ interface AccountingBlock {
   expenses: Expense[];
   request?: {
     amount: number | Decimal;
-    bankName?: string;
-    accountType?: string;
-    accountNumber?: string;
-    accountHolderName?: string;
-    pixKey?: string;
+    bankName?: string | null;
+    accountType?: string | null;
+    accountNumber?: string | null;
+    accountHolderName?: string | null;
+    pixKey?: string | null;
   };
 }
 
