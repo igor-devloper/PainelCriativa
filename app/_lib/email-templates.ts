@@ -129,7 +129,7 @@ export function acceptedRequestTemplate(
         </div>
         <div class="content">
           <h2>Olá, ${userName}!</h2>
-          <p>Sua solicitação de ID ${requestId} foi aceita e está em processamento.</p>
+          <p>Sua solicitação foi aceita e está em processamento.</p>
           <p>Valor solicitado: ${formatCurrency(amount)}</p>
           <p>Em breve você receberá mais informações sobre o status da sua solicitação.</p>
           <p>Se você tiver alguma dúvida, por favor, entre em contato conosco.</p>
