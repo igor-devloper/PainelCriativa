@@ -20,7 +20,12 @@ interface AccountingBlock {
   initialAmount: number | Decimal;
   expenses: Expense[];
   request?: {
-    amount: number;
+    amount: number | Decimal;
+    bankName?: string;
+    accountType?: string;
+    accountNumber?: string;
+    accountHolderName?: string;
+    pixKey?: string;
   };
 }
 
