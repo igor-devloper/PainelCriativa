@@ -61,7 +61,7 @@ export const RequestNotificationEmail = ({
             administrativo:
           </Text>
 
-          <Link href="https://painel.criativaenergia.com.br" style={button}>
+          <Link href="https://nucleoenergy.com/requests" style={button}>
             Acessar Painel
           </Link>
 
