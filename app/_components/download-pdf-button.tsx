@@ -3,7 +3,7 @@
 import { Button } from "@/app/_components/ui/button";
 import { Download } from "lucide-react";
 import { generateAccountingPDF } from "@/app/_utils/generate-pdf";
-import { Decimal } from "@prisma/client/runtime/library";
+import type { Decimal } from "@prisma/client/runtime/library";
 
 interface Expense {
   date: string;
@@ -21,11 +21,11 @@ interface AccountingBlock {
   expenses: Expense[];
   request?: {
     amount: number | Decimal;
-    bankName?: string | null; // Alterado para incluir null
-    accountType?: string | null; // Alterado para incluir null
-    accountNumber?: string | null; // Alterado para incluir null
-    accountHolderName?: string | null; // Alterado para incluir null
-    pixKey?: string | null; // Alterado para incluir null
+    bankName?: string | null;
+    accountType?: string | null;
+    accountNumber?: string | null;
+    accountHolderName?: string | null;
+    pixKey?: string | null;
   };
 }
 
@@ -41,11 +41,12 @@ export function DownloadPDFButton({ block }: DownloadPDFButtonProps) {
     request: block.request
       ? {
           ...block.request,
-          bankName: block.request.bankName || undefined,
-          accountType: block.request.accountType || undefined,
-          accountNumber: block.request.accountNumber || undefined,
-          accountHolderName: block.request.accountHolderName || undefined,
-          pixKey: block.request.pixKey || undefined,
+          amount: block.request.amount,
+          bankName: block.request.bankName || "Não informado",
+          accountType: block.request.accountType || "Não informado",
+          accountNumber: block.request.accountNumber || "Não informado",
+          accountHolderName: block.request.accountHolderName || "Não informado",
+          pixKey: block.request.pixKey || "Não informado",
         }
       : undefined,
   };
