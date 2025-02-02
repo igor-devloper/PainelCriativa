@@ -140,18 +140,24 @@ export async function generateAccountingPDF(
   });
 
   // Add bank information
+  const bankInfo = [
+    ["Banco:", block.request?.bankName || "Não informado"],
+    ["Tipo de Conta:", block.request?.accountType || "Não informado"],
+    ["Número da Conta:", block.request?.accountNumber || "Não informado"],
+    ["Titular:", block.request?.accountHolderName || "Não informado"],
+    ["Chave PIX:", block.request?.pixKey || "Não informado"],
+  ];
   autoTable(doc, {
     startY: doc.lastAutoTable.finalY + 10,
     head: [["DADOS BANCÁRIOS DO COLABORADOR"]],
-    body: [
-      ["Banco:", block.request?.bankName || "Não informado"],
-      ["Tipo de Conta:", block.request?.accountType || "Não informado"],
-      ["Número da Conta:", block.request?.accountNumber || "Não informado"],
-      ["Titular:", block.request?.accountHolderName || "Não informado"],
-      ["Chave PIX:", block.request?.pixKey || "Não informado"],
-    ],
+    body: bankInfo,
     theme: "plain",
     styles: { fontSize: 10, cellPadding: 2 },
+    headStyles: {
+      fillColor: [240, 240, 240],
+      textColor: [0, 0, 0],
+      fontStyle: "bold",
+    },
   });
 
   // Calculate totals

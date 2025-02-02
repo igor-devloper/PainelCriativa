@@ -21,11 +21,11 @@ interface AccountingBlock {
   expenses: Expense[];
   request?: {
     amount: number | Decimal;
-    bankName?: string | null;
-    accountType?: string | null;
-    accountNumber?: string | null;
-    accountHolderName?: string | null;
-    pixKey?: string | null;
+    bankName: string | null;
+    accountType: string | null;
+    accountNumber: string | null;
+    accountHolderName: string | null;
+    pixKey: string | null;
   };
 }
 
@@ -35,27 +35,13 @@ interface DownloadPDFButtonProps {
 }
 
 export function DownloadPDFButton({ block }: DownloadPDFButtonProps) {
-  // Sanitize the request object
-  const sanitizedBlock: AccountingBlock = {
-    ...block,
-    request: block.request
-      ? {
-          ...block.request,
-          amount: block.request.amount,
-          bankName: block.request.bankName || "Não informado",
-          accountType: block.request.accountType || "Não informado",
-          accountNumber: block.request.accountNumber || "Não informado",
-          accountHolderName: block.request.accountHolderName || "Não informado",
-          pixKey: block.request.pixKey || "Não informado",
-        }
-      : undefined,
-  };
-
   const handleDownload = async () => {
     try {
-      const companyName = sanitizedBlock.company;
-      const doc = await generateAccountingPDF(sanitizedBlock, companyName);
-      doc.save(`prestacao-de-contas-${sanitizedBlock.code}.pdf`);
+      // Do not sanitize the block - pass it directly to maintain all properties
+      const companyName = block.company;
+      console.log("Downloading PDF with block data:", block); // Debug log
+      const doc = await generateAccountingPDF(block, companyName);
+      doc.save(`prestacao-de-contas-${block.code}.pdf`);
     } catch (error) {
       console.error("Error generating PDF:", error);
     }
