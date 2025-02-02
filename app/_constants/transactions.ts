@@ -31,7 +31,8 @@ export const EXPENSE_CATEGORY_LABELS: Record<ExpenseCategory, string> = {
   [ExpenseCategory.BUSTICKET]: "Passagem de Ônibus",
   [ExpenseCategory.VEHICLEWASH]: "Lavagem de Veículo",
   [ExpenseCategory.ADVANCE]: "Adiantamento",
-  [ExpenseCategory.SUPPLIES]: "Suprimentos",
+  [ExpenseCategory.SUPPLIES]: "Material",
+  [ExpenseCategory.OFFICESUPPLIES]: "Material de Expediente",
   [ExpenseCategory.OTHER]: "Outros",
 };
 
@@ -117,6 +118,7 @@ export const EXPENSE_CATEGORY_OPTIONS = [
   { value: ExpenseCategory.BUSTICKET, label: "Passagem de Ônibus" },
   { value: ExpenseCategory.VEHICLEWASH, label: "Lavagem de Veículo" },
   { value: ExpenseCategory.ADVANCE, label: "Adiantamento" },
-  { value: ExpenseCategory.SUPPLIES, label: "Material de Expediente" },
+  { value: ExpenseCategory.SUPPLIES, label: "Material" },
+  { value: ExpenseCategory.OFFICESUPPLIES, label: "Material de Expediente" },
   { value: ExpenseCategory.OTHER, label: "Outros" },
 ];

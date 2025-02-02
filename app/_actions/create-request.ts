@@ -91,12 +91,7 @@ export async function createRequest(data: CreateRequestData) {
 
     let totalRequestAmount: Prisma.Decimal;
 
-    if (balance.isPositive()) {
-      totalRequestAmount = requestedAmount.minus(balance);
-      totalRequestAmount = totalRequestAmount.isNegative()
-        ? new Prisma.Decimal(0)
-        : totalRequestAmount;
-    } else if (balance.isNegative()) {
+    if (balance.isNegative()) {
       totalRequestAmount = requestedAmount.minus(balance);
     } else {
       totalRequestAmount = requestedAmount;
@@ -106,12 +101,7 @@ export async function createRequest(data: CreateRequestData) {
     const result = await db.$transaction(async (tx) => {
       let updatedDescription = data.description;
 
-      if (balance.isPositive()) {
-        const usedBalance = balance.gte(requestedAmount)
-          ? requestedAmount
-          : balance;
-        updatedDescription += `\n\n - Saldo do usuario utilizado: R$${usedBalance.toFixed(2)}`;
-      } else if (balance.isNegative()) {
+      if (balance.isNegative()) {
         updatedDescription += `\n\n - Valor a ser ressarcido ao usuario: R$${balance.abs().toFixed(2)}`;
       }
 
