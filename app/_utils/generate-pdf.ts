@@ -126,9 +126,15 @@ export async function generateAccountingPDF(
 
   console.log(bankInfo);
   autoTable(doc, {
-    startY: doc.lastAutoTable.finalY + 10,
+    startY: doc.lastAutoTable.finalY + 40,
     head: [["DADOS BANCÁRIOS DO COLABORADOR"]],
-    body: bankInfo,
+    body: [
+      [`Banco: ${block.request?.bankName || "Não informado"}`],
+      [`Tipo de Conta: ${block.request?.accountType || "Não informado"}`],
+      [`Número da Conta: ${block.request?.accountNumber || "Não informado"}`],
+      [`Titular: ${block.request?.accountHolderName || "Não informado"}`],
+      [`Chave PIX: ${block.request?.pixKey || "Não informado"}`],
+    ],
     theme: "plain",
     styles: { fontSize: 10, cellPadding: 2 },
     headStyles: {
