@@ -1,5 +1,3 @@
-export const revalidate = 10;
-
 import { db } from "@/app/_lib/prisma";
 import { DataTable } from "@/app/_components/ui/data-table";
 import { expenseColumns } from "@/app/transactions/_columns";

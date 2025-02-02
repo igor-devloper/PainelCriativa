@@ -1,5 +1,3 @@
-export const revalidate = 0;
-export const dynamic = "force-dynamic";
 import Image from "next/image";
 import { Button } from "@/app/_components/ui/button";
 import { LogInIcon } from "lucide-react";

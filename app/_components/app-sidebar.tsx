@@ -1,9 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-export const revalidate = 0;
-export const dynamic = "force-dynamic";
-
 import {
   Home,
   HandCoins,

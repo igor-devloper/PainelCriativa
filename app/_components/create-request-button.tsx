@@ -1,7 +1,5 @@
 "use client";
 
-export const revalidate = 0;
-export const dynamic = "force-dynamic";
 import { PlusCircle } from "lucide-react";
 import { Button } from "./ui/button";
 import { useState } from "react";

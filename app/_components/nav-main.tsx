@@ -1,7 +1,5 @@
 "use client";
 
-export const revalidate = 0;
-export const dynamic = "force-dynamic";
 import { type LucideIcon } from "lucide-react";
 
 import {
