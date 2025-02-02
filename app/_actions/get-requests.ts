@@ -30,7 +30,11 @@ export async function getRequests(
       include: {
         accountingBlock: {
           include: {
-            expenses: true,
+            expenses: {
+              orderBy: {
+                createdAt: "desc",
+              },
+            },
             request: true,
           },
         },
