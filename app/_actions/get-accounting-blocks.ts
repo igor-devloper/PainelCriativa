@@ -13,15 +13,18 @@ export async function getAccountingBlocks(): Promise<AccountingBlock[]> {
   const user = await clerkClient.users.getUser(userId);
   const userRole = getUserRole(user.publicMetadata);
 
+  // Define a condição where baseada no role do usuário
+  const where =
+    userRole === "ADMIN" || userRole === "FINANCE"
+      ? undefined // Sem filtro para admin e finance (mostrar todos)
+      : {
+          request: {
+            userId: userId, // Filtrar apenas blocos do usuário
+          },
+        };
+
   const blocks = await db.accountingBlock.findMany({
-    where:
-      userRole === "USER"
-        ? {
-            request: {
-              userId: userId,
-            },
-          }
-        : undefined,
+    where,
     orderBy: {
       createdAt: "desc",
     },
