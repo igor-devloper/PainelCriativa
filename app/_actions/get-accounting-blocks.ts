@@ -30,7 +30,11 @@ export async function getAccountingBlocks(): Promise<AccountingBlock[]> {
     },
     include: {
       request: true,
-      expenses: true,
+      expenses: {
+        orderBy: {
+          date: "desc",
+        },
+      },
     },
   });
 
