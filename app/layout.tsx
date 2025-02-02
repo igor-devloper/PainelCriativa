@@ -5,6 +5,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import { Toaster } from "@/app/_components/ui/toaster";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const mulish = Mulish({
   subsets: ["latin-ext"],
@@ -53,8 +54,11 @@ export default function RootLayout({
             baseTheme: dark,
           }}
         >
-          <div className="flex h-full flex-col overflow-hidden">{children}</div>
-          <Analytics />
+          <div className="flex h-full flex-col overflow-hidden">
+            {children}
+            <Analytics />
+            <SpeedInsights />
+          </div>
         </ClerkProvider>
 
         <Toaster />
