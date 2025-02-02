@@ -1,8 +1,10 @@
+/* eslint-disable prefer-const */
 interface PixData {
   pixKey: string;
   amount: number;
   merchantName: string;
   city?: string;
+  txid?: string;
 }
 
 function padNumber(num: number): string {
@@ -14,11 +16,10 @@ export function generatePixQRCode({
   amount,
   merchantName,
   city = "BRASIL",
+  txid = "***",
 }: PixData): string {
-  // Format amount with exactly 2 decimal places
   const formattedAmount = amount.toFixed(2);
 
-  // Clean merchant name - remove accents and special characters
   const cleanName = merchantName
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -27,34 +28,34 @@ export function generatePixQRCode({
     .trim()
     .toUpperCase();
 
-  // Merchant Account Information for PIX
-  // ID "26" for Merchant Account Information
-  // "00" (ID) + "14" (length of "br.gov.bcb.pix") + "br.gov.bcb.pix"
-  // "01" (ID) + "XX" (length of PIX key) + PIX key
   const pixDomain = "br.gov.bcb.pix";
   const merchantAccInfo = [
-    "00", // ID for GUI
+    "00",
     padNumber(pixDomain.length),
     pixDomain,
-    "01", // ID for PIX key
+    "01",
     padNumber(pixKey.length),
     pixKey,
   ].join("");
 
-  // Build the payload
-  const payload = [
-    "00020126", // Version "01" + Initiation Method "26"
-    `58${padNumber(merchantAccInfo.length)}${merchantAccInfo}`,
-    "52040000", // Category Code "0000"
-    "5303986", // Currency "986" (BRL)
+  const merchantField = `26${padNumber(merchantAccInfo.length)}${merchantAccInfo}`;
+
+  const txidField = `62${padNumber(txid.length + 4)}0503${txid}`;
+
+  let payload = [
+    "000201", // Payload Format Indicator
+    merchantField,
+    "52040000", // Merchant Category Code
+    "5303986", // Currency Code (BRL)
     `54${padNumber(formattedAmount.length)}${formattedAmount}`,
     "5802BR", // Country Code
     `59${padNumber(cleanName.length)}${cleanName}`,
     `60${padNumber(city.length)}${city}`,
-    "6304", // CRC16 (to be filled)
+    txidField,
+    "6304", // CRC16 placeholder
   ].join("");
 
-  // Calculate and append CRC16
+  // Calcula o CRC16
   const crc16 = calculateCRC16(payload);
   return payload + crc16;
 }
