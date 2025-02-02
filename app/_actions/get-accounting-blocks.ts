@@ -29,7 +29,16 @@ export async function getAccountingBlocks(): Promise<AccountingBlock[]> {
       createdAt: "desc",
     },
     include: {
-      request: true,
+      request: {
+        select: {
+          amount: true,
+          bankName: true,
+          accountType: true,
+          accountNumber: true,
+          accountHolderName: true,
+          pixKey: true,
+        },
+      },
       expenses: {
         orderBy: {
           date: "desc",

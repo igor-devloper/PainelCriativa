@@ -94,6 +94,21 @@ export async function generateAccountingPDF(
   block: AccountingBlock,
   companyName: string,
 ) {
+  // Debug logs
+  console.log("Block data:", {
+    code: block.code,
+    request: block.request,
+    expenses: block.expenses.length,
+  });
+
+  console.log("Bank information:", {
+    bankName: block.request?.bankName,
+    accountType: block.request?.accountType,
+    accountNumber: block.request?.accountNumber,
+    accountHolderName: block.request?.accountHolderName,
+    pixKey: block.request?.pixKey,
+  });
+
   const doc = new jsPDF();
 
   // Add logo
@@ -113,6 +128,15 @@ export async function generateAccountingPDF(
     theme: "plain",
     styles: { fontSize: 10, cellPadding: 2 },
     margin: { right: 70 },
+  });
+
+  // Debug log before bank information table
+  console.log("Preparing bank information table with:", {
+    bankName: block.request?.bankName || "Não informado",
+    accountType: block.request?.accountType || "Não informado",
+    accountNumber: block.request?.accountNumber || "Não informado",
+    accountHolderName: block.request?.accountHolderName || "Não informado",
+    pixKey: block.request?.pixKey || "Não informado",
   });
 
   // Add bank information
