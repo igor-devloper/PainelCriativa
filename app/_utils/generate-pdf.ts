@@ -94,21 +94,6 @@ export async function generateAccountingPDF(
   block: AccountingBlock,
   companyName: string,
 ) {
-  // Debug logs
-  console.log("Block data:", {
-    code: block.code,
-    request: block.request,
-    expenses: block.expenses.length,
-  });
-
-  console.log("Bank information:", {
-    bankName: block.request?.bankName,
-    accountType: block.request?.accountType,
-    accountNumber: block.request?.accountNumber,
-    accountHolderName: block.request?.accountHolderName,
-    pixKey: block.request?.pixKey,
-  });
-
   const doc = new jsPDF();
 
   // Add logo
@@ -130,15 +115,6 @@ export async function generateAccountingPDF(
     margin: { right: 70 },
   });
 
-  // Debug log before bank information table
-  console.log("Preparing bank information table with:", {
-    bankName: block.request?.bankName || "Não informado",
-    accountType: block.request?.accountType || "Não informado",
-    accountNumber: block.request?.accountNumber || "Não informado",
-    accountHolderName: block.request?.accountHolderName || "Não informado",
-    pixKey: block.request?.pixKey || "Não informado",
-  });
-
   // Add bank information
   const bankInfo = [
     ["Banco:", block.request?.bankName || "Não informado"],
@@ -147,6 +123,8 @@ export async function generateAccountingPDF(
     ["Titular:", block.request?.accountHolderName || "Não informado"],
     ["Chave PIX:", block.request?.pixKey || "Não informado"],
   ];
+
+  console.log(bankInfo);
   autoTable(doc, {
     startY: doc.lastAutoTable.finalY + 10,
     head: [["DADOS BANCÁRIOS DO COLABORADOR"]],
