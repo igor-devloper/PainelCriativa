@@ -4,10 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "prepare": "husky && prisma generate"
+    "prepare": "husky && prisma generate",
+    "build": "next build",
+    "vercel-build": "prisma generate && next build"
   },
   "dependencies": {
     "@clerk/clerk-sdk-node": "^5.0.69",
@@ -74,9 +75,8 @@
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
     "twilio": "^5.4.1",
-    "whatsapp-web.js": "^1.23.0",
-    "xlsx": "^0.18.5",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "critters": "^0.0.20"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.15",

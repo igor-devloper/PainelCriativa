@@ -5,10 +5,10 @@ const nextConfig = {
     removeConsole: process.env.NODE_ENV === "production",
   },
   experimental: {
-    optimizeCss: true,
+    optimizeCss: false,
     optimizeServerReact: true,
-
   },
+  output: "standalone",
   images: {
     remotePatterns: [
       {
@@ -17,6 +17,7 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
+    unoptimized: true,
    },
 };
 
