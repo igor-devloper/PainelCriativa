@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import Link from "next/link";
+import { Button } from "@/app/_components/ui/button";
 
 export default function Error({
   error,
@@ -11,25 +11,23 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
+    // Log the error to an error reporting service
     console.error(error);
   }, [error]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center">
-      <h2 className="mb-4 text-4xl font-bold">500 - Algo deu errado!</h2>
-      <p className="mb-4 text-gray-600">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4">
+      <h2 className="text-2xl font-bold">Algo deu errado!</h2>
+      <p className="text-muted-foreground">
         Ocorreu um erro inesperado. Por favor, tente novamente.
       </p>
       <div className="flex gap-4">
-        <button
-          onClick={() => reset()}
-          className="rounded bg-primary px-4 py-2 text-white hover:bg-primary/90"
-        >
+        <Button onClick={reset} variant="default">
           Tentar novamente
-        </button>
-        <Link href="/" className="text-primary underline hover:text-primary/90">
+        </Button>
+        <Button onClick={() => (window.location.href = "/")} variant="outline">
           Voltar para a página inicial
-        </Link>
+        </Button>
       </div>
     </div>
   );

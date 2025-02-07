@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ClientHomeWrapper } from "@/app/_components/client-home-wrapper";
 import { getDashboardOverview } from "@/app/_actions/get-dashboard-overview";
 import { getUserRole } from "../_lib/utils";
+import Loading from "../admin/loading";
 
 export default async function HomePage() {
   const { userId } = auth();
@@ -23,16 +24,21 @@ export default async function HomePage() {
   }));
 
   return (
-    <ClientHomeWrapper
-      users={formattedUsers}
-      userRole={userRole}
-      userName={`${user.firstName} ${user.lastName}`}
-      pendingRequestsCount={dashboardData.pendingRequests.count}
-      activeUsersCount={dashboardData.activeUsers.count}
-      activeUsersChange={dashboardData.activeUsers.percentageChange}
-      accountStatementsCount={dashboardData.accountStatements.count}
-      accountStatementsChange={dashboardData.accountStatements.percentageChange}
-      recentActivity={dashboardData.recentActivity}
-    />
+    <>
+      <ClientHomeWrapper
+        users={formattedUsers}
+        userRole={userRole}
+        userName={`${user.firstName} ${user.lastName}`}
+        pendingRequestsCount={dashboardData.pendingRequests.count}
+        activeUsersCount={dashboardData.activeUsers.count}
+        activeUsersChange={dashboardData.activeUsers.percentageChange}
+        accountStatementsCount={dashboardData.accountStatements.count}
+        accountStatementsChange={
+          dashboardData.accountStatements.percentageChange
+        }
+        recentActivity={dashboardData.recentActivity}
+      />
+      <Loading />
+    </>
   );
 }
