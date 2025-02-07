@@ -1,5 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  swcMinify: true,
+  compiler: {
+    removeConsole: process.env.NODE_ENV === "production",
+  },
+  experimental: {
+    optimizeCss: true,
+    optimizeServerReact: true,
+
+  },
   images: {
     remotePatterns: [
       {
@@ -9,11 +18,6 @@ const nextConfig = {
       },
     ],
    },
-   experimental: {
-    serverActions: {
-      bodySizeLimit: '10mb' // Set this to whatever limit you need
-    }
-  }
 };
 
 export default nextConfig;

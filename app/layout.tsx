@@ -9,6 +9,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const mulish = Mulish({
   subsets: ["latin-ext"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {

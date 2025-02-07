@@ -2,6 +2,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { Decimal } from "@prisma/client/runtime/library";
 import { formatCurrency, formatDate } from "../_lib/utils";
+import { redis } from "../_lib/redis";
 
 interface Expense {
   date: string;
@@ -95,6 +96,12 @@ export async function generateAccountingPDF(
   companyName: string,
 ) {
   const doc = new jsPDF();
+  const cacheKey = `pdf:${block.code}`;
+  const cached = await redis.get(cacheKey);
+
+  if (cached) {
+    return new jsPDF(JSON.parse(cached as string));
+  }
 
   // Add logo
   doc.addImage("/logo.png", "PNG", 140, 10, 30, 30);
@@ -242,6 +249,9 @@ export async function generateAccountingPDF(
       }
     }
   }
+  await redis.set(cacheKey, JSON.stringify(doc.output()), {
+    ex: 300, // 5 minutes
+  });
 
   return doc;
 }

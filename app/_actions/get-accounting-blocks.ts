@@ -2,6 +2,7 @@ import { db } from "@/app/_lib/prisma";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { getUserRole } from "@/app/_lib/utils";
 import { AccountingBlock } from "@/app/types";
+import { redis } from "../_lib/redis";
 
 export async function getAccountingBlocks(): Promise<AccountingBlock[]> {
   const { userId } = auth();
@@ -9,7 +10,12 @@ export async function getAccountingBlocks(): Promise<AccountingBlock[]> {
   if (!userId) {
     throw new Error("Unauthorized");
   }
+  const cacheKey = `accounting-blocks:${userId}`;
+  const cached = await redis.get(cacheKey);
 
+  if (cached) {
+    return JSON.parse(cached as string) as AccountingBlock[];
+  }
   const user = await clerkClient.users.getUser(userId);
   const userRole = getUserRole(user.publicMetadata);
 
@@ -34,12 +40,14 @@ export async function getAccountingBlocks(): Promise<AccountingBlock[]> {
         orderBy: {
           createdAt: "desc",
         },
+        take: 50,
       },
     },
+    take: 20,
   });
 
   // Serialize the data before returning
-  return JSON.parse(
+  const processedBlocks = JSON.parse(
     JSON.stringify(
       blocks.map((block) => ({
         ...block,
@@ -50,4 +58,10 @@ export async function getAccountingBlocks(): Promise<AccountingBlock[]> {
       })),
     ),
   );
+
+  await redis.set(cacheKey, JSON.stringify(processedBlocks), {
+    ex: 60, // Cache for 1 minute
+  });
+
+  return processedBlocks;
 }
