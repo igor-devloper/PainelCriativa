@@ -2,21 +2,22 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { Decimal } from "@prisma/client/runtime/library";
 import { formatCurrency, formatDate } from "../_lib/utils";
-
-interface Expense {
-  date: string;
-  name: string;
-  amount: number | Decimal;
-  description: string;
-  imageUrls?: string[];
-}
+import {
+  EXPENSE_CATEGORY_LABELS,
+  BLOCK_STATUS_LABELS,
+  REQUEST_STATUS_LABELS,
+} from "@/app/_constants/transactions";
+import type { Expense } from "@/app/types/expense";
+import { BlockStatus, RequestStatus } from "@prisma/client";
 
 interface AccountingBlock {
   code: string;
   createdAt: string | Date;
+  status: BlockStatus; // Use the Prisma enum type
   initialAmount?: number | Decimal;
   expenses: Expense[];
   request?: {
+    status: RequestStatus; // Use the Prisma enum type
     amount: number | Decimal;
     bankName?: string | null;
     accountType?: string | null;
@@ -90,14 +91,39 @@ async function normalizeBase64Image(base64Data: string): Promise<{
   });
 }
 
+function calculateExpensesByCategory(
+  expenses: Expense[],
+): Record<string, number> {
+  return expenses.reduce(
+    (acc, expense) => {
+      const categoryLabel = EXPENSE_CATEGORY_LABELS[expense.category];
+      acc[categoryLabel] =
+        (acc[categoryLabel] || 0) + Number(expense.amount.toString());
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
+}
+
 export async function generateAccountingPDF(
   block: AccountingBlock,
   companyName: string,
 ) {
   const doc = new jsPDF();
 
-  // Add logo
-  doc.addImage("/logo.png", "PNG", 140, 10, 30, 30);
+  // Add logo (fixed aspect ratio)
+  const logoWidth = 30;
+  const logoHeight = 30;
+  doc.addImage(
+    "/logo.png",
+    "PNG",
+    140,
+    10,
+    logoWidth,
+    logoHeight,
+    undefined,
+    "FAST",
+  );
 
   const companyCNPJ = COMPANY_CNPJS[companyName] || "";
 
@@ -144,7 +170,21 @@ export async function generateAccountingPDF(
     },
   });
 
-  // Calculate totals
+  // Add status information with proper typing
+  autoTable(doc, {
+    startY: doc.lastAutoTable.finalY + 10,
+    body: [
+      ["Status do Bloco:", BLOCK_STATUS_LABELS[block.status]],
+      [
+        "Status da Solicitação:",
+        REQUEST_STATUS_LABELS[block.request?.status || RequestStatus.WAITING],
+      ],
+    ],
+    theme: "plain",
+    styles: { fontSize: 10, cellPadding: 2 },
+  });
+
+  // Add financial summary
   const totalExpenses = block.expenses.reduce(
     (total, expense) => total + Number(expense.amount.toString()),
     0,
@@ -167,14 +207,30 @@ export async function generateAccountingPDF(
     styles: { fontSize: 10, cellPadding: 2 },
   });
 
-  // Add expenses table
+  // Add expenses by category summary
+  const expensesByCategory = calculateExpensesByCategory(block.expenses);
   autoTable(doc, {
     startY: doc.lastAutoTable.finalY + 10,
-    head: [["Data", "Fonte", "Crédito", "Valor despesa", "Descrição Despesa"]],
+    head: [["Categoria", "Valor Total"]],
+    body: Object.entries(expensesByCategory).map(([category, total]) => [
+      category,
+      formatCurrency(total),
+    ]),
+    headStyles: {
+      fillColor: [240, 240, 240],
+      textColor: [0, 0, 0],
+      fontStyle: "bold",
+    },
+    styles: { fontSize: 9, cellPadding: 2 },
+  });
+
+  // Update expenses table to include payment method
+  autoTable(doc, {
+    startY: doc.lastAutoTable.finalY + 15,
+    head: [["Data", "Categoria", "Valor despesa", "Descrição Despesa"]],
     body: block.expenses.map((expense) => [
       formatDate(expense.date),
-      expense.name,
-      formatCurrency(Number(expense.amount.toString())),
+      EXPENSE_CATEGORY_LABELS[expense.category],
       formatCurrency(Number(expense.amount.toString())),
       expense.description,
     ]),

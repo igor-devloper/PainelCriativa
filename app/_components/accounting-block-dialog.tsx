@@ -230,25 +230,21 @@ export function AccountingBlockDialog({
                   user={name}
                 />
               )}
-              {userRole === "ADMIN" ? (
-                <DownloadPDFButton
-                  block={{
-                    ...block,
-                    request: block.request ?? undefined, // Se for null, transforma em undefined
-                    expenses: block.expenses.map((expense) => ({
-                      ...expense,
-                      date:
-                        expense.date instanceof Date
-                          ? expense.date.toISOString()
-                          : expense.date,
-                      description: expense.description ?? "", // Se for null, transforma em string vazia
-                    })),
-                  }}
-                  userName={userName}
-                />
-              ) : (
-                ""
-              )}
+              <DownloadPDFButton
+                block={{
+                  ...block,
+                  request: block.request ?? undefined, // Se for null, transforma em undefined
+                  expenses: block.expenses.map((expense) => ({
+                    ...expense,
+                    date:
+                      expense.date instanceof Date
+                        ? expense.date.toISOString()
+                        : expense.date,
+                    description: expense.description ?? "", // Se for null, transforma em string vazia
+                  })),
+                }}
+                userName={userName}
+              />
               {block.status !== "CLOSED" && (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>

@@ -5,6 +5,11 @@ const nextConfig = {
     removeConsole: process.env.NODE_ENV === "production",
   },
   output: "standalone",
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "10mb", // Increase the body size limit to 10MB
+    },
+  },
   images: {
     remotePatterns: [
       {
@@ -13,7 +18,7 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
-   },
+  },
 };
 
 export default nextConfig;

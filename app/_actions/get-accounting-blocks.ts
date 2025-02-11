@@ -25,14 +25,11 @@ export async function getAccountingBlocks(): Promise<AccountingBlock[]> {
 
   const blocks = await db.accountingBlock.findMany({
     where,
-    orderBy: {
-      createdAt: "desc",
-    },
     include: {
       request: true,
       expenses: {
         orderBy: {
-          createdAt: "desc",
+          date: "desc",
         },
         take: 50,
       },
