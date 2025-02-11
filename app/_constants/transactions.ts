@@ -26,7 +26,7 @@ export const EXPENSE_CATEGORY_LABELS: Record<ExpenseCategory, string> = {
   [ExpenseCategory.PRINTING]: "Impressão",
   [ExpenseCategory.FUEL]: "Combustível",
   [ExpenseCategory.VEHICLERENTAL]: "Aluguel de Veículo",
-  [ExpenseCategory.TICKET]: "Bilhete",
+  [ExpenseCategory.TICKET]: "Passagem",
   [ExpenseCategory.AIRTICKET]: "Passagem Aérea",
   [ExpenseCategory.BUSTICKET]: "Passagem de Ônibus",
   [ExpenseCategory.VEHICLEWASH]: "Lavagem de Veículo",

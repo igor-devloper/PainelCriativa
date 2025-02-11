@@ -8,16 +8,17 @@ import {
   REQUEST_STATUS_LABELS,
 } from "@/app/_constants/transactions";
 import type { Expense } from "@/app/types/expense";
-import { BlockStatus, RequestStatus } from "@prisma/client";
+import { type BlockStatus, RequestStatus } from "@prisma/client";
 
+// Tipos
 interface AccountingBlock {
   code: string;
   createdAt: string | Date;
-  status: BlockStatus; // Use the Prisma enum type
+  status: BlockStatus;
   initialAmount?: number | Decimal;
   expenses: Expense[];
   request?: {
-    status: RequestStatus; // Use the Prisma enum type
+    status: RequestStatus;
     amount: number | Decimal;
     bankName?: string | null;
     accountType?: string | null;
@@ -27,6 +28,7 @@ interface AccountingBlock {
   };
 }
 
+// Constantes
 const COMPANY_CNPJS: Record<string, string> = {
   "GSM SOLARION 02": "44.910.546/0001-55",
   "CRIATIVA ENERGIA": "Não consta",
@@ -34,6 +36,7 @@ const COMPANY_CNPJS: Record<string, string> = {
   "EXATA I": "38.406.585/0001-17",
 };
 
+// Funções auxiliares para processamento de imagens
 function getBase64ImageFormat(base64String: string): string {
   const match = base64String.match(/^data:image\/(\w+);base64,/);
   return match ? match[1].toUpperCase() : "PNG";
@@ -65,10 +68,10 @@ async function normalizeBase64Image(base64Data: string): Promise<{
       const maxHeight = 800;
       let { width, height } = img;
 
-      // Calculate aspect ratio
+      // Calcula proporção
       const aspectRatio = width / height;
 
-      // Adjust dimensions while maintaining aspect ratio
+      // Ajusta dimensões mantendo proporção
       if (width > maxWidth) {
         width = maxWidth;
         height = width / aspectRatio;
@@ -88,9 +91,14 @@ async function normalizeBase64Image(base64Data: string): Promise<{
         dimensions: { width, height },
       });
     };
+
+    img.onerror = () => {
+      reject(new Error("Erro ao carregar imagem"));
+    };
   });
 }
 
+// Função para calcular despesas por categoria
 function calculateExpensesByCategory(
   expenses: Expense[],
 ): Record<string, number> {
@@ -105,54 +113,120 @@ function calculateExpensesByCategory(
   );
 }
 
+// Função principal para gerar o PDF
 export async function generateAccountingPDF(
   block: AccountingBlock,
   companyName: string,
 ) {
   const doc = new jsPDF();
 
-  // Add logo (fixed aspect ratio)
-  const logoWidth = 30;
-  const logoHeight = 30;
-  doc.addImage(
-    "/logo.png",
-    "PNG",
-    140,
-    10,
-    logoWidth,
-    logoHeight,
-    undefined,
-    "FAST",
-  );
+  // Função para adicionar cabeçalho (apenas na primeira página)
+
+  // Função para adicionar cabeçalho (apenas na primeira página)
+  const addHeader = () => {
+    // Adiciona cabeçalho verde claro
+    doc.setFillColor(144, 238, 144); // Verde mais claro
+    doc.rect(0, 0, doc.internal.pageSize.width, 40, "F");
+
+    // Adiciona logo mantendo proporção original (proporção aproximada 1.6:1)
+    const logoHeight = 25;
+    const logoWidth = logoHeight * (453 / 551); // Correct aspect ratio based on original dimensions
+    doc.addImage(
+      "/logo.png",
+      "PNG",
+      10,
+      7,
+      logoWidth,
+      logoHeight,
+      undefined,
+      "FAST",
+    );
+
+    // Adiciona título centralizado em branco
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(24);
+    doc.text("Prestação de Contas", doc.internal.pageSize.width / 2, 25, {
+      align: "center",
+    });
+
+    // Reseta cor do texto
+    doc.setTextColor(0, 0, 0);
+  };
+
+  // Adiciona cabeçalho apenas na primeira página
+  addHeader();
+
+  // Função para adicionar rodapé
+  const addFooter = (pageNumber: number) => {
+    const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
+
+    // Adiciona linha separadora
+    doc.setDrawColor(26, 132, 53);
+    doc.setLineWidth(0.5);
+    doc.line(10, pageHeight - 25, pageWidth - 10, pageHeight - 25);
+
+    // Adiciona logo pequena mantendo proporção
+    const logoHeight = 10;
+    const logoWidth = logoHeight * 1.6; // Mantendo a mesma proporção 1.6:1
+    doc.addImage(
+      "/logo.png",
+      "PNG",
+      10,
+      pageHeight - 20,
+      logoWidth,
+      logoHeight,
+      undefined,
+      "FAST",
+    );
+
+    // Adiciona texto de copyright
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    const currentYear = new Date().getFullYear();
+    const copyrightText = `© ${currentYear} Criativa Energia. Todos os direitos reservados. Este documento é confidencial e contém informações proprietárias.`;
+    doc.text(copyrightText, pageWidth / 2, pageHeight - 15, {
+      align: "center",
+    });
+
+    // Adiciona número da página
+    doc.setFontSize(10);
+    doc.text(`Página ${pageNumber}`, pageWidth - 20, pageHeight - 10);
+  };
+
+  // Adiciona cabeçalho apenas na primeira página
 
   const companyCNPJ = COMPANY_CNPJS[companyName] || "";
 
-  // Add header information
+  // Adiciona informações do documento
+  doc.setFillColor(248, 249, 250); // Cor de fundo mais suave
+  doc.roundedRect(10, 50, 190, 40, 3, 3, "F");
+
   autoTable(doc, {
-    startY: 50,
+    startY: 55,
     body: [
-      ["Data da última atualização:", formatDate(new Date())],
       ["Empresa:", companyName],
       ["CNPJ:", companyCNPJ],
-      ["Documento:", `Prestação de Contas - ${block.code}`],
+      ["Código do Bloco:", block.code],
+      ["Data:", formatDate(new Date())],
     ],
     theme: "plain",
-    styles: { fontSize: 10, cellPadding: 2 },
-    margin: { right: 70 },
+    styles: {
+      fontSize: 11,
+      cellPadding: 2,
+    },
+    columnStyles: {
+      0: { fontStyle: "bold" },
+    },
+    margin: { left: 15 },
   });
 
-  // Add bank information
-  const bankInfo = [
-    ["Banco:", block.request?.bankName || "Não informado"],
-    ["Tipo de Conta:", block.request?.accountType || "Não informado"],
-    ["Número da Conta:", block.request?.accountNumber || "Não informado"],
-    ["Titular:", block.request?.accountHolderName || "Não informado"],
-    ["Chave PIX:", block.request?.pixKey || "Não informado"],
-  ];
+  // Adiciona informações bancárias
+  doc.setFillColor(248, 249, 250);
+  doc.roundedRect(10, 100, 190, 70, 3, 3, "F");
 
-  console.log(bankInfo);
   autoTable(doc, {
-    startY: doc.lastAutoTable.finalY + 40,
+    startY: 105,
     head: [["DADOS BANCÁRIOS DO COLABORADOR"]],
     body: [
       [`Banco: ${block.request?.bankName || "Não informado"}`],
@@ -162,29 +236,38 @@ export async function generateAccountingPDF(
       [`Chave PIX: ${block.request?.pixKey || "Não informado"}`],
     ],
     theme: "plain",
-    styles: { fontSize: 10, cellPadding: 2 },
+    styles: { fontSize: 11, cellPadding: 3 },
     headStyles: {
-      fillColor: [240, 240, 240],
-      textColor: [0, 0, 0],
+      fillColor: [26, 132, 53],
+      textColor: [255, 255, 255],
       fontStyle: "bold",
     },
+    margin: { left: 15, right: 15 },
   });
 
-  // Add status information with proper typing
+  // Adiciona informações de status
+  const statusY = doc.lastAutoTable.finalY + 20;
+  doc.setFillColor(248, 249, 250);
+  doc.roundedRect(10, statusY, 190, 30, 3, 3, "F");
+
   autoTable(doc, {
-    startY: doc.lastAutoTable.finalY + 10,
+    startY: statusY + 5,
     body: [
-      ["Status do Bloco:", BLOCK_STATUS_LABELS[block.status]],
+      ["Status da Prestação de Contas:", BLOCK_STATUS_LABELS[block.status]],
       [
         "Status da Solicitação:",
         REQUEST_STATUS_LABELS[block.request?.status || RequestStatus.WAITING],
       ],
     ],
     theme: "plain",
-    styles: { fontSize: 10, cellPadding: 2 },
+    styles: { fontSize: 11, cellPadding: 2 },
+    columnStyles: {
+      0: { fontStyle: "bold" },
+    },
+    margin: { left: 15 },
   });
 
-  // Add financial summary
+  // Adiciona resumo financeiro
   const totalExpenses = block.expenses.reduce(
     (total, expense) => total + Number(expense.amount.toString()),
     0,
@@ -192,42 +275,58 @@ export async function generateAccountingPDF(
   const remainingBalance =
     Number(block.initialAmount?.toString()) - totalExpenses;
 
-  // Add financial summary
+  const summaryY = doc.lastAutoTable.finalY + 20;
+  doc.setFillColor(248, 249, 250);
+  doc.roundedRect(10, summaryY, 190, 40, 3, 3, "F");
+
   autoTable(doc, {
-    startY: doc.lastAutoTable.finalY + 10,
+    startY: summaryY + 5,
     body: [
       [
         "Valor disponibilizado:",
         formatCurrency(Number(block.request?.amount?.toString())),
       ],
-      ["Saldo:", formatCurrency(remainingBalance)],
-      ["Total das despesas", formatCurrency(totalExpenses)],
+      ["Total das despesas:", formatCurrency(totalExpenses)],
+      ["Saldo restante:", formatCurrency(remainingBalance)],
     ],
     theme: "plain",
-    styles: { fontSize: 10, cellPadding: 2 },
+    styles: {
+      fontSize: 12,
+      cellPadding: 3,
+    },
+    columnStyles: {
+      0: { fontStyle: "bold" },
+      1: { halign: "right" },
+    },
+    margin: { left: 15, right: 15 },
   });
 
-  // Add expenses by category summary
+  // Adiciona resumo por categoria
   const expensesByCategory = calculateExpensesByCategory(block.expenses);
+
   autoTable(doc, {
-    startY: doc.lastAutoTable.finalY + 10,
-    head: [["Categoria", "Valor Total"]],
+    startY: doc.lastAutoTable.finalY + 20,
+    head: [["RESUMO POR CATEGORIA", "VALOR"]],
     body: Object.entries(expensesByCategory).map(([category, total]) => [
       category,
       formatCurrency(total),
     ]),
     headStyles: {
-      fillColor: [240, 240, 240],
-      textColor: [0, 0, 0],
+      fillColor: [26, 132, 53],
+      textColor: [255, 255, 255],
       fontStyle: "bold",
     },
-    styles: { fontSize: 9, cellPadding: 2 },
+    columnStyles: {
+      1: { halign: "right" },
+    },
+    styles: { fontSize: 11, cellPadding: 4 },
+    margin: { left: 10, right: 10 },
   });
 
-  // Update expenses table to include payment method
+  // Adiciona tabela detalhada de despesas
   autoTable(doc, {
-    startY: doc.lastAutoTable.finalY + 15,
-    head: [["Data", "Categoria", "Valor despesa", "Descrição Despesa"]],
+    startY: doc.lastAutoTable.finalY + 20,
+    head: [["Data", "Categoria", "Valor", "Descrição"]],
     body: block.expenses.map((expense) => [
       formatDate(expense.date),
       EXPENSE_CATEGORY_LABELS[expense.category],
@@ -235,15 +334,27 @@ export async function generateAccountingPDF(
       expense.description,
     ]),
     headStyles: {
-      fillColor: [240, 240, 240],
-      textColor: [0, 0, 0],
+      fillColor: [26, 132, 53],
+      textColor: [255, 255, 255],
       fontStyle: "bold",
     },
-    styles: { fontSize: 9, cellPadding: 2, overflow: "linebreak" },
-    columnStyles: { 4: { cellWidth: 80 } },
+    styles: {
+      fontSize: 10,
+      cellPadding: 4,
+      overflow: "linebreak",
+    },
+    columnStyles: {
+      0: { cellWidth: 30 },
+      2: { halign: "right" },
+      3: { cellWidth: "auto" },
+    },
+    margin: { left: 10, right: 10 },
   });
 
-  // Add expense images
+  // Adiciona imagens das despesas
+  let pageNumber = 1;
+  addFooter(pageNumber);
+
   for (const expense of block.expenses) {
     if (expense.imageUrls && expense.imageUrls.length > 0) {
       for (const base64Data of expense.imageUrls) {
@@ -254,44 +365,55 @@ export async function generateAccountingPDF(
           const imageFormat = getBase64ImageFormat(normalizedBase64);
 
           doc.addPage();
+          pageNumber++;
+
           const margin = 20;
           const pageWidth = doc.internal.pageSize.width - 2 * margin;
-          const pageHeight = doc.internal.pageSize.height - 2 * margin - 40; // 40px for text below
+          const pageHeight = doc.internal.pageSize.height - 2 * margin - 80; // Increased margin for footer
 
-          // Calculate dimensions to fit page while maintaining aspect ratio
+          // Calcula dimensões para ajustar à página mantendo proporção
           const scale = Math.min(
             pageWidth / dimensions.width,
-            pageHeight / dimensions.height,
-          );
+            (pageHeight * 0.7) / dimensions.height,
+          ); // Reduced to 70% of page height
 
           const imgWidth = dimensions.width * scale;
           const imgHeight = dimensions.height * scale;
 
-          // Center image horizontally
+          // Centraliza imagem horizontalmente
           const xPos = margin + (pageWidth - imgWidth) / 2;
 
-          // Add image
+          // Adiciona imagem
           doc.addImage(
             cleanBase64,
             imageFormat,
             xPos,
-            margin,
+            50, // Adjusted starting position
             imgWidth,
             imgHeight,
             undefined,
             "FAST",
           );
 
-          // Add expense details below image
-          const textY = margin + imgHeight + 10;
-          doc.setFontSize(10);
-          doc.text(
-            `Despesa: ${expense.name}\nDescrição: ${expense.description}\nValor: ${formatCurrency(
-              Number(expense.amount.toString()),
-            )}`,
-            margin,
-            textY,
-          );
+          // Adiciona box para detalhes da despesa
+          const textY = 60 + imgHeight + 10;
+          doc.setFillColor(248, 249, 250);
+          doc.roundedRect(margin, textY, pageWidth, 40, 3, 3, "F");
+
+          // Adiciona detalhes da despesa com melhor formatação
+          doc.setFontSize(11);
+          doc.setTextColor(0, 0, 0);
+          const expenseDetails = [
+            `Despesa: ${expense.name}`,
+            `Descrição: ${expense.description}`,
+            `Valor: ${formatCurrency(Number(expense.amount.toString()))}`,
+          ];
+
+          expenseDetails.forEach((line, index) => {
+            doc.text(line, margin + 10, textY + 15 + index * 10);
+          });
+
+          addFooter(pageNumber);
         } catch (error) {
           console.error("Erro ao processar imagem para o PDF:", error);
         }
@@ -299,5 +421,16 @@ export async function generateAccountingPDF(
     }
   }
 
+  doc.setPage(1);
+  addFooter(1);
+
   return doc;
 }
+
+// Exporta as funções auxiliares para uso em outros módulos
+export {
+  getBase64ImageFormat,
+  cleanBase64String,
+  normalizeBase64Image,
+  calculateExpensesByCategory,
+};
