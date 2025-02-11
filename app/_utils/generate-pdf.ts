@@ -170,11 +170,10 @@ export async function generateAccountingPDF(
   // Add expenses table
   autoTable(doc, {
     startY: doc.lastAutoTable.finalY + 10,
-    head: [["Data", "Fonte", "Crédito", "Valor despesa", "Descrição Despesa"]],
+    head: [["Data", "Categoria", "Valor despesa", "Descrição Despesa"]],
     body: block.expenses.map((expense) => [
       formatDate(expense.date),
-      expense.name,
-      formatCurrency(Number(expense.amount.toString())),
+      formatCurrency(Number(expense.category)),
       formatCurrency(Number(expense.amount.toString())),
       expense.description,
     ]),
