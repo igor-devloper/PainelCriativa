@@ -1,45 +1,24 @@
 "use client";
 
-import { Button } from "@/app/_components/ui/button";
 import { Download } from "lucide-react";
-import { generateAccountingPDF } from "@/app/_utils/generate-pdf";
-import type { Decimal } from "@prisma/client/runtime/library";
-
-interface Expense {
-  date: string;
-  name: string;
-  amount: number;
-  description: string;
-  imageUrls?: string[];
-}
-
-interface AccountingBlock {
-  code: string;
-  createdAt: string | Date;
-  company: string;
-  initialAmount: number | Decimal;
-  expenses: Expense[];
-  request?: {
-    amount: number | Decimal;
-    bankName: string | null;
-    accountType: string | null;
-    accountNumber: string | null;
-    accountHolderName: string | null;
-    pixKey: string | null;
-  };
-}
+import type { AccountingBlock } from "../types/accounting";
+import { generateAccountingPDF } from "../_utils/generate-pdf";
+import { Button } from "./ui/button";
 
 interface DownloadPDFButtonProps {
   block: AccountingBlock;
   userName: string;
 }
 
-export function DownloadPDFButton({ block }: DownloadPDFButtonProps) {
+export function DownloadPDFButton({ block, userName }: DownloadPDFButtonProps) {
   const handleDownload = async () => {
     try {
-      // Do not sanitize the block - pass it directly to maintain all properties
+      // Do not sanitize the block - pass it directly to the PDF generator
       const companyName = block.company;
-      console.log("Downloading PDF with block data:", block); // Debug log
+      console.log(
+        `Downloading PDF with block ${block.code} for user ${userName}`,
+      );
+
       const doc = await generateAccountingPDF(block, companyName);
       doc.save(`prestacao-de-contas-${block.code}.pdf`);
     } catch (error) {
@@ -48,11 +27,7 @@ export function DownloadPDFButton({ block }: DownloadPDFButtonProps) {
   };
 
   return (
-    <Button
-      onClick={handleDownload}
-      variant="outline"
-      className="w-full sm:w-auto"
-    >
+    <Button onClick={handleDownload} variant="outline" size="sm">
       <Download className="mr-2 h-4 w-4" />
       Baixar PDF
     </Button>
