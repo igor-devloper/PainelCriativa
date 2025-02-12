@@ -120,42 +120,6 @@ export async function generateAccountingPDF(
 ) {
   const doc = new jsPDF();
 
-  // Função para adicionar cabeçalho (apenas na primeira página)
-
-  // Função para adicionar cabeçalho (apenas na primeira página)
-  const addHeader = () => {
-    // Adiciona cabeçalho verde claro
-    doc.setFillColor(144, 238, 144); // Verde mais claro
-    doc.rect(0, 0, doc.internal.pageSize.width, 40, "F");
-
-    // Adiciona logo mantendo proporção original (proporção aproximada 1.6:1)
-    const logoHeight = 25;
-    const logoWidth = logoHeight * (453 / 551); // Correct aspect ratio based on original dimensions
-    doc.addImage(
-      "/logo.png",
-      "PNG",
-      10,
-      7,
-      logoWidth,
-      logoHeight,
-      undefined,
-      "FAST",
-    );
-
-    // Adiciona título centralizado em branco
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(24);
-    doc.text("Prestação de Contas", doc.internal.pageSize.width / 2, 25, {
-      align: "center",
-    });
-
-    // Reseta cor do texto
-    doc.setTextColor(0, 0, 0);
-  };
-
-  // Adiciona cabeçalho apenas na primeira página
-  addHeader();
-
   // Função para adicionar rodapé
   const addFooter = (pageNumber: number) => {
     const pageWidth = doc.internal.pageSize.width;
@@ -167,13 +131,13 @@ export async function generateAccountingPDF(
     doc.line(10, pageHeight - 25, pageWidth - 10, pageHeight - 25);
 
     // Adiciona logo pequena mantendo proporção
-    const logoHeight = 10;
-    const logoWidth = logoHeight * 1.6; // Mantendo a mesma proporção 1.6:1
+    const logoHeight = 25;
+    const logoWidth = logoHeight * (453 / 551); // Correct aspect ratio based on original dimensions
     doc.addImage(
       "/logo.png",
       "PNG",
       10,
-      pageHeight - 20,
+      pageHeight - 24, // Changed from 7 to pageHeight - 20
       logoWidth,
       logoHeight,
       undefined,
@@ -193,8 +157,42 @@ export async function generateAccountingPDF(
     doc.setFontSize(10);
     doc.text(`Página ${pageNumber}`, pageWidth - 20, pageHeight - 10);
   };
+  // Função para adicionar cabeçalho (apenas na primeira página)
+  const addHeader = () => {
+    // Adiciona logo mantendo proporção original
+    const logoHeight = 30;
+    const logoWidth = logoHeight * (453 / 551); // Proporção correta baseada nas dimensões originais
+    doc.addImage(
+      "/logo.png",
+      "PNG",
+      10,
+      10,
+      logoWidth,
+      logoHeight,
+      undefined,
+      "FAST",
+    );
+
+    // Adiciona título e código
+    doc.setFontSize(20);
+    doc.setTextColor(26, 132, 53); // Verde institucional #1A8435
+    doc.text("Prestação de Contas", doc.internal.pageSize.width / 2, 25, {
+      align: "center",
+    });
+
+    doc.setFontSize(14);
+    doc.text(block.code, doc.internal.pageSize.width / 2, 35, {
+      align: "center",
+    });
+
+    // Adiciona linha decorativa
+    doc.setDrawColor(26, 132, 53);
+    doc.setLineWidth(0.5);
+    doc.line(50, 40, doc.internal.pageSize.width - 50, 40);
+  };
 
   // Adiciona cabeçalho apenas na primeira página
+  addHeader();
 
   const companyCNPJ = COMPANY_CNPJS[companyName] || "";
 
@@ -421,7 +419,7 @@ export async function generateAccountingPDF(
     }
   }
 
-  doc.setPage(1);
+  doc.setPage(2);
   addFooter(1);
 
   return doc;
