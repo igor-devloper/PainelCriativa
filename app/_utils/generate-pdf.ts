@@ -173,22 +173,18 @@ export async function generateAccountingPDF(
       "FAST",
     );
 
-    // Adiciona título e código
     doc.setFontSize(20);
-    doc.setTextColor(26, 132, 53); // Verde institucional #1A8435
+    doc.setFillColor(26, 132, 53);
+    doc.roundedRect(10, 15, doc.internal.pageSize.width - 20, 20, 3, 3, "F");
+    doc.setTextColor(255, 255, 255);
     doc.text(
       "Relatório de Prestação de Contas",
       doc.internal.pageSize.width / 2,
-      25,
+      30,
       {
         align: "center",
       },
     );
-
-    // Adiciona linha decorativa
-    doc.setDrawColor(26, 132, 53);
-    doc.setLineWidth(0.5);
-    doc.line(50, 40, doc.internal.pageSize.width - 50, 40);
   };
 
   // Adiciona cabeçalho apenas na primeira página
@@ -318,7 +314,7 @@ export async function generateAccountingPDF(
     startY: doc.lastAutoTable.finalY + 20,
     showHead: "firstPage",
     head: [
-      ["", "", "Despesas", ""],
+      ["", "", "TABELA DE REGISTRO DAS DESPESAS", ""],
       ["Data", "Categoria", "Valor", "Descrição"],
     ],
     body: block.expenses.map((expense) => [
@@ -415,6 +411,10 @@ export async function generateAccountingPDF(
             `Categoria: ${EXPENSE_CATEGORY_LABELS[expense.category]}`,
             `Valor: ${formatCurrency(Number(expense.amount.toString()))}`,
           ];
+
+          expenseDetails.forEach((line, index) => {
+            doc.text(line, margin + 10, textY + 15 + index * 10);
+          });
 
           expenseDetails.forEach((line, index) => {
             doc.text(line, margin + 10, textY + 15 + index * 10);
