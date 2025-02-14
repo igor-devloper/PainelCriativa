@@ -163,6 +163,10 @@ export async function generateAccountingPDF(
     // Adiciona logo mantendo proporção original
     const logoHeight = 30;
     const logoWidth = logoHeight * (453 / 551); // Proporção correta baseada nas dimensões originais
+
+    doc.setFontSize(20);
+    doc.setFillColor(248, 249, 250);
+    doc.roundedRect(10, 10, doc.internal.pageSize.width - 20, 30, 3, 3, "F");
     doc.addImage(
       "/logo.png",
       "PNG",
@@ -173,23 +177,11 @@ export async function generateAccountingPDF(
       undefined,
       "FAST",
     );
-
-    doc.setFontSize(20);
-    doc.setFillColor(248, 249, 250);
-    doc.roundedRect(
-      10,
-      10,
-      doc.internal.pageSize.width - margin,
-      30,
-      3,
-      3,
-      "F",
-    );
     doc.setTextColor(0, 0, 0);
     doc.text(
       "Relatório de Prestação de Contas",
       doc.internal.pageSize.width / 2,
-      30,
+      28,
       {
         align: "center",
       },
