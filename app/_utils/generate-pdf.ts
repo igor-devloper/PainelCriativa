@@ -376,7 +376,7 @@ export async function generateAccountingPDF(
           // Calcula dimensões para ajustar à página mantendo proporção
           const scale = Math.min(
             pageWidth / dimensions.width,
-            (pageHeight * 0.7) / dimensions.height,
+            (pageHeight * 0.85) / dimensions.height, // Changed from 0.7 to 0.85
           ); // Reduced to 70% of page height
 
           const imgWidth = dimensions.width * scale;
@@ -401,10 +401,10 @@ export async function generateAccountingPDF(
           // Adiciona box para detalhes da despesa
           const textY = yPos + imgHeight + 20;
           doc.setFillColor(248, 249, 250);
-          doc.roundedRect(margin, textY, pageWidth - 2 * margin, 55, 3, 3, "F");
+          doc.roundedRect(margin, textY, pageWidth - 2 * margin, 45, 3, 3, "F"); // Modify text box height from 55 to 45
 
           // Adiciona detalhes da despesa com melhor formatação
-          doc.setFontSize(10);
+          doc.setFontSize(9); // Reduce font size from 10 to 9
           doc.setTextColor(0, 0, 0);
           const expenseDetails = [
             `Despesa: ${expense.name}`,
@@ -414,11 +414,11 @@ export async function generateAccountingPDF(
           ];
 
           expenseDetails.forEach((line, index) => {
-            doc.text(line, margin + 10, textY + 15 + index * 10);
+            doc.text(line, margin + 10, textY + 12 + index * 8); // Adjust spacing between lines from 10 to 8
           });
 
           expenseDetails.forEach((line, index) => {
-            doc.text(line, margin + 10, textY + 15 + index * 10);
+            doc.text(line, margin + 10, textY + 12 + index * 8); // Adjust spacing between lines from 10 to 8
           });
 
           addFooter(pageNumber);
