@@ -176,7 +176,15 @@ export async function generateAccountingPDF(
 
     doc.setFontSize(20);
     doc.setFillColor(248, 249, 250);
-    doc.roundedRect(45, 18, doc.internal.pageSize.width - 50, 20, 3, 3, "F");
+    doc.roundedRect(
+      45,
+      18,
+      doc.internal.pageSize.width - margin,
+      30,
+      3,
+      3,
+      "F",
+    );
     doc.setTextColor(0, 0, 0);
     doc.text(
       "Relatório de Prestação de Contas",
