@@ -176,14 +176,14 @@ export async function generateAccountingPDF(
     // Adiciona título e código
     doc.setFontSize(20);
     doc.setTextColor(26, 132, 53); // Verde institucional #1A8435
-    doc.text("Prestação de Contas", doc.internal.pageSize.width / 2, 25, {
-      align: "center",
-    });
-
-    doc.setFontSize(14);
-    doc.text(block.code, doc.internal.pageSize.width / 2, 35, {
-      align: "center",
-    });
+    doc.text(
+      "Relatório de Prestação de Contas",
+      doc.internal.pageSize.width / 2,
+      25,
+      {
+        align: "center",
+      },
+    );
 
     // Adiciona linha decorativa
     doc.setDrawColor(26, 132, 53);
@@ -197,11 +197,12 @@ export async function generateAccountingPDF(
   const companyCNPJ = COMPANY_CNPJS[companyName] || "";
 
   // Adiciona informações do documento
-  doc.setFillColor(248, 249, 250); // Cor de fundo mais suave
-  doc.roundedRect(10, 50, 190, 40, 3, 3, "F");
+  doc.setFillColor(248, 249, 250);
+  doc.roundedRect(10, 50, doc.internal.pageSize.width - 20, 50, 3, 3, "F");
 
   autoTable(doc, {
     startY: 55,
+    head: [["DADOS DA PRESTAÇÃO DE CONTAS", "", "", ""]],
     body: [
       ["Empresa:", companyName],
       ["CNPJ:", companyCNPJ],
@@ -216,15 +217,20 @@ export async function generateAccountingPDF(
     columnStyles: {
       0: { fontStyle: "bold" },
     },
+    headStyles: {
+      fillColor: [26, 132, 53],
+      textColor: [255, 255, 255],
+      fontStyle: "bold",
+    },
     margin: { left: 15 },
   });
 
   // Adiciona informações bancárias
   doc.setFillColor(248, 249, 250);
-  doc.roundedRect(10, 100, 190, 70, 3, 3, "F");
+  doc.roundedRect(10, 115, 190, 70, 3, 3, "F");
 
   autoTable(doc, {
-    startY: 105,
+    startY: 120,
     head: [["DADOS BANCÁRIOS DO COLABORADOR"]],
     body: [
       [`Banco: ${block.request?.bankName || "Não informado"}`],
@@ -243,28 +249,6 @@ export async function generateAccountingPDF(
     margin: { left: 15, right: 15 },
   });
 
-  // Adiciona informações de status
-  const statusY = doc.lastAutoTable.finalY + 20;
-  doc.setFillColor(248, 249, 250);
-  doc.roundedRect(10, statusY, 190, 30, 3, 3, "F");
-
-  autoTable(doc, {
-    startY: statusY + 5,
-    body: [
-      ["Status da Prestação de Contas:", BLOCK_STATUS_LABELS[block.status]],
-      [
-        "Status da Solicitação:",
-        REQUEST_STATUS_LABELS[block.request?.status || RequestStatus.WAITING],
-      ],
-    ],
-    theme: "plain",
-    styles: { fontSize: 11, cellPadding: 2 },
-    columnStyles: {
-      0: { fontStyle: "bold" },
-    },
-    margin: { left: 15 },
-  });
-
   // Adiciona resumo financeiro
   const totalExpenses = block.expenses.reduce(
     (total, expense) => total + Number(expense.amount.toString()),
@@ -273,13 +257,21 @@ export async function generateAccountingPDF(
   const remainingBalance =
     Number(block.initialAmount?.toString()) - totalExpenses;
 
-  const summaryY = doc.lastAutoTable.finalY + 20;
+  const expensesByCategory = calculateExpensesByCategory(block.expenses);
+
+  const statusY = doc.lastAutoTable.finalY + 20;
   doc.setFillColor(248, 249, 250);
-  doc.roundedRect(10, summaryY, 190, 40, 3, 3, "F");
+  doc.roundedRect(10, statusY, 190, 70, 3, 3, "F");
 
   autoTable(doc, {
-    startY: summaryY + 5,
+    startY: statusY + 5,
+    head: [["RESUMO DE FECHAMENTO", "", "", "", ""]],
     body: [
+      ["Status da Prestação de Contas:", BLOCK_STATUS_LABELS[block.status]],
+      [
+        "Status da Solicitação:",
+        REQUEST_STATUS_LABELS[block.request?.status || RequestStatus.WAITING],
+      ],
       [
         "Valor disponibilizado:",
         formatCurrency(Number(block.request?.amount?.toString())),
@@ -288,22 +280,21 @@ export async function generateAccountingPDF(
       ["Saldo restante:", formatCurrency(remainingBalance)],
     ],
     theme: "plain",
-    styles: {
-      fontSize: 12,
-      cellPadding: 3,
+    styles: { fontSize: 11, cellPadding: 2 },
+    headStyles: {
+      fillColor: [26, 132, 53],
+      textColor: [255, 255, 255],
+      fontStyle: "bold",
     },
     columnStyles: {
       0: { fontStyle: "bold" },
-      1: { halign: "right" },
     },
-    margin: { left: 15, right: 15 },
+    margin: { left: 15 },
   });
-
   // Adiciona resumo por categoria
-  const expensesByCategory = calculateExpensesByCategory(block.expenses);
 
   autoTable(doc, {
-    startY: doc.lastAutoTable.finalY + 20,
+    startY: doc.lastAutoTable.finalY + 25,
     head: [["RESUMO POR CATEGORIA", "VALOR"]],
     body: Object.entries(expensesByCategory).map(([category, total]) => [
       category,
@@ -320,11 +311,16 @@ export async function generateAccountingPDF(
     styles: { fontSize: 11, cellPadding: 4 },
     margin: { left: 10, right: 10 },
   });
-
+  const margin = 10;
   // Adiciona tabela detalhada de despesas
+  let pageNumber = 1;
   autoTable(doc, {
     startY: doc.lastAutoTable.finalY + 20,
-    head: [["Data", "Categoria", "Valor", "Descrição"]],
+    showHead: "firstPage",
+    head: [
+      ["", "", "Despesas", ""],
+      ["Data", "Categoria", "Valor", "Descrição"],
+    ],
     body: block.expenses.map((expense) => [
       formatDate(expense.date),
       EXPENSE_CATEGORY_LABELS[expense.category],
@@ -340,18 +336,29 @@ export async function generateAccountingPDF(
       fontSize: 10,
       cellPadding: 4,
       overflow: "linebreak",
+      minCellHeight: 15,
     },
     columnStyles: {
-      0: { cellWidth: 30 },
-      2: { halign: "right" },
+      0: { cellWidth: 60 },
+      1: { cellWidth: 30, halign: "right" },
+      2: { cellWidth: 30, halign: "right" },
       3: { cellWidth: "auto" },
     },
-    margin: { left: 10, right: 10 },
+    margin: { left: margin, right: margin, bottom: 40 },
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    didDrawPage: (data) => {
+      addFooter(pageNumber);
+    },
+    pageBreak: "auto",
+    showFoot: "lastPage",
+    foot: [[{ content: "", colSpan: 4 }]],
+    footStyles: {
+      minCellHeight: 0,
+      fillColor: [255, 255, 255],
+    }, // Reserve space for footer
   });
 
   // Adiciona imagens das despesas
-  let pageNumber = 1;
-  addFooter(pageNumber);
 
   for (const expense of block.expenses) {
     if (expense.imageUrls && expense.imageUrls.length > 0) {
@@ -380,6 +387,7 @@ export async function generateAccountingPDF(
 
           // Centraliza imagem horizontalmente
           const xPos = margin + (pageWidth - imgWidth) / 2;
+          const yPos = 40;
 
           // Adiciona imagem
           doc.addImage(
@@ -394,9 +402,9 @@ export async function generateAccountingPDF(
           );
 
           // Adiciona box para detalhes da despesa
-          const textY = 60 + imgHeight + 10;
+          const textY = yPos + imgHeight + 20;
           doc.setFillColor(248, 249, 250);
-          doc.roundedRect(margin, textY, pageWidth, 40, 3, 3, "F");
+          doc.roundedRect(margin, textY, pageWidth - 2 * margin, 55, 3, 3, "F");
 
           // Adiciona detalhes da despesa com melhor formatação
           doc.setFontSize(11);
@@ -404,6 +412,7 @@ export async function generateAccountingPDF(
           const expenseDetails = [
             `Despesa: ${expense.name}`,
             `Descrição: ${expense.description}`,
+            `Categoria: ${EXPENSE_CATEGORY_LABELS[expense.category]}`,
             `Valor: ${formatCurrency(Number(expense.amount.toString()))}`,
           ];
 
