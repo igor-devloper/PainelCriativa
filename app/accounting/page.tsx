@@ -21,7 +21,6 @@ export default async function AccountingPage() {
 
   const accountingBlocks = await getAccountingBlocks();
   const balances = await getUserBalance(); // This now returns all company balances
-
   return (
     <AccountingPageWrapper
       name={user.fullName ?? ""}

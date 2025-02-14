@@ -117,6 +117,7 @@ function calculateExpensesByCategory(
 export async function generateAccountingPDF(
   block: AccountingBlock,
   companyName: string,
+  name: string,
 ) {
   const doc = new jsPDF();
 
@@ -174,9 +175,9 @@ export async function generateAccountingPDF(
     );
 
     doc.setFontSize(20);
-    doc.setFillColor(26, 132, 53);
-    doc.roundedRect(10, 15, doc.internal.pageSize.width - 20, 20, 3, 3, "F");
-    doc.setTextColor(255, 255, 255);
+    doc.setFillColor(248, 249, 250);
+    doc.roundedRect(45, 18, doc.internal.pageSize.width - 50, 20, 3, 3, "F");
+    doc.setTextColor(0, 0, 0);
     doc.text(
       "Relatório de Prestação de Contas",
       doc.internal.pageSize.width / 2,
@@ -191,10 +192,9 @@ export async function generateAccountingPDF(
   addHeader();
 
   const companyCNPJ = COMPANY_CNPJS[companyName] || "";
-
   // Adiciona informações do documento
   doc.setFillColor(248, 249, 250);
-  doc.roundedRect(10, 50, doc.internal.pageSize.width - 20, 50, 3, 3, "F");
+  doc.roundedRect(10, 50, doc.internal.pageSize.width - 20, 60, 3, 3, "F");
 
   autoTable(doc, {
     startY: 55,
@@ -202,7 +202,8 @@ export async function generateAccountingPDF(
     body: [
       ["Empresa:", companyName],
       ["CNPJ:", companyCNPJ],
-      ["Código do Bloco:", block.code],
+      ["Responsável:", name],
+      ["Código:", block.code],
       ["Data:", formatDate(new Date())],
     ],
     theme: "plain",
@@ -314,7 +315,7 @@ export async function generateAccountingPDF(
     startY: doc.lastAutoTable.finalY + 20,
     showHead: "firstPage",
     head: [
-      ["", "", "TABELA DE REGISTRO DAS DESPESAS", ""],
+      ["TABELA DE REGISTRO DAS DESPESAS", "", "", ""],
       ["Data", "Categoria", "Valor", "Descrição"],
     ],
     body: block.expenses.map((expense) => [
@@ -403,7 +404,7 @@ export async function generateAccountingPDF(
           doc.roundedRect(margin, textY, pageWidth - 2 * margin, 55, 3, 3, "F");
 
           // Adiciona detalhes da despesa com melhor formatação
-          doc.setFontSize(11);
+          doc.setFontSize(10);
           doc.setTextColor(0, 0, 0);
           const expenseDetails = [
             `Despesa: ${expense.name}`,

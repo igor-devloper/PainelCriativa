@@ -111,7 +111,6 @@ export function DashboardOverview({
             <CardTitle>Ações Rápidas</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
-            <CreateRequestButton users={users} />
             <Link href="/requests">
               <Button className="flex w-full justify-start" variant="outline">
                 <ClipboardList className="mr-2 h-4 w-4" />

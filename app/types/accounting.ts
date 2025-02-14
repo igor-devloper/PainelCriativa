@@ -21,6 +21,7 @@ export interface Expense {
 export interface AccountingBlock {
   code: string;
   company: string;
+  userId?: string;
   createdAt: string | Date;
   status: BlockStatus;
   initialAmount?: number | Decimal;

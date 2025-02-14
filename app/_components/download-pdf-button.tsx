@@ -15,11 +15,11 @@ export function DownloadPDFButton({ block, userName }: DownloadPDFButtonProps) {
     try {
       // Do not sanitize the block - pass it directly to the PDF generator
       const companyName = block.company;
+      const name = block.request?.accountHolderName;
       console.log(
         `Downloading PDF with block ${block.code} for user ${userName}`,
       );
-
-      const doc = await generateAccountingPDF(block, companyName);
+      const doc = await generateAccountingPDF(block, companyName, name ?? "");
       doc.save(`prestacao-de-contas-${block.code}.pdf`);
     } catch (error) {
       console.error("Error generating PDF:", error);
