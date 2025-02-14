@@ -177,8 +177,8 @@ export async function generateAccountingPDF(
     doc.setFontSize(20);
     doc.setFillColor(248, 249, 250);
     doc.roundedRect(
-      45,
-      18,
+      10,
+      10,
       doc.internal.pageSize.width - margin,
       30,
       3,
