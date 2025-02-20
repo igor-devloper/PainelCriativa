@@ -56,73 +56,75 @@ export async function updateRequestStatus(
           data: updateData,
         });
 
-        if (newStatus === "COMPLETED" || request.type === "DEPOSIT") {
-          const userBalance = await tx.userBalance.findFirst({
-            where: {
-              userId: updatedRequest.userId,
-              company: updatedRequest.responsibleCompany,
-            },
-          });
-
-          const currentBalance = userBalance
-            ? userBalance.balance
-            : new Prisma.Decimal(0);
-          const requestedAmount = updatedRequest.amount;
-
-          let newBalance: Prisma.Decimal;
-
-          if (currentBalance.isNegative()) {
-            // If balance is negative, add the requested amount
-            newBalance = currentBalance.plus(requestedAmount);
-          } else {
-            // If balance is zero or positive, just set it to the requested amount
-            newBalance = requestedAmount;
-          }
-
-          if (userBalance) {
-            await tx.userBalance.update({
+        if (request.type === "DEPOSIT") {
+          if (newStatus === "COMPLETED") {
+            const userBalance = await tx.userBalance.findFirst({
               where: {
-                id: userBalance.id,
-              },
-              data: {
-                balance: newBalance,
-              },
-            });
-          } else {
-            await tx.userBalance.create({
-              data: {
                 userId: updatedRequest.userId,
                 company: updatedRequest.responsibleCompany,
-                balance: newBalance,
               },
             });
-          }
 
-          updatedRequest = await tx.request.update({
-            where: { id: requestId },
-            data: {
-              balanceDeducted: currentBalance.isNegative()
-                ? currentBalance.abs()
-                : new Prisma.Decimal(0),
-              currentBalance: newBalance,
-            },
-          });
+            const currentBalance = userBalance
+              ? userBalance.balance
+              : new Prisma.Decimal(0);
+            const requestedAmount = updatedRequest.amount;
 
-          if (!request.accountingBlock) {
-            const blockCode = await generateAccountingBlockCode(
-              request.responsibleCompany,
-            );
+            let newBalance: Prisma.Decimal;
 
-            await tx.accountingBlock.create({
+            if (currentBalance.isNegative()) {
+              // If balance is negative, add the requested amount
+              newBalance = currentBalance.plus(requestedAmount);
+            } else {
+              // If balance is zero or positive, just set it to the requested amount
+              newBalance = requestedAmount;
+            }
+
+            if (userBalance) {
+              await tx.userBalance.update({
+                where: {
+                  id: userBalance.id,
+                },
+                data: {
+                  balance: newBalance,
+                },
+              });
+            } else {
+              await tx.userBalance.create({
+                data: {
+                  userId: updatedRequest.userId,
+                  company: updatedRequest.responsibleCompany,
+                  balance: newBalance,
+                },
+              });
+            }
+
+            updatedRequest = await tx.request.update({
+              where: { id: requestId },
               data: {
-                code: blockCode,
-                requestId: requestId,
-                status: "OPEN",
-                initialAmount: requestedAmount,
+                balanceDeducted: currentBalance.isNegative()
+                  ? currentBalance.abs()
+                  : new Prisma.Decimal(0),
                 currentBalance: newBalance,
-                company: updatedRequest.responsibleCompany,
               },
             });
+
+            if (!request.accountingBlock) {
+              const blockCode = await generateAccountingBlockCode(
+                request.responsibleCompany,
+              );
+
+              await tx.accountingBlock.create({
+                data: {
+                  code: blockCode,
+                  requestId: requestId,
+                  status: "OPEN",
+                  initialAmount: requestedAmount,
+                  currentBalance: newBalance,
+                  company: updatedRequest.responsibleCompany,
+                },
+              });
+            }
           }
         }
 

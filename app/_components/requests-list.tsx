@@ -32,6 +32,8 @@ import {
 } from "../_constants/transactions";
 import { useUser } from "@clerk/nextjs";
 import { Request } from "../types";
+import { RequestStatusDialog } from "./request-status-dialog";
+import UserInfo from "./user-info";
 
 interface User {
   id: string;
@@ -54,6 +56,8 @@ export function RequestsList({
   userId,
 }: RequestsListProps) {
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
+
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [reimbursementDialogOpen, setReimbursementDialogOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
   const [validationDialogOpen, setValidationDialogOpen] = useState(false);
@@ -109,6 +113,14 @@ export function RequestsList({
         return;
       }
 
+      if (newStatus === "COMPLETED") {
+        setSelectedRequest(requests.find((r) => r.id === requestId) || null);
+
+        setDialogOpen(true);
+
+        return;
+      }
+
       await updateRequestStatus(
         requestId,
         newStatus,
@@ -119,7 +131,7 @@ export function RequestsList({
         title: "Status atualizado",
         description: "O status da solicitação foi atualizado com sucesso.",
       });
-      router.refresh();
+      await router.refresh();
     } catch (error) {
       console.error("Erro ao atualizar status:", error);
       toast({
@@ -132,6 +144,44 @@ export function RequestsList({
     }
   };
 
+  const getStatusBadge = (status: RequestStatus) => {
+    const badgeVariants = {
+      WAITING: "bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
+      VALIDATES: "bg-blue-100 text-blue-800 hover:bg-blue-200",
+      AUTHORIZES: "bg-green-100 text-green-800 hover:bg-green-200",
+      ACCEPTS: "bg-purple-100 text-purple-800 hover:bg-purple-200",
+      COMPLETED: "bg-gray-100 text-gray-800 hover:bg-gray-200",
+    };
+
+    return (
+      <Badge className={` ${badgeVariants[status]} font-medium`}>
+        {REQUEST_STATUS_LABELS[status]}
+      </Badge>
+    );
+  };
+
+  const updateRequestStatusAndRefresh = async (
+    requestId: string,
+    newStatus: RequestStatus,
+    denialReason?: string,
+    proofBase64?: string,
+  ) => {
+    const result = await updateRequestStatus(
+      requestId,
+      newStatus,
+      denialReason,
+      proofBase64,
+    );
+    if (result.success) {
+      toast({
+        variant: "success",
+        title: "Status atualizado",
+        description: "O status da solicitação foi atualizado com sucesso.",
+      });
+
+      await router.refresh();
+    }
+  };
   const canChangeStatus = (request: Request) => {
     if (isUpdating === request.id) return false;
     if (userRole === "ADMIN") return true;
@@ -173,11 +223,21 @@ export function RequestsList({
         <TableHeader>
           <TableRow>
             <TableHead>Empresa Responsável</TableHead>
+
             <TableHead>Motivo da solicitação</TableHead>
+
             <TableHead>Tipo da Solicitação</TableHead>
+
+            <TableHead>Observação</TableHead>
+
             <TableHead>Data</TableHead>
+
             <TableHead>Valor</TableHead>
+
+            <TableHead>Autor</TableHead>
+
             <TableHead>Status</TableHead>
+
             <TableHead>Ações</TableHead>
           </TableRow>
         </TableHeader>
@@ -185,27 +245,32 @@ export function RequestsList({
           {requests.map((request) => (
             <TableRow key={request.id}>
               <TableCell>{request.responsibleCompany}</TableCell>
-              <TableCell>{request.description}</TableCell>
+              <TableCell>{request.description.split(" - ")[0]}</TableCell>
               <TableCell>
-                {REQUEST_TYPE_LABELS[request.type as RequestType]}
+                {REQUEST_TYPE_LABELS[request.type || "DEPOSIT"]}
+              </TableCell>
+              <TableCell>
+                {request.description.includes("Saldo")
+                  ? `Saldo ${request.description.split("Saldo")[1]}`
+                  : request.description}
               </TableCell>
               <TableCell>{formatDate(request.createdAt)}</TableCell>
-              <TableCell>{formatCurrency(Number(request.amount))}</TableCell>
+              <TableCell>{formatCurrency(request.amount)}</TableCell>
               <TableCell>
-                <Badge variant="outline">
-                  {REQUEST_STATUS_LABELS[request.status]}
-                </Badge>
+                <UserInfo userId={request.userId} />
               </TableCell>
+              <TableCell>{getStatusBadge(request.status)}</TableCell>
               <TableCell>
                 {canChangeStatus(request) && (
                   <Select
-                    disabled={isUpdating === request.id}
-                    onValueChange={(value) =>
-                      handleStatusChange(request.id, value as RequestStatus)
+                    value={request.status}
+                    onValueChange={(value: RequestStatus) =>
+                      handleStatusChange(request.id, value)
                     }
+                    disabled={isUpdating === request.id}
                   >
                     <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Alterar Status" />
+                      <SelectValue placeholder="Alterar status" />
                     </SelectTrigger>
                     <SelectContent>
                       {getAvailableStatuses(request).map((status) => (
@@ -227,6 +292,30 @@ export function RequestsList({
         setIsOpen={setValidationDialogOpen}
         onConfirm={handleValidationUserSelect}
         users={users}
+      />
+
+      <RequestStatusDialog
+        isOpen={dialogOpen}
+        setIsOpen={setDialogOpen}
+        request={selectedRequest}
+        onConfirm={async (proofBase64) => {
+          if (selectedRequest) {
+            try {
+              await updateRequestStatusAndRefresh(
+                selectedRequest.id,
+                "COMPLETED",
+                undefined,
+                proofBase64,
+              );
+
+              setDialogOpen(false);
+
+              setSelectedRequest(null);
+            } catch (error) {
+              console.error("Erro ao completar solicitação:", error);
+            }
+          }
+        }}
       />
 
       <ReimbursementDialog
