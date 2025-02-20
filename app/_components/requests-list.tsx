@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/app/_components/ui/select";
 import { Badge } from "@/app/_components/ui/badge";
-import type { Request, RequestStatus, RequestType } from "@prisma/client";
+import type { RequestStatus, RequestType } from "@prisma/client";
 import { formatCurrency, formatDate } from "@/app/_lib/utils";
 import { updateRequestStatus } from "@/app/_actions/update-request-status";
 import { useToast } from "@/app/_hooks/use-toast";
@@ -31,15 +31,28 @@ import {
   REQUEST_TYPE_LABELS,
 } from "../_constants/transactions";
 import { useUser } from "@clerk/nextjs";
-import { User } from "@clerk/nextjs/server";
+import { Request } from "../types";
+
+interface User {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  imageUrl: string;
+}
 
 interface RequestsListProps {
   requests: Request[];
   userRole: string;
   users: User[];
+  userId: string;
 }
 
-export function RequestsList({ requests, userRole, users }: RequestsListProps) {
+export function RequestsList({
+  requests,
+  userRole,
+  users,
+  userId,
+}: RequestsListProps) {
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
   const [reimbursementDialogOpen, setReimbursementDialogOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
