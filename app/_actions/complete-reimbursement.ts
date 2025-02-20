@@ -57,26 +57,19 @@ export async function completeReimbursement(
         },
       });
 
-      // Update or create user balance
       if (existingBalance) {
+        const newBalance = existingBalance.balance.minus(request.amount);
+
         await tx.userBalance.update({
           where: {
             id: existingBalance.id,
           },
           data: {
-            balance: {
-              increment: request.amount,
-            },
+            balance: newBalance,
           },
         });
       } else {
-        await tx.userBalance.create({
-          data: {
-            userId: request.userId,
-            company: request.responsibleCompany,
-            balance: request.amount,
-          },
-        });
+        throw new Error("Saldo do usuário não encontrado para dedução");
       }
 
       // Get user details from Clerk
