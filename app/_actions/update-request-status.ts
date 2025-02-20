@@ -8,8 +8,8 @@ import { clerkClient } from "@clerk/nextjs/server";
 import {
   sendApprovedRequestEmail,
   sendAcceptedRequestEmail,
+  sendReimbursementProcessedEmail,
 } from "@/app/_lib/email-utils";
-import { completeReimbursement } from "./complete-reimbursement";
 
 export async function updateRequestStatus(
   requestId: string,
@@ -57,17 +57,79 @@ export async function updateRequestStatus(
           data: updateData,
         });
 
-        if (request.type === "REIMBURSEMENT" && newStatus === "COMPLETED") {
-          if (!proofBase64) {
-            throw new Error(
-              "A prova do pagamento é necessária para completar a solicitação.",
-            );
+        if (request.type === "REIMBURSEMENT") {
+          if (newStatus === "COMPLETED") {
+            const request = await tx.request.findUnique({
+              where: { id: requestId },
+              include: {
+                accountingBlock: true,
+              },
+            });
+
+            if (!request) {
+              throw new Error("Solicitação não encontrada");
+            }
+
+            // Update request status and add proof
+            await tx.request.update({
+              where: { id: requestId },
+              data: {
+                status: "COMPLETED",
+                updatedAt: new Date(),
+                proofUrl: request.proofUrl,
+              },
+            });
+
+            // Close the accounting block if it exists
+            if (request.accountingBlock) {
+              await tx.accountingBlock.update({
+                where: { id: request.accountingBlock.id },
+                data: {
+                  status: "CLOSED",
+                },
+              });
+            }
+
+            // Find existing balance
+            const existingBalance = await tx.userBalance.findFirst({
+              where: {
+                userId: request.userId,
+                company: request.responsibleCompany,
+              },
+            });
+
+            if (existingBalance) {
+              const newBalance = existingBalance.balance.minus(request.amount);
+
+              await tx.userBalance.update({
+                where: {
+                  id: existingBalance.id,
+                },
+                data: {
+                  balance: newBalance,
+                },
+              });
+            } else {
+              throw new Error("Saldo do usuário não encontrado para dedução");
+            }
+
+            // Get user details from Clerk
+            const user = await clerkClient.users.getUser(request.userId);
+            const userEmail = user.emailAddresses.find(
+              (email) => email.id === user.primaryEmailAddressId,
+            )?.emailAddress;
+
+            if (userEmail) {
+              await sendReimbursementProcessedEmail(
+                userEmail,
+                user.firstName || "Usuário",
+                requestId,
+                Number(request.amount),
+                proofBase64 || "",
+              );
+            }
           }
-
-          // Chama a action `completeReimbursement`
-          await completeReimbursement(requestId, proofBase64);
         }
-
         if (request.type === "DEPOSIT") {
           if (newStatus === "COMPLETED") {
             const userBalance = await tx.userBalance.findFirst({
