@@ -16,90 +16,96 @@ export async function completeReimbursement(
     throw new Error("Unauthorized");
   }
 
-  return await db.$transaction(async (tx) => {
-    const request = await tx.request.findUnique({
-      where: { id: requestId },
-      include: {
-        accountingBlock: true,
-      },
-    });
-
-    if (!request) {
-      throw new Error("Solicitação não encontrada");
-    }
-
-    // Update request status and add proof
-    await tx.request.update({
-      where: { id: requestId },
-      data: {
-        status: RequestStatus.COMPLETED,
-        updatedAt: new Date(),
-        proofUrl: proofUrl,
-      },
-    });
-
-    // Close the accounting block if it exists
-    if (request.accountingBlock) {
-      await tx.accountingBlock.update({
-        where: { id: request.accountingBlock.id },
-        data: {
-          status: BlockStatus.CLOSED,
+  return await db.$transaction(
+    async (tx) => {
+      const request = await tx.request.findUnique({
+        where: { id: requestId },
+        include: {
+          accountingBlock: true,
         },
       });
-    }
 
-    // Find existing balance
-    const existingBalance = await tx.userBalance.findFirst({
-      where: {
-        userId: request.userId,
-        company: request.responsibleCompany,
-      },
-    });
+      if (!request) {
+        throw new Error("Solicitação não encontrada");
+      }
 
-    // Update or create user balance
-    if (existingBalance) {
-      await tx.userBalance.update({
-        where: {
-          id: existingBalance.id,
-        },
+      // Update request status and add proof
+      await tx.request.update({
+        where: { id: requestId },
         data: {
-          balance: {
-            increment: request.amount,
+          status: RequestStatus.COMPLETED,
+          updatedAt: new Date(),
+          proofUrl: proofUrl,
+        },
+      });
+
+      // Close the accounting block if it exists
+      if (request.accountingBlock) {
+        await tx.accountingBlock.update({
+          where: { id: request.accountingBlock.id },
+          data: {
+            status: BlockStatus.CLOSED,
           },
-        },
-      });
-    } else {
-      await tx.userBalance.create({
-        data: {
+        });
+      }
+
+      // Find existing balance
+      const existingBalance = await tx.userBalance.findFirst({
+        where: {
           userId: request.userId,
           company: request.responsibleCompany,
-          balance: request.amount,
         },
       });
-    }
 
-    // Get user details from Clerk
-    const user = await clerkClient.users.getUser(request.userId);
-    const userEmail = user.emailAddresses.find(
-      (email) => email.id === user.primaryEmailAddressId,
-    )?.emailAddress;
+      // Update or create user balance
+      if (existingBalance) {
+        await tx.userBalance.update({
+          where: {
+            id: existingBalance.id,
+          },
+          data: {
+            balance: {
+              increment: request.amount,
+            },
+          },
+        });
+      } else {
+        await tx.userBalance.create({
+          data: {
+            userId: request.userId,
+            company: request.responsibleCompany,
+            balance: request.amount,
+          },
+        });
+      }
 
-    if (userEmail) {
-      await sendReimbursementProcessedEmail(
-        userEmail,
-        user.firstName || "Usuário",
-        requestId,
-        Number(request.amount),
-        proofUrl,
-      );
-    }
+      // Get user details from Clerk
+      const user = await clerkClient.users.getUser(request.userId);
+      const userEmail = user.emailAddresses.find(
+        (email) => email.id === user.primaryEmailAddressId,
+      )?.emailAddress;
 
-    revalidatePath("/requests");
-    revalidatePath(`/requests/${requestId}`);
+      if (userEmail) {
+        await sendReimbursementProcessedEmail(
+          userEmail,
+          user.firstName || "Usuário",
+          requestId,
+          Number(request.amount),
+          proofUrl,
+        );
+      }
 
-    return {
-      status: "success",
-      message: "Reembolso processado com sucesso",
-    };
-  });
+      revalidatePath("/requests");
+      revalidatePath(`/requests/${requestId}`);
+
+      return {
+        status: "success",
+        message: "Reembolso processado com sucesso",
+      };
+    },
+    {
+      maxWait: 10000,
+      timeout: 60000,
+    },
+  );
 }
