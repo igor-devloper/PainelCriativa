@@ -57,156 +57,137 @@ export async function updateRequestStatus(
           data: updateData,
         });
 
-        if (request.type === "REIMBURSEMENT") {
-          if (newStatus === "COMPLETED") {
-            const request = await tx.request.findUnique({
-              where: { id: requestId },
-              include: {
-                accountingBlock: true,
-              },
-            });
+        if (request.type === "REIMBURSEMENT" && newStatus === "COMPLETED") {
+          // Get the block code from the request description
+          const blockCode = request.name.split(" - ")[1]; // This will get the block code from "Reembolso - PC XXX"
 
-            if (!request) {
-              throw new Error("Solicitação não encontrada");
-            }
+          // Find and close the accounting block
+          const accountingBlock = await tx.accountingBlock.findFirst({
+            where: {
+              code: blockCode,
+              company: request.responsibleCompany,
+            },
+          });
 
-            // Update request status and add proof
-            await tx.request.update({
-              where: { id: requestId },
+          if (accountingBlock) {
+            await tx.accountingBlock.update({
+              where: { id: accountingBlock.id },
               data: {
-                status: "COMPLETED",
-                updatedAt: new Date(),
-                proofUrl: proofBase64,
-              },
-            });
-
-            // Close the accounting block if it exists
-            if (request.accountingBlock) {
-              await tx.accountingBlock.update({
-                where: { id: request.accountingBlock.id },
-                data: {
-                  status: "CLOSED",
-                },
-              });
-            }
-
-            // Find existing balance and deduct the reimbursement amount
-            const existingBalance = await tx.userBalance.findFirst({
-              where: {
-                userId: request.userId,
-                company: request.responsibleCompany,
-              },
-            });
-
-            if (existingBalance) {
-              const newBalance = existingBalance.balance.minus(request.amount);
-
-              await tx.userBalance.update({
-                where: {
-                  id: existingBalance.id,
-                },
-                data: {
-                  balance: newBalance,
-                },
-              });
-            } else {
-              throw new Error("Saldo do usuário não encontrado para dedução");
-            }
-
-            // Get user details from Clerk
-            const user = await clerkClient.users.getUser(request.userId);
-            const userEmail = user.emailAddresses.find(
-              (email) => email.id === user.primaryEmailAddressId,
-            )?.emailAddress;
-
-            if (userEmail) {
-              await sendReimbursementProcessedEmail(
-                userEmail,
-                user.firstName || "Usuário",
-                requestId,
-                Number(request.amount),
-                proofBase64 || "",
-              );
-            }
-
-            // Update the request status to "Finalizada"
-            await tx.request.update({
-              where: { id: requestId },
-              data: {
-                status: "Finalizada" as RequestStatus,
+                status: "CLOSED",
+                currentBalance: 0, // Set the balance to 0 as the reimbursement is completed
               },
             });
           }
-        }
-        if (request.type === "DEPOSIT") {
-          if (newStatus === "COMPLETED") {
-            const userBalance = await tx.userBalance.findFirst({
+
+          // Find existing balance
+          const existingBalance = await tx.userBalance.findFirst({
+            where: {
+              userId: request.userId,
+              company: request.responsibleCompany,
+            },
+          });
+
+          if (existingBalance) {
+            // For reimbursement, we don't need to deduct from the user's balance
+            // Instead, we set it to 0 if it was negative, or keep it as is if it was positive
+            const newBalance = existingBalance.balance.isNegative()
+              ? new Prisma.Decimal(0)
+              : existingBalance.balance;
+
+            await tx.userBalance.update({
               where: {
+                id: existingBalance.id,
+              },
+              data: {
+                balance: newBalance,
+              },
+            });
+          } else {
+            throw new Error("Saldo do usuário não encontrado");
+          }
+
+          // Get user details from Clerk
+          const user = await clerkClient.users.getUser(request.userId);
+          const userEmail = user.emailAddresses.find(
+            (email) => email.id === user.primaryEmailAddressId,
+          )?.emailAddress;
+
+          if (userEmail) {
+            await sendReimbursementProcessedEmail(
+              userEmail,
+              user.firstName || "Usuário",
+              requestId,
+              Number(request.amount),
+              proofBase64 || "",
+            );
+          }
+        } else if (request.type === "DEPOSIT" && newStatus === "COMPLETED") {
+          const userBalance = await tx.userBalance.findFirst({
+            where: {
+              userId: updatedRequest.userId,
+              company: updatedRequest.responsibleCompany,
+            },
+          });
+
+          const currentBalance = userBalance
+            ? userBalance.balance
+            : new Prisma.Decimal(0);
+          const requestedAmount = updatedRequest.amount;
+
+          let newBalance: Prisma.Decimal;
+
+          if (currentBalance.isNegative()) {
+            // If balance is negative, add the requested amount
+            newBalance = currentBalance.plus(requestedAmount);
+          } else {
+            // If balance is zero or positive, just set it to the requested amount
+            newBalance = requestedAmount;
+          }
+
+          if (userBalance) {
+            await tx.userBalance.update({
+              where: {
+                id: userBalance.id,
+              },
+              data: {
+                balance: newBalance,
+              },
+            });
+          } else {
+            await tx.userBalance.create({
+              data: {
                 userId: updatedRequest.userId,
+                company: updatedRequest.responsibleCompany,
+                balance: newBalance,
+              },
+            });
+          }
+
+          updatedRequest = await tx.request.update({
+            where: { id: requestId },
+            data: {
+              balanceDeducted: currentBalance.isNegative()
+                ? currentBalance.abs()
+                : new Prisma.Decimal(0),
+              currentBalance: newBalance,
+            },
+          });
+
+          if (!request.accountingBlock) {
+            const blockCode = await generateAccountingBlockCode(
+              request.responsibleCompany,
+            );
+
+            await tx.accountingBlock.create({
+              data: {
+                code: blockCode,
+                requestId: requestId,
+                status: "OPEN",
+                initialAmount: requestedAmount,
+                currentBalance: newBalance,
                 company: updatedRequest.responsibleCompany,
               },
             });
-
-            const currentBalance = userBalance
-              ? userBalance.balance
-              : new Prisma.Decimal(0);
-            const requestedAmount = updatedRequest.amount;
-
-            let newBalance: Prisma.Decimal;
-
-            if (currentBalance.isNegative()) {
-              // If balance is negative, add the requested amount
-              newBalance = currentBalance.plus(requestedAmount);
-            } else {
-              // If balance is zero or positive, just set it to the requested amount
-              newBalance = requestedAmount;
-            }
-
-            if (userBalance) {
-              await tx.userBalance.update({
-                where: {
-                  id: userBalance.id,
-                },
-                data: {
-                  balance: newBalance,
-                },
-              });
-            } else {
-              await tx.userBalance.create({
-                data: {
-                  userId: updatedRequest.userId,
-                  company: updatedRequest.responsibleCompany,
-                  balance: newBalance,
-                },
-              });
-            }
-
-            updatedRequest = await tx.request.update({
-              where: { id: requestId },
-              data: {
-                balanceDeducted: currentBalance.isNegative()
-                  ? currentBalance.abs()
-                  : new Prisma.Decimal(0),
-                currentBalance: newBalance,
-              },
-            });
-
-            if (!request.accountingBlock) {
-              const blockCode = await generateAccountingBlockCode(
-                request.responsibleCompany,
-              );
-
-              await tx.accountingBlock.create({
-                data: {
-                  code: blockCode,
-                  requestId: requestId,
-                  status: "OPEN",
-                  initialAmount: requestedAmount,
-                  currentBalance: newBalance,
-                  company: updatedRequest.responsibleCompany,
-                },
-              });
-            }
           }
         }
 

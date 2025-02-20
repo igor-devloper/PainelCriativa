@@ -36,7 +36,7 @@ export async function createReimbursementRequest(
   const reimbursementRequest = await db.request.create({
     data: {
       userId,
-      name: `Reembolso - ${block.code}`,
+      name: `${block.code}`,
       description: `Reembolso referente ao bloco ${block.code}`,
       amount: Math.abs(negativeBalance),
       currentBalance: userBalance.balance,
