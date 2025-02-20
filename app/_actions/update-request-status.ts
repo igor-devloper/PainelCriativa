@@ -9,6 +9,7 @@ import {
   sendApprovedRequestEmail,
   sendAcceptedRequestEmail,
 } from "@/app/_lib/email-utils";
+import { completeReimbursement } from "./complete-reimbursement";
 
 export async function updateRequestStatus(
   requestId: string,
@@ -55,6 +56,17 @@ export async function updateRequestStatus(
           where: { id: requestId },
           data: updateData,
         });
+
+        if (request.type === "REIMBURSEMENT" && newStatus === "COMPLETED") {
+          if (!proofBase64) {
+            throw new Error(
+              "A prova do pagamento é necessária para completar a solicitação.",
+            );
+          }
+
+          // Chama a action `completeReimbursement`
+          await completeReimbursement(requestId, proofBase64);
+        }
 
         if (request.type === "DEPOSIT") {
           if (newStatus === "COMPLETED") {

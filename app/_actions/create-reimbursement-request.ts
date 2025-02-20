@@ -1,5 +1,5 @@
 import { db } from "@/app/_lib/prisma";
-import { RequestStatus, RequestType, BlockStatus } from "@prisma/client";
+import { RequestStatus, RequestType } from "@prisma/client";
 import { auth } from "@clerk/nextjs/server";
 import { notifyAdminsAndFinance } from "../_lib/email-utils";
 
@@ -56,14 +56,6 @@ export async function createReimbursementRequest(
     },
     include: {
       accountingBlock: true,
-    },
-  });
-
-  // Update block status
-  await db.accountingBlock.update({
-    where: { id: blockId },
-    data: {
-      status: BlockStatus.APPROVED, // or another appropriate status
     },
   });
 
