@@ -19,8 +19,12 @@ export default async function AccountingPage() {
   const user = await clerkClient.users.getUser(userId);
   const userRole = getUserRole(user.publicMetadata);
 
-  const accountingBlocks = await getAccountingBlocks();
-  const balances = await getUserBalance(); // This now returns all company balances
+  // Fetch data in parallel
+  const [accountingBlocks, balances] = await Promise.all([
+    getAccountingBlocks(),
+    getUserBalance(),
+  ]);
+
   return (
     <AccountingPageWrapper
       name={user.fullName ?? ""}

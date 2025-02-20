@@ -5,6 +5,7 @@ import {
   RequestStatus,
   BlockStatus,
   ExpenseStatus,
+  RequestType,
 } from "@prisma/client";
 
 export const PAYMENT_METHOD_ICONS = {
@@ -34,6 +35,11 @@ export const EXPENSE_CATEGORY_LABELS: Record<ExpenseCategory, string> = {
   [ExpenseCategory.SUPPLIES]: "Material",
   [ExpenseCategory.OFFICESUPPLIES]: "Material de Expediente",
   [ExpenseCategory.OTHER]: "Outros",
+};
+
+export const REQUEST_TYPE_LABELS: Record<RequestType, string> = {
+  DEPOSIT: "Deposito",
+  REIMBURSEMENT: "Reembolso",
 };
 
 export const REQUEST_STATUS_LABELS: { [key in RequestStatus]: string } = {

@@ -56,7 +56,7 @@ export async function updateRequestStatus(
           data: updateData,
         });
 
-        if (newStatus === "COMPLETED") {
+        if (newStatus === "COMPLETED" || request.type === "DEPOSIT") {
           const userBalance = await tx.userBalance.findFirst({
             where: {
               userId: updatedRequest.userId,

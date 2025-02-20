@@ -105,18 +105,24 @@ export function AccountingBlockDialog({
   const handleCloseAccounting = async () => {
     try {
       const result = await closeAccountingBlock(block.id);
-      if (result.success) {
+      if (result.status === "reimbursement_pending") {
         toast({
-          title: "Prestação de contas fechada com sucesso",
-          description: `Saldo restante: ${formatCurrency(result.remainingBalance)}. Novo saldo do usuário: ${formatCurrency(result.newBalance)}`,
+          title: "Solicitação de reembolso criada",
+          description:
+            "Uma solicitação de reembolso foi criada. O bloco será fechado quando o reembolso for processado.",
         });
-        onOpenChange(false);
+      } else if (result.success) {
+        toast({
+          title: "Bloco fechado com sucesso",
+          description: `O bloco foi fechado com um saldo final de ${formatCurrency(result.remainingBalance)}.`,
+        });
       }
+      onOpenChange(false);
     } catch (error) {
       toast({
-        title: "Erro ao fechar prestação de contas",
+        title: "Erro ao fechar bloco",
         description:
-          "Ocorreu um erro ao fechar a prestação de contas. Por favor, tente novamente.",
+          "Ocorreu um erro ao tentar fechar o bloco. Por favor, tente novamente.",
         variant: "destructive",
       });
     }
@@ -258,20 +264,18 @@ export function AccountingBlockDialog({
                         Fechar Prestação de Contas
                       </AlertDialogTitle>
                       <AlertDialogDescription>
-                        Tem certeza que deseja fechar esta prestação de contas?
-                        Esta ação não pode ser desfeita.
-                        {remainingBalance > 0 && (
-                          <p className="mt-2 text-green-500">
-                            Há um saldo positivo de{" "}
-                            {formatCurrency(remainingBalance)}. Este valor será
-                            adicionado ao saldo do usuário.
-                          </p>
-                        )}
-                        {remainingBalance < 0 && (
+                        Você está prestes a fechar este bloco de prestação de
+                        contas.
+                        {remainingBalance < 0 ? (
                           <p className="mt-2 text-red-500">
-                            As despesas excederam o valor disponível em{" "}
-                            {formatCurrency(Math.abs(remainingBalance))}. Isso
-                            resultará em um saldo negativo para o usuário.
+                            O saldo final é negativo (
+                            {formatCurrency(remainingBalance)}). Uma solicitação
+                            de reembolso será criada automaticamente.
+                          </p>
+                        ) : (
+                          <p className="mt-2">
+                            O saldo final é de{" "}
+                            {formatCurrency(remainingBalance)}.
                           </p>
                         )}
                       </AlertDialogDescription>

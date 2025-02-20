@@ -1,113 +1,69 @@
 "use server";
 
 import { db } from "@/app/_lib/prisma";
+import { createReimbursementRequest } from "./create-reimbursement-request";
+import { BlockStatus } from "@prisma/client";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
-import { Prisma } from "@prisma/client";
-import { trackCloseBlock } from "../_lib/analytics";
 
 export async function closeAccountingBlock(blockId: string) {
   const { userId } = auth();
 
   if (!userId) {
-    throw new Error("Unauthorized");
+    throw new Error("Usuário não autenticado");
   }
 
-  try {
-    const block = await db.accountingBlock.findUnique({
-      where: { id: blockId },
-      include: {
-        request: true,
-        expenses: true,
-      },
-    });
+  const block = await db.accountingBlock.findUnique({
+    where: { id: blockId },
+    include: {
+      expenses: true,
+      request: true,
+    },
+  });
 
-    if (!block) {
-      throw new Error("Accounting block not found");
-    }
+  if (!block) {
+    throw new Error("Bloco não encontrado");
+  }
 
-    const totalExpenses = block.expenses.reduce(
-      (sum, expense) => new Prisma.Decimal(sum).plus(expense.amount),
-      new Prisma.Decimal(0),
+  // Calculate total expenses
+  const totalExpenses = block.expenses.reduce(
+    (sum, expense) => sum + Number(expense.amount),
+    0,
+  );
+
+  // Calculate balance
+  const balance = Number(block.initialAmount) - totalExpenses;
+
+  // If balance is negative, create reimbursement request
+  if (balance < 0) {
+    const reimbursementRequest = await createReimbursementRequest(
+      blockId,
+      Math.abs(balance),
     );
-
-    const remainingBalance = new Prisma.Decimal(block.request.amount).minus(
-      totalExpenses,
-    );
-
-    const userBalance = await db.userBalance.findFirst({
-      where: {
-        userId: block.request.userId,
-        company: block.company,
-      },
-    });
-
-    let newBalance: Prisma.Decimal;
-
-    if (remainingBalance.isPositive()) {
-      // If there's remaining balance, add it to the user's balance
-      newBalance = userBalance
-        ? new Prisma.Decimal(userBalance.balance).plus(remainingBalance)
-        : remainingBalance;
-    } else {
-      // If expenses exceeded the available amount, deduct the overspent amount from the user's balance
-      newBalance = userBalance
-        ? new Prisma.Decimal(userBalance.balance).plus(remainingBalance)
-        : remainingBalance;
-    }
-
-    await db.$transaction(async (tx) => {
-      // Update the accounting block
-      const closedBlock = await tx.accountingBlock.update({
-        where: { id: blockId },
-        data: {
-          status: "CLOSED",
-          currentBalance: remainingBalance,
-        },
-      });
-      if (closedBlock) {
-        trackCloseBlock(closedBlock.code, Number(closedBlock.currentBalance));
-      }
-      // Update the request
-      await tx.request.update({
-        where: { id: block.request.id },
-        data: {
-          status: "COMPLETED",
-          balanceDeducted: totalExpenses,
-          currentBalance: remainingBalance,
-        },
-      });
-
-      // Update or create user balance
-      // if (userBalance) {
-      //   await tx.userBalance.update({
-      //     where: { id: userBalance.id },
-      //     data: {
-      //       balance: newBalance,
-      //     },
-      //   });
-      // } else {
-      //   await tx.userBalance.create({
-      //     data: {
-      //       userId: block.request.userId,
-      //       company: block.company,
-      //       balance: newBalance,
-      //     },
-      //   });
-      // }
-    });
-
-    revalidatePath("/accounting");
-    revalidatePath(`/accounting/${blockId}`);
-
     return {
-      success: true,
-      message: "Accounting block closed successfully",
-      remainingBalance: remainingBalance.toNumber(),
-      newBalance: newBalance.toNumber(),
+      status: "reimbursement_pending",
+      message:
+        "Solicitação de reembolso criada. O bloco será fechado após o reembolso ser processado.",
+      reimbursementRequestId: reimbursementRequest.id,
     };
-  } catch (error) {
-    console.error("Error closing accounting block:", error);
-    throw new Error("Failed to close accounting block");
   }
+
+  // If balance is positive or zero, close the block immediately
+  await db.accountingBlock.update({
+    where: { id: blockId },
+    data: {
+      status: BlockStatus.CLOSED,
+      currentBalance: balance,
+    },
+  });
+
+  revalidatePath("/accounting");
+
+  return {
+    status: "closed",
+    message: "Bloco fechado com sucesso",
+    success: true,
+    remainingBalance: balance,
+    newBalance: balance,
+  };
 }

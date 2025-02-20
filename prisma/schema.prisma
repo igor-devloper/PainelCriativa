@@ -18,6 +18,7 @@ model Request {
   status                      RequestStatus    @default(WAITING)
   userId                      String
   phoneNumber                 String
+  type RequestType?
   financeId                   String?
   expectedDate                DateTime?
   denialReason                String?
@@ -83,6 +84,10 @@ enum RequestStatus {
   AUTHORIZES
   ACCEPTS
   COMPLETED
+}
+enum RequestType {
+ REIMBURSEMENT
+ DEPOSIT
 }
 
 enum BlockStatus {

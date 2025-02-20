@@ -105,6 +105,7 @@ export async function createRequest(data: CreateRequestData) {
           amount: data.amount,
           currentBalance: requestedAmount,
           responsibleCompany: data.responsibleCompany,
+          type: "DEPOSIT",
           status: "WAITING",
           phoneNumber: data.phoneNumber,
           initialUserBalance: balance,

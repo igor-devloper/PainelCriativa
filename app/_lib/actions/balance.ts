@@ -9,7 +9,6 @@ import {
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { ExpenseEdit } from "@/app/types";
-import { trackCreateExpense } from "../analytics";
 
 export async function getUserBalance(
   company?: string,
@@ -294,9 +293,7 @@ export async function registerExpense(
             company: block.company,
           },
         });
-        if (expense) {
-          trackCreateExpense(data.amount, data.category);
-        }
+
         await updateBalance(
           prisma,
           block.request.userId,
