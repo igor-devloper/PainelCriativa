@@ -76,7 +76,7 @@ export async function updateRequestStatus(
               data: {
                 status: "COMPLETED",
                 updatedAt: new Date(),
-                proofUrl: request.proofUrl,
+                proofUrl: proofBase64,
               },
             });
 
@@ -90,7 +90,7 @@ export async function updateRequestStatus(
               });
             }
 
-            // Find existing balance
+            // Find existing balance and deduct the reimbursement amount
             const existingBalance = await tx.userBalance.findFirst({
               where: {
                 userId: request.userId,
@@ -128,6 +128,14 @@ export async function updateRequestStatus(
                 proofBase64 || "",
               );
             }
+
+            // Update the request status to "Finalizada"
+            await tx.request.update({
+              where: { id: requestId },
+              data: {
+                status: "Finalizada" as RequestStatus,
+              },
+            });
           }
         }
         if (request.type === "DEPOSIT") {
