@@ -23,7 +23,7 @@ const LoginPage = async () => {
         <div className="absolute inset-0 bg-gradient-to-b from-gray-50/80 via-gray-50 to-gray-50 md:hidden" />
         <div className="relative z-10 mx-auto w-full max-w-[500px] space-y-6">
           <div className="space-y-1.5">
-            <div className="inline-block rounded-xl bg-white p-4 shadow-sm">
+            <div className="inline-block rounded-xl p-4 shadow-sm">
               <Image
                 src="/logo.png"
                 width={100}
