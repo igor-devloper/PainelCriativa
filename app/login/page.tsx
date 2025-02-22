@@ -19,11 +19,11 @@ const LoginPage = async () => {
   return (
     <div className="flex h-full flex-col md:grid md:grid-cols-2">
       {/* Left Side */}
-      <div className="relative flex h-full flex-col justify-center bg-gray-50 px-8 lg:px-16">
+      <div className="relative flex h-full flex-col justify-center px-8 lg:px-16">
         <div className="absolute inset-0 bg-gradient-to-b from-gray-50/80 via-gray-50 to-gray-50 md:hidden" />
         <div className="relative z-10 mx-auto w-full max-w-[500px] space-y-6">
           <div className="space-y-1.5">
-            <div className="inline-block rounded-xl p-4 shadow-sm">
+            <div className="inline-block p-4">
               <Image
                 src="/logo.png"
                 width={100}

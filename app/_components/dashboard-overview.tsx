@@ -12,6 +12,8 @@ import { ptBR } from "date-fns/locale";
 import { CreateRequestButton } from "./create-request-button";
 import Link from "next/link";
 import { Button } from "./ui/button";
+import { UserBalance } from "./user-balance";
+import { RecentAccountingBlocks } from "../financial/_components/recent-accounting-blocks";
 
 interface User {
   id: string;
@@ -24,11 +26,19 @@ interface DashboardOverviewProps {
   userRole: UserRole;
   userName: string;
   users: User[];
+  userBalances: { [key: string]: number };
   pendingRequestsCount: number;
   activeUsersCount: number;
   activeUsersChange: number;
   accountStatementsCount: number;
   accountStatementsChange: number;
+  blocks: {
+    id: string;
+    code: string;
+    company: string;
+    amount: number;
+    status: string;
+  }[];
   recentActivity: {
     id: string;
     type:
@@ -52,6 +62,8 @@ export function DashboardOverview({
   accountStatementsChange,
   recentActivity,
   userRole,
+  userBalances,
+  blocks,
 }: DashboardOverviewProps) {
   return (
     <div className="space-y-6">
@@ -61,54 +73,59 @@ export function DashboardOverview({
         </h2>
         <CreateRequestButton users={users} />
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Solicitações Pendentes
-            </CardTitle>
-            <ClipboardList className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{pendingRequestsCount}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Usuários Ativos
-            </CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">+{activeUsersCount}</div>
-            <p className="text-xs text-muted-foreground">
-              {activeUsersChange > 0 ? "+" : ""}
-              {activeUsersChange.toFixed(0)}% em relação ao mês passado
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Prestações de Contas
-            </CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{accountStatementsCount}</div>
-            <p className="text-xs text-muted-foreground">
-              {accountStatementsChange > 0 ? "+" : ""}
-              {accountStatementsChange.toFixed(0)}% em relação ao mês passado
-            </p>
-          </CardContent>
-        </Card>
+      {userRole === "ADMIN" && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Solicitações Pendentes
+              </CardTitle>
+              <ClipboardList className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{pendingRequestsCount}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Usuários Ativos
+              </CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">+{activeUsersCount}</div>
+              <p className="text-xs text-muted-foreground">
+                {activeUsersChange > 0 ? "+" : ""}
+                {activeUsersChange.toFixed(0)}% em relação ao mês passado
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Prestações de Contas
+              </CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{accountStatementsCount}</div>
+              <p className="text-xs text-muted-foreground">
+                {accountStatementsChange > 0 ? "+" : ""}
+                {accountStatementsChange.toFixed(0)}% em relação ao mês passado
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+      <div className="grid grid-cols-2 gap-6">
+        <UserBalance balances={userBalances} />
+        <RecentAccountingBlocks blocks={blocks} />
       </div>
-
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card className="col-span-4">
           <CardHeader>
-            <CardTitle>Ações Rápidas</CardTitle>
+            <CardTitle>Ações</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
             <Link href="/requests">
@@ -157,7 +174,7 @@ export function DashboardOverview({
                           "Nova despesa criada"}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        {formatDistanceToNow(activity.createdAt, {
+                        {formatDistanceToNow(new Date(activity.createdAt), {
                           addSuffix: true,
                           locale: ptBR,
                         })}{" "}

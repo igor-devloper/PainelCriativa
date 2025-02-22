@@ -26,11 +26,19 @@ interface ClientHomeWrapperProps {
   userRole: UserRole;
   userName: string;
   users: User[];
+  userBalances: { [key: string]: number };
   pendingRequestsCount: number;
   activeUsersCount: number;
   activeUsersChange: number;
   accountStatementsCount: number;
   accountStatementsChange: number;
+  blocks: {
+    id: string;
+    code: string;
+    company: string;
+    amount: number;
+    status: string;
+  }[];
   recentActivity: {
     id: string;
     type:
@@ -47,6 +55,7 @@ interface ClientHomeWrapperProps {
 export function ClientHomeWrapper({
   userName,
   pendingRequestsCount,
+  blocks,
   userRole,
   users,
   activeUsersCount,
@@ -54,6 +63,7 @@ export function ClientHomeWrapper({
   accountStatementsCount,
   accountStatementsChange,
   recentActivity,
+  userBalances,
 }: ClientHomeWrapperProps) {
   return (
     <SidebarProvider>
@@ -90,6 +100,7 @@ export function ClientHomeWrapper({
         <ScrollArea className="flex-1">
           <div className="container mx-auto p-6">
             <DashboardOverview
+              userBalances={userBalances}
               users={users}
               userRole={userRole}
               userName={userName}
@@ -99,6 +110,7 @@ export function ClientHomeWrapper({
               accountStatementsCount={accountStatementsCount}
               accountStatementsChange={activeUsersChange}
               recentActivity={recentActivity}
+              blocks={blocks}
             />
           </div>
         </ScrollArea>

@@ -18,6 +18,10 @@ export function formatCurrency(
   }).format(Number(value));
 }
 
+export function serializeData<T>(data: T): T {
+  return JSON.parse(JSON.stringify(data));
+}
+
 export function formatDate(date: Date | string): string {
   // Ensure we have a valid Date object
   const dateObj = date instanceof Date ? date : new Date(date);

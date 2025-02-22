@@ -6,6 +6,8 @@ import { dark } from "@clerk/themes";
 import { Toaster } from "@/app/_components/ui/toaster";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+// import { QueryClientProvider } from "@tanstack/react-query";
+// import { queryClient } from "./_lib/query-client";
 
 const mulish = Mulish({
   subsets: ["latin-ext"],

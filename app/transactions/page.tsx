@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { db } from "@/app/_lib/prisma";
 import { DataTable } from "@/app/_components/ui/data-table";
 import { expenseColumns } from "@/app/transactions/_columns";
@@ -14,6 +15,7 @@ import { Separator } from "@/app/_components/ui/separator";
 import { Receipt } from "lucide-react";
 import { getUserRole } from "../_lib/utils";
 import { getPendingRequestsCount } from "../_actions/get-pending-requests-count";
+import { TableSkeleton } from "@/app/_components/ui/table-skeleton";
 
 export const metadata = {
   title: "Despesas - Painel Criativa",
@@ -24,29 +26,10 @@ const ExpensesPage = async () => {
   if (!userId) {
     redirect("/login");
   }
+
   const user = await clerkClient.users.getUser(userId);
   const userRole = getUserRole(user.publicMetadata);
   const pendingRequestsCount = await getPendingRequestsCount();
-  const where =
-    userRole === "ADMIN" || userRole === "FINANCE" ? undefined : { userId };
-  const expenses = await db.expense.findMany({
-    where,
-    orderBy: {
-      date: "desc",
-    },
-    include: {
-      block: {
-        select: {
-          code: true,
-          request: {
-            select: {
-              name: true,
-            },
-          },
-        },
-      },
-    },
-  });
 
   return (
     <SidebarProvider>
@@ -75,10 +58,9 @@ const ExpensesPage = async () => {
                 </div>
               </div>
               <ScrollArea className="h-full">
-                <DataTable
-                  columns={expenseColumns}
-                  data={JSON.parse(JSON.stringify(expenses))}
-                />
+                <Suspense fallback={<TableSkeleton columns={9} rows={10} />}>
+                  <ExpensesTable userId={userId} userRole={userRole} />
+                </Suspense>
                 <ScrollBar orientation="horizontal" />
               </ScrollArea>
             </div>
@@ -89,5 +71,43 @@ const ExpensesPage = async () => {
     </SidebarProvider>
   );
 };
+
+async function ExpensesTable({
+  userId,
+  userRole,
+}: {
+  userId: string;
+  userRole: string;
+}) {
+  const where =
+    userRole === "ADMIN" || userRole === "FINANCE" ? undefined : { userId };
+
+  const expenses = await db.expense.findMany({
+    where,
+    orderBy: {
+      date: "desc",
+    },
+    take: 50,
+    include: {
+      block: {
+        select: {
+          code: true,
+          request: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return (
+    <DataTable
+      columns={expenseColumns}
+      data={JSON.parse(JSON.stringify(expenses))}
+    />
+  );
+}
 
 export default ExpensesPage;
