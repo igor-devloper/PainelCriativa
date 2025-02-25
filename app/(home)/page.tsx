@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { ClientHomeWrapper } from "@/app/_components/client-home-wrapper";
 import { getDashboardOverview } from "@/app/_actions/get-dashboard-overview";
 import { getUserRole } from "../_lib/utils";
-import Loading from "../admin/loading";
 import { getUserBalance } from "../_lib/actions/balance";
 import { getAccountingBlocks } from "../_actions/get-accounting-blocks";
 
@@ -50,7 +49,6 @@ export default async function HomePage() {
         recentActivity={formattedRecentActivity}
         blocks={blocks}
       />
-      <Loading />
     </>
   );
 }
