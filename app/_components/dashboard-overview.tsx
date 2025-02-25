@@ -5,7 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/app/_components/ui/card";
-import type { UserRole } from "@/app/types";
+import type { AccountingBlock, UserRole } from "@/app/types";
 import { ClipboardList, Users, FileText } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -32,13 +32,7 @@ interface DashboardOverviewProps {
   activeUsersChange: number;
   accountStatementsCount: number;
   accountStatementsChange: number;
-  blocks: {
-    id: string;
-    code: string;
-    company: string;
-    amount: number;
-    status: string;
-  }[];
+  blocks: AccountingBlock[];
   recentActivity: {
     id: string;
     type:
@@ -118,7 +112,7 @@ export function DashboardOverview({
           </Card>
         </div>
       )}
-      <div className="grid grid-cols-2 gap-6">
+      <div className="flex flex-col items-center justify-center gap-6 md:grid md:grid-cols-2">
         <UserBalance balances={userBalances} />
         <RecentAccountingBlocks blocks={blocks} />
       </div>

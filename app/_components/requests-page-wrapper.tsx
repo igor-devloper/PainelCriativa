@@ -2,22 +2,25 @@
 "use client";
 
 import { Suspense } from "react";
-import { SidebarInset, SidebarProvider } from "@/app/_components/ui/sidebar";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/app/_components/ui/sidebar";
 import { ScrollArea, ScrollBar } from "@/app/_components/ui/scroll-area";
 import { AppSidebar } from "@/app/_components/app-sidebar";
 import type { UserRole, Request } from "@/app/types";
 import { RequestsList } from "./requests-list";
 import { Siren } from "lucide-react";
 import { TableSkeleton } from "@/app/_components/ui/table-skeleton";
+import { Separator } from "@/app/_components/ui/separator";
 
 interface RequestsPageWrapperProps {
   userRole: UserRole;
   requests: Request[];
-  users: any[]; // TODO: Type this correctly
+  users: any[]; // TODO: Type this properly
   userId: string;
 }
-
-// ... (rest of the imports remain the same)
 
 export function RequestsPageWrapper({
   userRole,
@@ -26,7 +29,7 @@ export function RequestsPageWrapper({
   userId,
 }: RequestsPageWrapperProps) {
   const pendingRequestsCount = requests.filter(
-    (r) => r.status === "WAITING",
+    (request) => request.status === "WAITING",
   ).length;
 
   return (
@@ -36,7 +39,12 @@ export function RequestsPageWrapper({
         pendingRequestsCount={pendingRequestsCount}
       />
       <SidebarInset>
-        {/* ... (header remains the same) ... */}
+        <header className="flex h-14 shrink-0 items-center gap-2">
+          <div className="flex flex-1 items-center gap-2 px-3">
+            <SidebarTrigger />
+            <Separator orientation="vertical" className="mr-2 h-4" />
+          </div>
+        </header>
         <ScrollArea>
           <div className="flex w-[400px] flex-col overflow-hidden p-6 pb-10 pr-10 md:w-full">
             <div className="flex justify-between">

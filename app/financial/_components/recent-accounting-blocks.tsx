@@ -13,15 +13,10 @@ import {
   TableRow,
 } from "@/app/_components/ui/table";
 import { formatCurrency } from "@/app/_lib/utils";
+import { AccountingBlock } from "@/app/types";
 
 interface RecentAccountingBlocksProps {
-  blocks: {
-    id: string;
-    code: string;
-    company: string;
-    amount: number;
-    status: string;
-  }[];
+  blocks: AccountingBlock[];
 }
 
 export const RecentAccountingBlocks = ({
@@ -47,7 +42,7 @@ export const RecentAccountingBlocks = ({
               <TableRow key={block.id}>
                 <TableCell>{block.code}</TableCell>
                 <TableCell>{block.company}</TableCell>
-                <TableCell>{formatCurrency(block.amount)}</TableCell>
+                <TableCell>{formatCurrency(block.totalAmount)}</TableCell>
                 <TableCell>{block.status}</TableCell>
               </TableRow>
             ))}

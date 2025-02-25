@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
+import { Suspense } from "react";
 import {
   SidebarInset,
   SidebarProvider,
@@ -8,12 +8,13 @@ import {
 } from "@/app/_components/ui/sidebar";
 import { ScrollArea } from "@/app/_components/ui/scroll-area";
 import { AppSidebar } from "@/app/_components/app-sidebar";
-import type { AdminStats, UserRole } from "@/app/types";
+import type { AccountingBlock, UserRole } from "@/app/types";
 import { DashboardOverview } from "./dashboard-overview";
 import { HomeIcon } from "lucide-react";
 import { Avatar } from "@/app/_components/ui/avatar";
 import { UserButton } from "@clerk/nextjs";
 import { Separator } from "./ui/separator";
+import { CardSkeleton } from "@/app/_components/ui/card-skeleton";
 
 interface User {
   id: string;
@@ -32,13 +33,7 @@ interface ClientHomeWrapperProps {
   activeUsersChange: number;
   accountStatementsCount: number;
   accountStatementsChange: number;
-  blocks: {
-    id: string;
-    code: string;
-    company: string;
-    amount: number;
-    status: string;
-  }[];
+  blocks: AccountingBlock[];
   recentActivity: {
     id: string;
     type:
@@ -99,19 +94,21 @@ export function ClientHomeWrapper({
         </div>
         <ScrollArea className="flex-1">
           <div className="container mx-auto p-6">
-            <DashboardOverview
-              userBalances={userBalances}
-              users={users}
-              userRole={userRole}
-              userName={userName}
-              pendingRequestsCount={pendingRequestsCount}
-              activeUsersCount={activeUsersCount}
-              activeUsersChange={activeUsersChange}
-              accountStatementsCount={accountStatementsCount}
-              accountStatementsChange={activeUsersChange}
-              recentActivity={recentActivity}
-              blocks={blocks}
-            />
+            <Suspense fallback={<CardSkeleton />}>
+              <DashboardOverview
+                userBalances={userBalances}
+                users={users}
+                userRole={userRole}
+                userName={userName}
+                pendingRequestsCount={pendingRequestsCount}
+                activeUsersCount={activeUsersCount}
+                activeUsersChange={activeUsersChange}
+                accountStatementsCount={accountStatementsCount}
+                accountStatementsChange={accountStatementsChange}
+                recentActivity={recentActivity}
+                blocks={blocks}
+              />
+            </Suspense>
           </div>
         </ScrollArea>
       </SidebarInset>

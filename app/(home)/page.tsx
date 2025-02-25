@@ -5,8 +5,7 @@ import { getDashboardOverview } from "@/app/_actions/get-dashboard-overview";
 import { getUserRole } from "../_lib/utils";
 import Loading from "../admin/loading";
 import { getUserBalance } from "../_lib/actions/balance";
-import { getFinancialOverviewData } from "../_actions/financial-actions";
-import { getFinancialDashboardData } from "../_actions/get-financial-dashboard-data";
+import { getAccountingBlocks } from "../_actions/get-accounting-blocks";
 
 export default async function HomePage() {
   const { userId } = auth();
@@ -19,8 +18,7 @@ export default async function HomePage() {
   const userRole = getUserRole(user.publicMetadata);
   const users = await clerkClient.users.getUserList();
   const balances = await getUserBalance();
-  const financialData = await getFinancialOverviewData();
-  const dashboardFinancialData = await getFinancialDashboardData();
+  const [blocks] = await Promise.all([getAccountingBlocks()]);
 
   const formattedUsers = users.data.map((user) => ({
     id: user.id,
@@ -35,21 +33,6 @@ export default async function HomePage() {
     }),
   );
 
-  // Add default data if no data is returned
-  if (!financialData.approvedValues.length) {
-    financialData.approvedValues = Array.from({ length: 6 }, (_, i) => {
-      const d = new Date();
-      d.setMonth(d.getMonth() - i);
-      return {
-        month: d.toLocaleString("pt-BR", { month: "short" }),
-        value: 0,
-      };
-    }).reverse();
-  }
-
-  if (!financialData.expensesByCategory.length) {
-    financialData.expensesByCategory = [{ category: "Sem dados", value: 0 }];
-  }
   return (
     <>
       <ClientHomeWrapper
@@ -65,7 +48,7 @@ export default async function HomePage() {
           dashboardData.accountStatements.percentageChange
         }
         recentActivity={formattedRecentActivity}
-        blocks={dashboardFinancialData.recentAccountingBlocks}
+        blocks={blocks}
       />
       <Loading />
     </>
