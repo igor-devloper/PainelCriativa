@@ -53,20 +53,20 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={`${mulish.className} antialiased`}>
-        <ThemeProvider attribute="class" defaultTheme="light">
-          <ClerkProvider
-            appearance={{
-              baseTheme: dark,
-            }}
-          >
+        <ClerkProvider
+          appearance={{
+            baseTheme: dark,
+          }}
+        >
+          <ThemeProvider attribute="class" defaultTheme="light">
             <div className="flex h-full flex-col overflow-hidden">
               {children}
               <Analytics />
               <SpeedInsights />
             </div>
-          </ClerkProvider>
-          <Toaster />
-        </ThemeProvider>
+            <Toaster />
+          </ThemeProvider>
+        </ClerkProvider>
       </body>
     </html>
   );
