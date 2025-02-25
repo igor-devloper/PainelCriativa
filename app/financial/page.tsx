@@ -15,6 +15,7 @@ import { ScrollArea, ScrollBar } from "@/app/_components/ui/scroll-area";
 import { DollarSign } from "lucide-react";
 import { FinancialDashboard } from "./_components/financial-dashboard";
 import { getFinancialDashboardData } from "../_actions/get-financial-dashboard-data";
+import { getAccountingBlocks } from "../_actions/get-accounting-blocks";
 
 export const metadata = {
   title: "Área Financeira - Criativa",
@@ -29,6 +30,7 @@ export default async function FinancialPage() {
   const user = await clerkClient.users.getUser(userId);
   const userRole = getUserRole(user.publicMetadata);
   const pendingRequestsCount = await getPendingRequestsCount();
+  const [accountingBlocks] = await Promise.all([getAccountingBlocks()]);
 
   if (userRole !== "ADMIN" && userRole !== "FINANCE") {
     redirect("/");
@@ -74,7 +76,10 @@ export default async function FinancialPage() {
             </div>
           </div>
           <ScrollArea className="h-full">
-            <FinancialDashboard data={dashboardData} />
+            <FinancialDashboard
+              data={dashboardData}
+              blocks={accountingBlocks}
+            />
             <ScrollBar orientation="horizontal" />
           </ScrollArea>
         </div>
