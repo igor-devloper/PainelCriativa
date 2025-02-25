@@ -6,7 +6,7 @@ import { dark } from "@clerk/themes";
 import { Toaster } from "@/app/_components/ui/toaster";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { ThemeProvider } from "./_components/theme-provider";
+// import { ThemeProvider } from "./_components/theme-provider";
 // import { QueryClientProvider } from "@tanstack/react-query";
 // import { queryClient } from "./_lib/query-client";
 
@@ -58,14 +58,14 @@ export default function RootLayout({
             baseTheme: dark,
           }}
         >
-          <ThemeProvider attribute="class" defaultTheme="light">
-            <div className="flex h-full flex-col overflow-hidden">
-              {children}
-              <Analytics />
-              <SpeedInsights />
-            </div>
-            <Toaster />
-          </ThemeProvider>
+          {/* <ThemeProvider attribute="class" defaultTheme="light"> */}
+          <div className="flex h-full flex-col overflow-hidden">
+            {children}
+            <Analytics />
+            <SpeedInsights />
+          </div>
+          <Toaster />
+          {/* </ThemeProvider> */}
         </ClerkProvider>
       </body>
     </html>
