@@ -4,15 +4,17 @@ import { SummaryCards } from "./summary-cards";
 import { ExpensesByCompany } from "./expenses-by-company";
 import { CashFlowChart } from "./cash-flow-chart";
 import { PendingRequests } from "./pending-requests";
-import { RecentAccountingBlocks } from "./recent-accounting-blocks";
 import { ExpensesByCategoryChart } from "./expenses-by-category-chart";
 import type { FinancialDashboardData } from "@/app/_actions/get-financial-dashboard-data";
+import { AccountingBlock } from "@/app/types";
+import { RecentAccountingBlocks } from "./recent-accounting-blocks";
 
 interface FinancialDashboardProps {
   data: FinancialDashboardData;
+  blocks: AccountingBlock[];
 }
 
-export function FinancialDashboard({ data }: FinancialDashboardProps) {
+export function FinancialDashboard({ data, blocks }: FinancialDashboardProps) {
   return (
     <div className="container mx-auto w-full p-6">
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -39,7 +41,7 @@ export function FinancialDashboard({ data }: FinancialDashboardProps) {
           <PendingRequests requests={data.pendingRequests} />
         </div>
         <div className="md:col-span-2">
-          <RecentAccountingBlocks blocks={data.recentAccountingBlocks} />
+          <RecentAccountingBlocks blocks={blocks} />
         </div>
       </div>
     </div>
