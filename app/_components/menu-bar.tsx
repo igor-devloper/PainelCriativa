@@ -96,7 +96,9 @@ export function MenuBar({ menuItems }: MenuBarProps) {
                   }}
                 />
                 <motion.div
-                  className="relative z-10 flex items-center gap-3 rounded-lg bg-transparent px-3 py-2 text-muted-foreground transition-colors hover:text-foreground"
+                  className={`relative z-10 flex items-center gap-3 bg-transparent px-3 py-2 ${
+                    isDarkTheme ? "text-sidebar-foreground" : "text-foreground"
+                  } rounded-lg transition-colors hover:text-foreground`}
                   variants={itemVariants}
                   transition={sharedTransition}
                   style={{
@@ -117,7 +119,9 @@ export function MenuBar({ menuItems }: MenuBarProps) {
                   )}
                 </motion.div>
                 <motion.div
-                  className="absolute inset-0 z-10 flex items-center gap-3 rounded-lg bg-transparent px-3 py-2 text-muted-foreground transition-colors hover:text-foreground"
+                  className={`absolute inset-0 z-10 flex items-center gap-3 bg-transparent px-3 py-2 ${
+                    isDarkTheme ? "text-sidebar-foreground" : "text-foreground"
+                  } rounded-lg transition-colors hover:text-foreground`}
                   variants={backVariants}
                   transition={sharedTransition}
                   style={{

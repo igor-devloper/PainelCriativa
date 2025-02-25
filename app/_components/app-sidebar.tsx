@@ -1,7 +1,6 @@
 "use client";
 
 import type React from "react";
-
 import {
   Home,
   HandCoins,
@@ -21,6 +20,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { UserButton } from "@clerk/nextjs";
 import { MenuBar } from "./menu-bar";
+import { useTheme } from "next-themes";
 
 const defaultNavItems = [
   {
@@ -85,6 +85,9 @@ export function AppSidebar({
   pendingRequestsCount,
   ...props
 }: AppSidebarProps) {
+  const { theme } = useTheme();
+  const isDarkTheme = theme === "dark";
+
   const navItems = (() => {
     switch (userRole) {
       case "ADMIN":
@@ -103,7 +106,11 @@ export function AppSidebar({
   );
 
   return (
-    <Sidebar variant="inset" {...props}>
+    <Sidebar
+      variant="inset"
+      className={`bg-sidebar ${isDarkTheme ? "text-sidebar-foreground" : "text-foreground"}`}
+      {...props}
+    >
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem className="">
@@ -131,7 +138,7 @@ export function AppSidebar({
           appearance={{
             elements: {
               userButtonBox: "flex items-center gap-2",
-              userButtonOuterIdentifier: "text-black font-semibold",
+              userButtonOuterIdentifier: `${isDarkTheme ? "text-white" : "text-black"} font-semibold`,
               userButtonTrigger: "focus:shadow-none focus:outline-none",
             },
           }}
