@@ -13,7 +13,6 @@ import {
   CardTitle,
 } from "@/app/_components/ui/card";
 import { Button } from "@/app/_components/ui/button";
-import { AppSidebar } from "@/app/_components/app-sidebar";
 import { Skeleton } from "@/app/_components/ui/skeleton";
 import { ThemeToggle } from "@/app/_components/theme-toggle";
 import { Avatar } from "./_components/ui/avatar";
@@ -22,7 +21,6 @@ import { UserButton } from "@clerk/nextjs";
 export default function Loading() {
   return (
     <SidebarProvider>
-      <AppSidebar userRole="USER" pendingRequestsCount={0} />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="flex flex-1 items-center gap-2">
