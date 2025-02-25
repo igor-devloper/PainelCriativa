@@ -112,7 +112,7 @@ export function DashboardOverview({
           </Card>
         </div>
       )}
-      <div className="flex flex-col items-center justify-center gap-6 md:grid md:grid-cols-2">
+      <div className="grid grid-cols-1 md:grid-cols-2">
         <UserBalance balances={userBalances} />
         <RecentAccountingBlocks blocks={blocks} />
       </div>

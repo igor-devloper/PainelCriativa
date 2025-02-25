@@ -13,18 +13,33 @@ import { AppSidebar } from "@/app/_components/app-sidebar";
 import { CardSkeleton } from "@/app/_components/ui/card-skeleton";
 import { TableSkeleton } from "@/app/_components/ui/table-skeleton";
 import { ThemeToggle } from "@/app/_components/theme-toggle";
+import { Avatar } from "../_components/ui/avatar";
+import { UserButton } from "@clerk/nextjs";
 
 export default function Loading() {
   return (
     <SidebarProvider>
       <AppSidebar userRole="USER" pendingRequestsCount={0} />
       <SidebarInset>
-        <header className="flex h-14 shrink-0 items-center gap-2">
-          <div className="flex flex-1 items-center gap-2 px-3">
+        <header className="flex h-16 shrink-0 items-center gap-2 bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="flex flex-1 items-center gap-2">
             <SidebarTrigger />
             <Separator orientation="vertical" className="mr-2 h-4" />
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
+            <Avatar>
+              <UserButton
+                appearance={{
+                  elements: {
+                    userButtonBox: "flex items-center gap-2",
+                    userButtonOuterIdentifier: "text-black font-semibold",
+                    userButtonTrigger: "focus:shadow-none focus:outline-none",
+                  },
+                }}
+              />
+            </Avatar>
+          </div>
         </header>
         <div className="flex w-[400px] flex-col overflow-hidden p-6 pb-10 pr-10 md:w-full">
           <div className="flex justify-between">
