@@ -14,6 +14,7 @@ import { RequestsList } from "./requests-list";
 import { Siren } from "lucide-react";
 import { TableSkeleton } from "@/app/_components/ui/table-skeleton";
 import { Separator } from "@/app/_components/ui/separator";
+import { ThemeToggle } from "./theme-toggle";
 
 interface RequestsPageWrapperProps {
   userRole: UserRole;
@@ -44,6 +45,7 @@ export function RequestsPageWrapper({
             <SidebarTrigger />
             <Separator orientation="vertical" className="mr-2 h-4" />
           </div>
+          <ThemeToggle />
         </header>
         <ScrollArea>
           <div className="flex w-[400px] flex-col overflow-hidden p-6 pb-10 pr-10 md:w-full">

@@ -6,6 +6,7 @@ import { dark } from "@clerk/themes";
 import { Toaster } from "@/app/_components/ui/toaster";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { ThemeProvider } from "./_components/theme-provider";
 // import { QueryClientProvider } from "@tanstack/react-query";
 // import { queryClient } from "./_lib/query-client";
 
@@ -52,19 +53,20 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={`${mulish.className} antialiased`}>
-        <ClerkProvider
-          appearance={{
-            baseTheme: dark,
-          }}
-        >
-          <div className="flex h-full flex-col overflow-hidden">
-            {children}
-            <Analytics />
-            <SpeedInsights />
-          </div>
-        </ClerkProvider>
-
-        <Toaster />
+        <ThemeProvider attribute="class" defaultTheme="light">
+          <ClerkProvider
+            appearance={{
+              baseTheme: dark,
+            }}
+          >
+            <div className="flex h-full flex-col overflow-hidden">
+              {children}
+              <Analytics />
+              <SpeedInsights />
+            </div>
+          </ClerkProvider>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

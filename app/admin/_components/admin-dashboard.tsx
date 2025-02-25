@@ -55,6 +55,7 @@ import { UserTableRow } from "./user-table-row";
 import type { AdminDashboardData, UserRole } from "@/app/types/dashboard";
 import { CompanyMetricsCard } from "../analytics/company-metrics";
 import { ExpenseAnalysisCard } from "../analytics/expense-analysis";
+import { ThemeToggle } from "@/app/_components/theme-toggle";
 // import { ExportDataCard } from "../analytics/export-data";
 
 interface AdminDashboardProps {
@@ -88,6 +89,7 @@ export function AdminDashboard({
             <Separator orientation="vertical" className="mr-2 h-4" />
           </div>
           <div className="flex items-center gap-4">
+            <ThemeToggle />
             <Avatar>
               <UserButton
                 appearance={{

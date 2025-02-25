@@ -15,6 +15,7 @@ import { HandCoins } from "lucide-react";
 import { Suspense } from "react";
 import { CardSkeleton } from "./ui/card-skeleton";
 import { TableSkeleton } from "./ui/table-skeleton";
+import { ThemeToggle } from "./theme-toggle";
 
 interface AccountingPageWrapperProps {
   userRole: UserRole;
@@ -45,6 +46,7 @@ export function AccountingPageWrapper({
             <SidebarTrigger />
             <Separator orientation="vertical" className="mr-2 h-4" />
           </div>
+          <ThemeToggle />
         </header>
         <div className="flex w-[400px] flex-col overflow-hidden p-6 pb-10 pr-10 md:w-full">
           <div className="flex justify-between">

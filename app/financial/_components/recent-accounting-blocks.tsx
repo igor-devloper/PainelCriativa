@@ -14,6 +14,7 @@ import {
 } from "@/app/_components/ui/table";
 import { formatCurrency } from "@/app/_lib/utils";
 import { AccountingBlock } from "@/app/types";
+import { STATUS_BLOCK_LABEL } from "@/app/types/block";
 
 interface RecentAccountingBlocksProps {
   blocks: AccountingBlock[];
@@ -42,8 +43,10 @@ export const RecentAccountingBlocks = ({
               <TableRow key={block.id}>
                 <TableCell>{block.code}</TableCell>
                 <TableCell>{block.company}</TableCell>
-                <TableCell>{formatCurrency(block.totalAmount)}</TableCell>
-                <TableCell>{block.status}</TableCell>
+                <TableCell>
+                  {formatCurrency(Number(block.currentBalance))}
+                </TableCell>
+                <TableCell>{STATUS_BLOCK_LABEL[block.status]}</TableCell>
               </TableRow>
             ))}
           </TableBody>

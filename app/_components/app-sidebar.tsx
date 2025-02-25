@@ -1,5 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
+
+import type React from "react";
 
 import {
   Home,
@@ -14,47 +15,64 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
 } from "@/app/_components/ui/sidebar";
 import Link from "next/link";
 import Image from "next/image";
 import { UserButton } from "@clerk/nextjs";
-import { ClientSidebarContent } from "./client-sidebar-content";
+import { MenuBar } from "./menu-bar";
 
 const defaultNavItems = [
   {
-    title: "Home",
-    url: "/",
-    icon: Home,
+    icon: <Home className="h-5 w-5" />,
+    label: "Home",
+    href: "/",
+    gradient:
+      "radial-gradient(circle, rgba(59,130,246,0.15) 0%, rgba(37,99,235,0.06) 50%, rgba(29,78,216,0) 100%)",
+    iconColor: "text-blue-500",
   },
   {
-    title: "Solicitações",
-    url: "/requests",
-    icon: Siren,
+    icon: <Siren className="h-5 w-5" />,
+    label: "Solicitações",
+    href: "/requests",
+    gradient:
+      "radial-gradient(circle, rgba(249,115,22,0.15) 0%, rgba(234,88,12,0.06) 50%, rgba(194,65,12,0) 100%)",
+    iconColor: "text-orange-500",
   },
   {
-    title: "Prestações de Contas",
-    url: "/accounting",
-    icon: HandCoins,
+    icon: <HandCoins className="h-5 w-5" />,
+    label: "Prestações de Contas",
+    href: "/accounting",
+    gradient:
+      "radial-gradient(circle, rgba(34,197,94,0.15) 0%, rgba(22,163,74,0.06) 50%, rgba(21,128,61,0) 100%)",
+    iconColor: "text-green-500",
   },
   {
-    title: "Despesas",
-    url: "/transactions",
-    icon: Wallet,
+    icon: <Wallet className="h-5 w-5" />,
+    label: "Despesas",
+    href: "/transactions",
+    gradient:
+      "radial-gradient(circle, rgba(239,68,68,0.15) 0%, rgba(220,38,38,0.06) 50%, rgba(185,28,28,0) 100%)",
+    iconColor: "text-red-500",
   },
 ];
 
 const financeNavItem = {
-  title: "Financeiro",
-  url: "/financial",
-  icon: DollarSign,
+  icon: <DollarSign className="h-5 w-5" />,
+  label: "Financeiro",
+  href: "/financial",
+  gradient:
+    "radial-gradient(circle, rgba(139,92,246,0.15) 0%, rgba(109,40,217,0.06) 50%, rgba(91,33,182,0) 100%)",
+  iconColor: "text-purple-500",
 };
 
 const adminNavItem = {
-  title: "Administrador",
-  url: "/admin",
-  icon: Settings,
+  icon: <Settings className="h-5 w-5" />,
+  label: "Administrador",
+  href: "/admin",
+  gradient:
+    "radial-gradient(circle, rgba(156,163,175,0.15) 0%, rgba(107,114,128,0.06) 50%, rgba(75,85,99,0) 100%)",
+  iconColor: "text-gray-500",
 };
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
@@ -79,7 +97,7 @@ export function AppSidebar({
   })();
 
   const updatedNavItems = navItems.map((item) =>
-    item.title === "Solicitações"
+    item.label === "Solicitações"
       ? { ...item, badgeCount: pendingRequestsCount }
       : item,
   );
@@ -104,7 +122,9 @@ export function AppSidebar({
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <ClientSidebarContent navItems={updatedNavItems} />
+      <div className="flex-1 overflow-auto py-2">
+        <MenuBar menuItems={updatedNavItems} />
+      </div>
       <SidebarFooter className="mb-4 flex items-center justify-center">
         <UserButton
           showName={true}

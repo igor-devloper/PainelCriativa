@@ -16,6 +16,7 @@ import { Receipt } from "lucide-react";
 import { getUserRole } from "../_lib/utils";
 import { getPendingRequestsCount } from "../_actions/get-pending-requests-count";
 import { TableSkeleton } from "@/app/_components/ui/table-skeleton";
+import { ThemeToggle } from "../_components/theme-toggle";
 
 export const metadata = {
   title: "Despesas - Painel Criativa",
@@ -43,6 +44,7 @@ const ExpensesPage = async () => {
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
           </div>
+          <ThemeToggle />
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
           <ScrollArea className="max-h-[600px]">
