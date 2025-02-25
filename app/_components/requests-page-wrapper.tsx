@@ -15,6 +15,8 @@ import { Siren } from "lucide-react";
 import { TableSkeleton } from "@/app/_components/ui/table-skeleton";
 import { Separator } from "@/app/_components/ui/separator";
 import { ThemeToggle } from "./theme-toggle";
+import { Avatar } from "./ui/avatar";
+import { UserButton } from "@clerk/nextjs";
 
 interface RequestsPageWrapperProps {
   userRole: UserRole;
@@ -40,12 +42,25 @@ export function RequestsPageWrapper({
         pendingRequestsCount={pendingRequestsCount}
       />
       <SidebarInset>
-        <header className="flex h-14 shrink-0 items-center gap-2">
-          <div className="flex flex-1 items-center gap-2 px-3">
+        <header className="flex h-16 shrink-0 items-center gap-2 bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="flex flex-1 items-center gap-2">
             <SidebarTrigger />
             <Separator orientation="vertical" className="mr-2 h-4" />
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
+            <Avatar>
+              <UserButton
+                appearance={{
+                  elements: {
+                    userButtonBox: "flex items-center gap-2",
+                    userButtonOuterIdentifier: "text-black font-semibold",
+                    userButtonTrigger: "focus:shadow-none focus:outline-none",
+                  },
+                }}
+              />
+            </Avatar>
+          </div>
         </header>
         <ScrollArea>
           <div className="flex w-[400px] flex-col overflow-hidden p-6 pb-10 pr-10 md:w-full">

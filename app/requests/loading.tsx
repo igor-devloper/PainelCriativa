@@ -1,87 +1,64 @@
-import { Skeleton } from "@/app/_components/ui/skeleton";
+"use client";
+
+import { Suspense } from "react";
+import { FileText } from "lucide-react";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/app/_components/ui/table";
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/app/_components/ui/sidebar";
+import { Separator } from "@/app/_components/ui/separator";
+import { ScrollArea, ScrollBar } from "@/app/_components/ui/scroll-area";
+import { AppSidebar } from "@/app/_components/app-sidebar";
+import { TableSkeleton } from "@/app/_components/ui/table-skeleton";
+import { ThemeToggle } from "@/app/_components/theme-toggle";
+import { Avatar } from "../_components/ui/avatar";
+import { UserButton } from "@clerk/nextjs";
 
 export default function Loading() {
   return (
-    <div className="flex w-full flex-col space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Skeleton className="h-6 w-6" />
-          <Skeleton className="h-8 w-[200px]" />
+    <SidebarProvider>
+      <AppSidebar userRole="USER" pendingRequestsCount={0} />
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2 bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="flex flex-1 items-center gap-2">
+            <SidebarTrigger />
+            <Separator orientation="vertical" className="mr-2 h-4" />
+          </div>
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
+            <Avatar>
+              <UserButton
+                appearance={{
+                  elements: {
+                    userButtonBox: "flex items-center gap-2",
+                    userButtonOuterIdentifier: "text-black font-semibold",
+                    userButtonTrigger: "focus:shadow-none focus:outline-none",
+                  },
+                }}
+              />
+            </Avatar>
+          </div>
+        </header>
+        <div className="flex w-[400px] flex-col overflow-hidden p-6 pb-10 pr-10 md:w-full">
+          <div className="flex justify-between">
+            <div className="flex h-16 items-center gap-4 px-4">
+              <FileText className="h-6 w-6" />
+              <h1 className="text-xl font-semibold">Solicitações</h1>
+            </div>
+          </div>
+          <ScrollArea className="flex-1">
+            <div className="container mx-auto py-6">
+              <Suspense
+                fallback={<TableSkeleton columns={8} rows={5} showFooter />}
+              >
+                <TableSkeleton columns={8} rows={5} showFooter />
+              </Suspense>
+            </div>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
         </div>
-      </div>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>
-                <Skeleton className="h-4 w-[150px]" />
-              </TableHead>
-              <TableHead>
-                <Skeleton className="h-4 w-[150px]" />
-              </TableHead>
-              <TableHead>
-                <Skeleton className="h-4 w-[120px]" />
-              </TableHead>
-              <TableHead>
-                <Skeleton className="h-4 w-[150px]" />
-              </TableHead>
-              <TableHead>
-                <Skeleton className="h-4 w-[100px]" />
-              </TableHead>
-              <TableHead>
-                <Skeleton className="h-4 w-[100px]" />
-              </TableHead>
-              <TableHead>
-                <Skeleton className="h-4 w-[120px]" />
-              </TableHead>
-              <TableHead>
-                <Skeleton className="h-4 w-[100px]" />
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Array.from({ length: 5 }).map((_, i) => (
-              <TableRow key={i}>
-                <TableCell>
-                  <Skeleton className="h-4 w-[150px]" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-[150px]" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-[120px]" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-[150px]" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-[100px]" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-[100px]" />
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Skeleton className="h-8 w-8 rounded-full" />
-                    <Skeleton className="h-4 w-[100px]" />
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-6 w-[100px] rounded-full" />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
