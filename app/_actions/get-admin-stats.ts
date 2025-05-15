@@ -5,7 +5,7 @@ import { AdminStats } from "@/app/types";
 export async function getAdminStats(): Promise<AdminStats> {
   try {
     // Get total users from Clerk
-    const users = await clerkClient.users.getUserList();
+    const users = await (await clerkClient()).users.getUserList();
     const totalUsers = users.data.length;
 
     // Get pending requests count
