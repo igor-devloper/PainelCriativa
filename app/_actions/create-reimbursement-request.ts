@@ -7,7 +7,7 @@ export async function createReimbursementRequest(
   blockId: string,
   negativeBalance: number,
 ) {
-  const { userId } = auth();
+  const { userId } = await auth();
 
   if (!userId) {
     throw new Error("Usuário não autenticado");

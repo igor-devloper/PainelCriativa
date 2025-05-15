@@ -41,7 +41,7 @@ export interface FinancialDashboardData {
 }
 
 export async function getFinancialDashboardData(): Promise<FinancialDashboardData> {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) {
     throw new Error("Unauthorized");
   }

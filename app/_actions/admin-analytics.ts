@@ -55,7 +55,7 @@ export async function getCompanyMetrics(
   startDate?: Date,
   endDate?: Date,
 ): Promise<CompanyMetrics[]> {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
   const dateFilter = {
@@ -117,7 +117,7 @@ export async function getExpenseAnalytics(
   startDate?: Date,
   endDate?: Date,
 ): Promise<ExpenseAnalytics> {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
   const dateFilter = {
@@ -182,7 +182,7 @@ export async function exportToPDF(
   startDate?: Date,
   endDate?: Date,
 ): Promise<Uint8Array | null> {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
   try {

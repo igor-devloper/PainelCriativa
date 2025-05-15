@@ -31,7 +31,7 @@ export interface DashboardOverviewData {
 }
 
 export async function getDashboardOverview(): Promise<DashboardOverviewData> {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) {
     throw new Error("Unauthorized");
   }

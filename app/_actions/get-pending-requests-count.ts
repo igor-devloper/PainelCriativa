@@ -3,7 +3,7 @@ import { db } from "@/app/_lib/prisma";
 import { getUserRole } from "@/app/_lib/utils";
 
 export async function getPendingRequestsCount() {
-  const { userId } = auth();
+  const { userId } = await auth();
 
   if (!userId) {
     throw new Error("Unauthorized");

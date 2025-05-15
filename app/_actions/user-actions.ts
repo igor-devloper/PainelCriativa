@@ -16,7 +16,7 @@ const userSchema = z.object({
 });
 
 export async function createUser(formData: FormData) {
-  const { userId } = auth();
+  const { userId } = await auth();
 
   if (!userId) {
     throw new Error("Não autorizado");

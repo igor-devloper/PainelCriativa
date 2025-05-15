@@ -4,7 +4,7 @@ import { getUserRole } from "@/app/_lib/utils";
 import { AccountingBlock } from "@/app/types";
 
 export async function getAccountingBlocks(): Promise<AccountingBlock[]> {
-  const { userId } = auth();
+  const { userId } = await auth();
 
   if (!userId) {
     throw new Error("Unauthorized");

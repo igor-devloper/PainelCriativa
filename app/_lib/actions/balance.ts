@@ -13,7 +13,7 @@ import { ExpenseEdit } from "@/app/types";
 export async function getUserBalance(
   company?: string,
 ): Promise<number | { [key: string]: number }> {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) {
     throw new Error("User not authenticated");
   }
@@ -108,7 +108,7 @@ async function updateBalance(
 }
 
 export async function editExpense(expenseId: string, data: ExpenseEdit) {
-  const { userId } = auth();
+  const { userId } = await auth();
 
   if (!userId) {
     throw new Error("Unauthorized");
@@ -186,7 +186,7 @@ export async function editExpense(expenseId: string, data: ExpenseEdit) {
 }
 
 export async function deleteExpense(expenseId: string) {
-  const { userId } = auth();
+  const { userId } = await auth();
 
   if (!userId) {
     throw new Error("Unauthorized");
@@ -260,7 +260,7 @@ export async function registerExpense(
     imageUrls: string[];
   },
 ) {
-  const { userId } = auth();
+  const { userId } = await auth();
 
   if (!userId) {
     throw new Error("Unauthorized");

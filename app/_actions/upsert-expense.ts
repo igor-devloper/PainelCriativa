@@ -19,7 +19,7 @@ interface UpsertExpenseData {
 }
 
 export async function upsertExpense(data: UpsertExpenseData) {
-  const { userId } = auth();
+  const { userId } = await auth();
 
   if (!userId) {
     throw new Error("Unauthorized");

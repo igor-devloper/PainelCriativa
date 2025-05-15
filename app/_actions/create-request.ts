@@ -59,7 +59,7 @@ async function notifyManager(requestData: {
 
 export async function createRequest(data: CreateRequestData) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     if (!userId) {
       throw new Error("Usuário não autenticado");
     }

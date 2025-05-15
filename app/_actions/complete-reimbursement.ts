@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
 import { db } from "@/app/_lib/prisma";
@@ -10,7 +11,7 @@ export async function completeReimbursement(
   requestId: string,
   proofUrl: string,
 ) {
-  const { userId } = auth();
+  const { userId } = await auth();
 
   if (!userId) {
     throw new Error("Unauthorized");
@@ -75,7 +76,7 @@ export async function completeReimbursement(
       // Get user details from Clerk
       const user = await clerkClient.users.getUser(request.userId);
       const userEmail = user.emailAddresses.find(
-        (email) => email.id === user.primaryEmailAddressId,
+        (email: { id: any }) => email.id === user.primaryEmailAddressId,
       )?.emailAddress;
 
       if (userEmail) {

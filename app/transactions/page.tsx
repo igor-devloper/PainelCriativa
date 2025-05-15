@@ -23,7 +23,7 @@ export const metadata = {
 };
 
 const ExpensesPage = async () => {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) {
     redirect("/login");
   }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
 import { db } from "@/app/_lib/prisma";
@@ -33,7 +34,7 @@ export interface AdminDashboardData {
 }
 
 export async function getAdminDashboardData(): Promise<AdminDashboardData> {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) {
     throw new Error("Unauthorized");
   }
@@ -77,7 +78,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
 
   const totalUsers = usersList.data.length;
   const lastMonthUsers = usersList.data.filter(
-    (user) =>
+    (user: { createdAt: string | number | Date }) =>
       new Date(user.createdAt) >= startOfLastMonth &&
       new Date(user.createdAt) < startOfMonth,
   ).length;
@@ -108,13 +109,22 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
       userGrowth,
       totalExpenses: totalExpenses._sum.amount?.toNumber() ?? 0,
     },
-    recentUsers: recentClerkUsers.map((user) => ({
-      id: user.id,
-      name: `${user.firstName} ${user.lastName}`,
-      email: user.emailAddresses[0]?.emailAddress ?? "",
-      role: (user.publicMetadata.role as string) ?? "USER",
-      joinedAt: new Date(user.createdAt),
-    })),
+    recentUsers: recentClerkUsers.map(
+      (user: {
+        id: any;
+        firstName: any;
+        lastName: any;
+        emailAddresses: { emailAddress: any }[];
+        publicMetadata: { role: string };
+        createdAt: string | number | Date;
+      }) => ({
+        id: user.id,
+        name: `${user.firstName} ${user.lastName}`,
+        email: user.emailAddresses[0]?.emailAddress ?? "",
+        role: (user.publicMetadata.role as string) ?? "USER",
+        joinedAt: new Date(user.createdAt),
+      }),
+    ),
     recentActivity: recentRequests.map((request) => ({
       id: request.id,
       type: request.accountingBlock ? "BLOCK_CREATED" : "REQUEST_CREATED",
