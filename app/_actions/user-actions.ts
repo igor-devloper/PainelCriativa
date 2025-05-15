@@ -31,7 +31,9 @@ export async function createUser(formData: FormData) {
       role: formData.get("role"),
     });
 
-    const user = await clerkClient.users.createUser({
+    const user = await (
+      await clerkClient()
+    ).users.createUser({
       firstName: validatedFields.firstName,
       lastName: validatedFields.lastName,
       emailAddress: [validatedFields.email],
@@ -52,7 +54,7 @@ export async function createUser(formData: FormData) {
 }
 
 export async function updateUser(userId: string, formData: FormData) {
-  const { userId: currentUserId } = auth();
+  const { userId: currentUserId } = await auth();
 
   if (!currentUserId) {
     throw new Error("Não autorizado");
@@ -71,7 +73,9 @@ export async function updateUser(userId: string, formData: FormData) {
         role: formData.get("role"),
       });
 
-    const user = await clerkClient.users.updateUser(userId, {
+    const user = await (
+      await clerkClient()
+    ).users.updateUser(userId, {
       firstName: validatedFields.firstName,
       lastName: validatedFields.lastName,
       publicMetadata: {
@@ -90,14 +94,14 @@ export async function updateUser(userId: string, formData: FormData) {
 }
 
 export async function deleteUser(userId: string) {
-  const { userId: currentUserId } = auth();
+  const { userId: currentUserId } = await auth();
 
   if (!currentUserId) {
     throw new Error("Não autorizado");
   }
 
   try {
-    await clerkClient.users.deleteUser(userId);
+    await (await clerkClient()).users.deleteUser(userId);
     revalidatePath("/users");
     return { success: true };
   } catch (error) {

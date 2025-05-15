@@ -35,12 +35,12 @@ export default async function HomePage() {
     }),
   );
 
-  const formattedRecentActivity = dashboardData.recentActivity.map(
-    (activity: { createdAt: string | number | Date }) => ({
-      ...activity,
-      createdAt: new Date(activity.createdAt),
-    }),
-  );
+  // const formattedRecentActivity = dashboardData.recentActivity.map(
+  //   (activity: { createdAt: string | number | Date }) => ({
+  //     ...activity,
+  //     createdAt: new Date(activity.createdAt),
+  //   }),
+  // );
 
   return (
     <>
@@ -56,7 +56,6 @@ export default async function HomePage() {
         accountStatementsChange={
           dashboardData.accountStatements.percentageChange
         }
-        recentActivity={formattedRecentActivity}
         blocks={blocks}
       />
     </>

@@ -74,7 +74,7 @@ export async function completeReimbursement(
       }
 
       // Get user details from Clerk
-      const user = await clerkClient.users.getUser(request.userId);
+      const user = await (await clerkClient()).users.getUser(request.userId);
       const userEmail = user.emailAddresses.find(
         (email: { id: any }) => email.id === user.primaryEmailAddressId,
       )?.emailAddress;

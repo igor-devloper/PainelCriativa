@@ -35,17 +35,17 @@ interface ClientHomeWrapperProps {
   accountStatementsCount: number;
   accountStatementsChange: number;
   blocks: AccountingBlock[];
-  recentActivity: {
-    id: string;
-    type:
-      | "REQUEST_CREATED"
-      | "STATEMENT_APPROVED"
-      | "USER_REGISTERED"
-      | "EXPENSE_CREATED";
-    description: string;
-    userFullName: string;
-    createdAt: Date;
-  }[];
+  // recentActivity: {
+  //   id: string;
+  //   type:
+  //     | "REQUEST_CREATED"
+  //     | "STATEMENT_APPROVED"
+  //     | "USER_REGISTERED"
+  //     | "EXPENSE_CREATED";
+  //   description: string;
+  //   userFullName: string;
+  //   createdAt: Date;
+  // }[];
 }
 
 export function ClientHomeWrapper({
@@ -58,7 +58,6 @@ export function ClientHomeWrapper({
   activeUsersChange,
   accountStatementsCount,
   accountStatementsChange,
-  recentActivity,
   userBalances,
 }: ClientHomeWrapperProps) {
   return (
@@ -107,7 +106,6 @@ export function ClientHomeWrapper({
                 activeUsersChange={activeUsersChange}
                 accountStatementsCount={accountStatementsCount}
                 accountStatementsChange={accountStatementsChange}
-                recentActivity={recentActivity}
                 blocks={blocks}
               />
             </Suspense>

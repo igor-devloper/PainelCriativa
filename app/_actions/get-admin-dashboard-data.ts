@@ -71,7 +71,9 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
   ]);
 
   // Get users data from Clerk
-  const usersList = await clerkClient.users.getUserList({
+  const usersList = await (
+    await clerkClient()
+  ).users.getUserList({
     limit: 100,
     orderBy: "-created_at",
   });

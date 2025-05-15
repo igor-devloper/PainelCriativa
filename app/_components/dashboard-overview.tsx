@@ -7,8 +7,8 @@ import {
 } from "@/app/_components/ui/card";
 import type { AccountingBlock, UserRole } from "@/app/types";
 import { ClipboardList, Users, FileText } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
+// import { formatDistanceToNow } from "date-fns";
+// import { ptBR } from "date-fns/locale";
 import { CreateRequestButton } from "./create-request-button";
 import Link from "next/link";
 import { Button } from "./ui/button";
@@ -33,17 +33,17 @@ interface DashboardOverviewProps {
   accountStatementsCount: number;
   accountStatementsChange: number;
   blocks: AccountingBlock[];
-  recentActivity: {
-    id: string;
-    type:
-      | "REQUEST_CREATED"
-      | "STATEMENT_APPROVED"
-      | "USER_REGISTERED"
-      | "EXPENSE_CREATED";
-    description: string;
-    userFullName: string;
-    createdAt: Date;
-  }[];
+  // recentActivity: {
+  //   id: string;
+  //   type:
+  //     | "REQUEST_CREATED"
+  //     | "STATEMENT_APPROVED"
+  //     | "USER_REGISTERED"
+  //     | "EXPENSE_CREATED";
+  //   description: string;
+  //   userFullName: string;
+  //   createdAt: Date;
+  // }[];
 }
 
 export function DashboardOverview({
@@ -54,7 +54,6 @@ export function DashboardOverview({
   activeUsersChange,
   accountStatementsCount,
   accountStatementsChange,
-  recentActivity,
   userRole,
   userBalances,
   blocks,
@@ -153,7 +152,7 @@ export function DashboardOverview({
               <CardDescription>Últimas atualizações do sistema</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              {/* <div className="space-y-4">
                 {recentActivity.map((activity) => (
                   <div key={activity.id} className="flex items-center">
                     <div className="space-y-1">
@@ -177,7 +176,7 @@ export function DashboardOverview({
                     </div>
                   </div>
                 ))}
-              </div>
+              </div> */}
             </CardContent>
           </Card>
         )}

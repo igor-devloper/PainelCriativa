@@ -197,7 +197,9 @@ export async function getDashboardOverview(): Promise<DashboardOverviewData> {
   const userIds = [
     ...new Set(recentActivity.map((activity) => activity.userId)),
   ];
-  const users = await clerkClient.users.getUserList({ userId: userIds });
+  const users = await (
+    await clerkClient()
+  ).users.getUserList({ userId: userIds });
   const userMap = new Map(
     users.data.map((user) => [user.id, `${user.firstName} ${user.lastName}`]),
   );
