@@ -134,7 +134,7 @@ export async function notifyAdminsAndFinance({
   requestId: string;
 }) {
   try {
-    const users = await clerkClient.users.getUserList();
+    const users = await (await clerkClient()).users.getUserList();
 
     const adminAndFinanceUsers = users.data.filter((user) => {
       const role = user.publicMetadata.role as UserRole;

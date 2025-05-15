@@ -4,7 +4,9 @@ import { clerkClient } from "@clerk/nextjs/server";
 
 export async function getFinanceUsers() {
   try {
-    const users = await clerkClient.users.getUserList({
+    const users = await (
+      await clerkClient()
+    ).users.getUserList({
       orderBy: "-created_at",
     });
 
