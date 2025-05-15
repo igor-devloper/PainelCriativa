@@ -107,7 +107,9 @@ export async function updateRequestStatus(
           }
 
           // Get user details from Clerk
-          const user = await clerkClient.users.getUser(request.userId);
+          const user = await (
+            await clerkClient()
+          ).users.getUser(request.userId);
           const userEmail = user.emailAddresses.find(
             (email) => email.id === user.primaryEmailAddressId,
           )?.emailAddress;
@@ -192,7 +194,9 @@ export async function updateRequestStatus(
         }
 
         // Fetch user data from Clerk
-        const user = await clerkClient.users.getUser(updatedRequest.userId);
+        const user = await (
+          await clerkClient()
+        ).users.getUser(updatedRequest.userId);
 
         // Send email notification
         await sendEmailNotification(
