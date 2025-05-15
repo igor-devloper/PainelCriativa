@@ -1,34 +1,44 @@
-import { auth, clerkClient } from "@clerk/nextjs/server";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { ClientHomeWrapper } from "@/app/_components/client-home-wrapper";
 import { getDashboardOverview } from "@/app/_actions/get-dashboard-overview";
 import { getUserRole } from "../_lib/utils";
 import { getUserBalance } from "../_lib/actions/balance";
 import { getAccountingBlocks } from "../_actions/get-accounting-blocks";
+import { getClerkUser, getClerkUserList } from "../_lib/clerk-helpers"; // Novo arquivo com funções em cache
 
 export default async function HomePage() {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) {
     redirect("/login");
   }
 
-  const user = await clerkClient.users.getUser(userId);
-  const dashboardData = await getDashboardOverview();
+  // Use as funções em cache
+  const user = await getClerkUser(userId);
   const userRole = getUserRole(user.publicMetadata);
-  const users = await clerkClient.users.getUserList();
-  const balances = await getUserBalance();
-  const [blocks] = await Promise.all([getAccountingBlocks()]);
 
-  const formattedUsers = users.data.map((user) => ({
-    id: user.id,
-    firstName: user.firstName || "",
-    lastName: user.lastName || "",
-    imageUrl: user.imageUrl,
-  }));
+  // Execute chamadas paralelas para melhorar o desempenho
+  const [dashboardData, users, balances, blocks] = await Promise.all([
+    getDashboardOverview(),
+    getClerkUserList(),
+    getUserBalance(),
+    getAccountingBlocks(),
+  ]);
+
+  const formattedUsers = users.data.map(
+    (user: { id: any; firstName: any; lastName: any; imageUrl: any }) => ({
+      id: user.id,
+      firstName: user.firstName || "",
+      lastName: user.lastName || "",
+      imageUrl: user.imageUrl,
+    }),
+  );
+
   const formattedRecentActivity = dashboardData.recentActivity.map(
-    (activity) => ({
+    (activity: { createdAt: string | number | Date }) => ({
       ...activity,
-      createdAt: new Date(activity.createdAt), // Converte string para Date
+      createdAt: new Date(activity.createdAt),
     }),
   );
 
