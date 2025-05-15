@@ -10,8 +10,8 @@ export async function getAccountingBlocks(): Promise<AccountingBlock[]> {
     throw new Error("Unauthorized");
   }
 
-  const user = await clerkClient.users.getUser(userId);
-  const userRole = getUserRole(user.publicMetadata);
+  const user = (await clerkClient()).users.getUser(userId);
+  const userRole = getUserRole((await user).publicMetadata);
 
   // Define a condição where baseada no role do usuário
   const where =

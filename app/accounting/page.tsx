@@ -16,7 +16,7 @@ export default async function AccountingPage() {
     redirect("/login");
   }
 
-  const user = await clerkClient.users.getUser(userId);
+  const user = await (await clerkClient()).users.getUser(userId);
   const userRole = getUserRole(user.publicMetadata);
 
   // Fetch data in parallel

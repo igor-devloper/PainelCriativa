@@ -7,7 +7,7 @@ import { clerkClient, currentUser, auth } from "@clerk/nextjs/server";
  * Função em cache para obter um usuário pelo ID
  */
 export const getClerkUser = cache(async (userId: string) => {
-  return await clerkClient.users.getUser(userId);
+  return (await clerkClient()).users.getUser(userId);
 });
 
 /**
@@ -24,7 +24,7 @@ export const getClerkUserList = cache(
     phoneNumber?: string[];
     externalId?: string[];
   }) => {
-    return await clerkClient.users.getUserList(params);
+    return await (await clerkClient()).users.getUserList(params);
   },
 );
 
@@ -39,14 +39,16 @@ export const getClerkCurrentUser = cache(async () => {
  * Função em cache para obter uma organização pelo ID
  */
 export const getClerkOrganization = cache(async (organizationId: string) => {
-  return await clerkClient.organizations.getOrganization({ organizationId });
+  return await (
+    await clerkClient()
+  ).organizations.getOrganization({ organizationId });
 });
 
 /**
  * Função em cache para obter a lista de organizações
  */
 export const getClerkOrganizationList = cache(async () => {
-  return await clerkClient.organizations.getOrganizationList();
+  return await (await clerkClient()).organizations.getOrganizationList();
 });
 
 /**
@@ -54,7 +56,9 @@ export const getClerkOrganizationList = cache(async () => {
  */
 export const getClerkOrganizationMemberships = cache(
   async (organizationId: string) => {
-    return await clerkClient.organizations.getOrganizationMembershipList({
+    return await (
+      await clerkClient()
+    ).organizations.getOrganizationMembershipList({
       organizationId,
     });
   },

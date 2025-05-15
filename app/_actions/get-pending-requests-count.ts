@@ -9,7 +9,7 @@ export async function getPendingRequestsCount() {
     throw new Error("Unauthorized");
   }
 
-  const user = await clerkClient.users.getUser(userId);
+  const user = await (await clerkClient()).users.getUser(userId);
   const userRole = getUserRole(user.publicMetadata);
 
   let count;

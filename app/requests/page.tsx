@@ -15,10 +15,10 @@ export default async function RequestsPage() {
     redirect("/login");
   }
 
-  const user = await clerkClient.users.getUser(userId);
+  const user = await (await clerkClient()).users.getUser(userId);
   const userRole = getUserRole(user.publicMetadata);
   const requests = await getRequests(userRole, userId);
-  const users = await clerkClient.users.getUserList();
+  const users = await (await clerkClient()).users.getUserList();
 
   const formattedUsers = users.data.map((user) => ({
     id: user.id,

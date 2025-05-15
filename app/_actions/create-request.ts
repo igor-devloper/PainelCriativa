@@ -65,7 +65,7 @@ export async function createRequest(data: CreateRequestData) {
     }
 
     // Get user details for the notification with proper typing
-    const user = await clerkClient.users.getUser(userId);
+    const user = (await clerkClient()).users.getUser(userId);
 
     // Validate input data
     if (
@@ -130,11 +130,11 @@ export async function createRequest(data: CreateRequestData) {
       };
     });
 
-    const userManager = await clerkClient.users.getUser(data.gestor);
+    const userManager = await (await clerkClient()).users.getUser(data.gestor);
     const managerEmail = userManager.emailAddresses[0]?.emailAddress;
     // Send notifications after successful request creation
     await notifyManager({
-      userName: user.firstName ?? "Usuário",
+      userName: (await user).firstName ?? "Usuário",
       amount: data.amount,
       company: data.responsibleCompany,
       description: data.description,

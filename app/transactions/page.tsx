@@ -28,7 +28,7 @@ const ExpensesPage = async () => {
     redirect("/login");
   }
 
-  const user = await clerkClient.users.getUser(userId);
+  const user = await (await clerkClient()).users.getUser(userId);
   const userRole = getUserRole(user.publicMetadata);
   const pendingRequestsCount = await getPendingRequestsCount();
 

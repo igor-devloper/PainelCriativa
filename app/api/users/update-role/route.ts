@@ -12,7 +12,7 @@ export async function POST(request: Request) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const user = await clerkClient.users.getUser(userId);
+    const user = await (await clerkClient()).users.getUser(userId);
     const userRole = getUserRole(user.publicMetadata);
 
     if (userRole !== "ADMIN") {
@@ -29,7 +29,9 @@ export async function POST(request: Request) {
       return new NextResponse("Invalid request", { status: 400 });
     }
 
-    await clerkClient.users.updateUser(targetUserId, {
+    await (
+      await clerkClient()
+    ).users.updateUser(targetUserId, {
       publicMetadata: { role },
     });
 

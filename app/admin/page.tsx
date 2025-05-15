@@ -23,7 +23,7 @@ export default async function AdminPage() {
 
   try {
     // Get user data from Clerk
-    const user = await clerkClient.users.getUser(userId);
+    const user = await (await clerkClient()).users.getUser(userId);
     const userRole = getUserRole(user.publicMetadata);
 
     // Only allow ADMIN and FINANCE roles to access this page
