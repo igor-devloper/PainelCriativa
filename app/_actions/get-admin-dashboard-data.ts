@@ -33,6 +33,12 @@ export interface AdminDashboardData {
   }[];
 }
 
+function getUserRole(user: any): string {
+  return (
+    (user?.publicMetadata as Record<string, any>)?.role?.toString() ?? "USER"
+  );
+}
+
 export async function getAdminDashboardData(): Promise<AdminDashboardData> {
   const { userId } = await auth();
   if (!userId) {
@@ -111,22 +117,13 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
       userGrowth,
       totalExpenses: totalExpenses._sum.amount?.toNumber() ?? 0,
     },
-    recentUsers: recentClerkUsers.map(
-      (user: {
-        id: any;
-        firstName: any;
-        lastName: any;
-        emailAddresses: { emailAddress: any }[];
-        publicMetadata: { role: string };
-        createdAt: string | number | Date;
-      }) => ({
-        id: user.id,
-        name: `${user.firstName} ${user.lastName}`,
-        email: user.emailAddresses[0]?.emailAddress ?? "",
-        role: (user.publicMetadata.role as string) ?? "USER",
-        joinedAt: new Date(user.createdAt),
-      }),
-    ),
+    recentUsers: recentClerkUsers.map((user) => ({
+      id: user.id,
+      name: `${user.firstName} ${user.lastName}`,
+      email: user.emailAddresses[0]?.emailAddress ?? "",
+      role: getUserRole(user),
+      joinedAt: new Date(user.createdAt),
+    })),
     recentActivity: recentRequests.map((request) => ({
       id: request.id,
       type: request.accountingBlock ? "BLOCK_CREATED" : "REQUEST_CREATED",
