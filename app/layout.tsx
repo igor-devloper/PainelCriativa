@@ -1,3 +1,4 @@
+import type React from "react";
 import type { Metadata } from "next";
 import { Mulish } from "next/font/google";
 import "./globals.css";
@@ -6,9 +7,8 @@ import { dark } from "@clerk/themes";
 import { Toaster } from "@/app/_components/ui/toaster";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-// import { ThemeProvider } from "./_components/theme-provider";
-// import { QueryClientProvider } from "@tanstack/react-query";
-// import { queryClient } from "./_lib/query-client";
+import { QueryClientProvider } from "@/app/_components/query-client-provider";
+import { Suspense } from "react";
 
 const mulish = Mulish({
   subsets: ["latin-ext"],
@@ -58,14 +58,16 @@ export default function RootLayout({
             baseTheme: dark,
           }}
         >
-          {/* <ThemeProvider attribute="class" defaultTheme="light"> */}
-          <div className="flex h-full flex-col overflow-hidden">
-            {children}
-            <Analytics />
-            <SpeedInsights />
-          </div>
-          <Toaster />
-          {/* </ThemeProvider> */}
+          <QueryClientProvider>
+            <div className="flex h-full flex-col overflow-hidden">
+              <Suspense>
+                {children}
+                <Analytics />
+                <SpeedInsights />
+              </Suspense>
+            </div>
+            <Toaster />
+          </QueryClientProvider>
         </ClerkProvider>
       </body>
     </html>
