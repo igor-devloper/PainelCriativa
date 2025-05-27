@@ -430,8 +430,6 @@ export async function registerExpense(
 
     revalidatePath("/");
     revalidatePath("/dashboard");
-    revalidatePath("/accounting");
-    revalidatePath(`/accounting/${result.blockId}`);
 
     return { success: true, data: JSON.parse(JSON.stringify(result)) };
   } catch (error) {
