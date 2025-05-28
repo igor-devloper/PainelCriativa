@@ -283,11 +283,6 @@ export async function editExpense(expenseId: string, data: ExpenseEdit) {
     // Limpa o cache após modificações
     clearCache(`user-balance-${userId}`);
 
-    revalidatePath("/");
-    revalidatePath("/dashboard");
-    revalidatePath("/accounting");
-    revalidatePath(`/accounting/${result.blockId}`);
-
     return { success: true, data: JSON.parse(JSON.stringify(result)) };
   } catch (error) {
     console.error("Error editing expense:", error);
@@ -424,12 +419,6 @@ export async function registerExpense(
         timeout: 120000, // Aumenta o timeout da transação
       },
     );
-
-    // Limpa o cache após modificações
-    clearCache(`user-balance-${userId}`);
-
-    revalidatePath("/");
-    revalidatePath("/dashboard");
 
     return { success: true, data: JSON.parse(JSON.stringify(result)) };
   } catch (error) {
