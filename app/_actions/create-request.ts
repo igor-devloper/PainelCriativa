@@ -5,7 +5,6 @@ import { db } from "@/app/_lib/prisma";
 import { Prisma } from "@prisma/client";
 import { auth, clerkClient, type User } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
-import { sendGZappyMessage } from "@/app/_lib/gzappy";
 import { trackCreateRequest } from "../_lib/analytics";
 import { RequestNotificationEmail } from "../_components/email-templates/request-notification-email";
 import resend from "../_lib/resend-config";
