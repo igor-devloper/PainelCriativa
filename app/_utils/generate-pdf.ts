@@ -204,7 +204,7 @@ export async function generateAccountingPDF(
       ["CNPJ:", companyCNPJ],
       ["Responsável:", name],
       ["Código:", block.code],
-      ["Data:", formatDate(new Date())],
+      ["Data:", formatDate(block.createdAt)],
     ],
     theme: "plain",
     styles: {
