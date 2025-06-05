@@ -1,6 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState } from "react";
+import {
+  AwaitedReactNode,
+  JSXElementConstructor,
+  Key,
+  ReactElement,
+  ReactNode,
+  ReactPortal,
+  useState,
+} from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -34,13 +43,14 @@ import { DatePicker } from "./ui/date-picker";
 import { ImageUpload } from "./image-upload";
 import { Loader2, X } from "lucide-react";
 import { MoneyInput } from "./money-input";
-import {
-  EXPENSE_CATEGORY_OPTIONS,
-  PAYMENT_METHOD_OPTIONS,
-} from "@/app/_constants/transactions";
+
 import { type Expense } from "@/app/types";
 import { ExpenseCategory, PaymentMethod } from "@prisma/client";
 import { editExpense } from "../_lib/actions/balance";
+import {
+  EXPENSE_CATEGORY_OPTIONS,
+  PAYMENT_METHOD_OPTIONS,
+} from "../_constants/transactions";
 
 const formSchema = z.object({
   description: z.string().nullable(),
@@ -219,7 +229,10 @@ export function EditExpenseDialog({
                       </FormControl>
                       <SelectContent>
                         {EXPENSE_CATEGORY_OPTIONS.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
+                          <SelectItem
+                            key={option.value}
+                            value={option.value.toString() ?? ""}
+                          >
                             {option.label}
                           </SelectItem>
                         ))}
@@ -246,11 +259,32 @@ export function EditExpenseDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {PAYMENT_METHOD_OPTIONS.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
+                        {PAYMENT_METHOD_OPTIONS.map(
+                          (option: {
+                            value: Key | null | undefined;
+                            label:
+                              | string
+                              | number
+                              | bigint
+                              | boolean
+                              | ReactElement<
+                                  any,
+                                  string | JSXElementConstructor<any>
+                                >
+                              | Iterable<ReactNode>
+                              | ReactPortal
+                              | Promise<AwaitedReactNode>
+                              | null
+                              | undefined;
+                          }) => (
+                            <SelectItem
+                              key={option.value}
+                              value={option.value?.toString() ?? ""}
+                            >
+                              {option.label}
+                            </SelectItem>
+                          ),
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />

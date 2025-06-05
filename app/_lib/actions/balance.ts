@@ -2,6 +2,7 @@
 "use server";
 
 import { db } from "@/app/_lib/prisma";
+import { ExpenseEdit } from "@/app/types";
 import { auth } from "@clerk/nextjs/server";
 import {
   type ExpenseCategory,
@@ -9,40 +10,27 @@ import {
   Prisma,
 } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import type { ExpenseEdit } from "@/app/types";
 
 // Cache em memória simples
 const cache = new Map<string, { data: any; expiry: number }>();
 
-/**
- * Função para executar consultas com cache
- */
 async function queryWithCache<T>(
   cacheKey: string,
   queryFn: () => Promise<T>,
   ttlSeconds = 60,
 ): Promise<T> {
-  // Verifica se o resultado está em cache e não expirou
   const cached = cache.get(cacheKey);
   if (cached && cached.expiry > Date.now()) {
     return cached.data as T;
   }
-
-  // Executa a consulta
   const result = await queryFn();
-
-  // Armazena o resultado em cache
   cache.set(cacheKey, {
     data: result,
     expiry: Date.now() + ttlSeconds * 1000,
   });
-
   return result;
 }
 
-/**
- * Limpa o cache por prefixo
- */
 function clearCache(prefix?: string): void {
   if (prefix) {
     for (const key of cache.keys()) {
@@ -55,44 +43,33 @@ function clearCache(prefix?: string): void {
   }
 }
 
-/**
- * Função para executar consultas com retry automático
- */
 async function executeWithRetry<T>(
   operation: () => Promise<T>,
   maxRetries = 3,
   delay = 1000,
 ): Promise<T> {
   let lastError: any;
-
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       return await operation();
     } catch (error: any) {
       lastError = error;
-
-      // Verifica se é um erro de conexão fechada
       const isConnectionError =
         error.message.includes("Connection closed") ||
         error.message.includes("Connection terminated") ||
-        error.code === "P2023" || // Prisma: Inconsistent query
-        error.code === "P2024" || // Prisma: Connection pool timeout
-        error.code === "P2025"; // Prisma: Record not found
-
+        error.code === "P2023" ||
+        error.code === "P2024" ||
+        error.code === "P2025";
       if (!isConnectionError || attempt === maxRetries) {
         throw error;
       }
-
       console.warn(
         `Tentativa ${attempt} falhou, tentando novamente em ${delay}ms...`,
       );
       await new Promise((resolve) => setTimeout(resolve, delay));
-
-      // Aumenta o delay exponencialmente para cada nova tentativa
       delay *= 2;
     }
   }
-
   throw lastError;
 }
 
@@ -100,73 +77,42 @@ export async function getUserBalance(
   company?: string,
 ): Promise<number | { [key: string]: number }> {
   const { userId } = await auth();
-  if (!userId) {
-    throw new Error("User not authenticated");
-  }
+  if (!userId) throw new Error("User not authenticated");
 
-  // Usa cache para reduzir consultas ao banco
   return queryWithCache(
     `user-balance-${userId}-${company || "all"}`,
     async () => {
-      try {
-        if (company) {
-          // Get balance for specific company
-          const userBalance = await executeWithRetry(() =>
-            db.userBalance.findFirst({
-              where: {
-                userId: userId,
-                company: company,
-              },
+      if (company) {
+        const userBalance = await executeWithRetry(() =>
+          db.userBalance.findFirst({ where: { userId, company } }),
+        );
+        if (!userBalance) {
+          await executeWithRetry(() =>
+            db.userBalance.create({
+              data: { userId, company, balance: new Prisma.Decimal(0) },
             }),
           );
-
-          if (!userBalance) {
-            // If no balance record exists, create one with a zero balance
-            await executeWithRetry(() =>
-              db.userBalance.create({
-                data: {
-                  userId,
-                  company,
-                  balance: new Prisma.Decimal(0),
-                },
-              }),
-            );
-            return 0;
-          }
-
-          return Number(userBalance.balance);
-        } else {
-          // Get balances for all companies
-          const userBalances = await executeWithRetry(() =>
-            db.userBalance.findMany({
-              where: {
-                userId,
-              },
-            }),
-          );
-
-          const companies = [
-            "GSM SOLARION 02",
-            "CRIATIVA ENERGIA",
-            "OESTE BIOGÁS",
-            "EXATA I",
-          ];
-          const balances: { [key: string]: number } = {};
-
-          // Initialize all companies with 0 balance
-          for (const company of companies) {
-            const balance = userBalances.find((b) => b.company === company);
-            balances[company] = balance ? Number(balance.balance) : 0;
-          }
-
-          return balances;
+          return 0;
         }
-      } catch (error) {
-        console.error("Error fetching user balance:", error);
-        throw new Error("Failed to fetch user balance");
+        return Number(userBalance.balance);
+      } else {
+        const userBalances = await executeWithRetry(() =>
+          db.userBalance.findMany({ where: { userId } }),
+        );
+        const companies = [
+          "GSM SOLARION 02",
+          "CRIATIVA ENERGIA",
+          "OESTE BIOGÁS",
+          "EXATA I",
+        ];
+        const balances: { [key: string]: number } = {};
+        for (const company of companies) {
+          const balance = userBalances.find((b) => b.company === company);
+          balances[company] = balance ? Number(balance.balance) : 0;
+        }
+        return balances;
       }
     },
-    // Cache por 30 segundos
     30,
   );
 }
@@ -178,43 +124,24 @@ async function updateBalance(
   amount: Prisma.Decimal,
   operation: "increment" | "decrement",
 ) {
-  try {
-    const existingBalance = await prisma.userBalance.findFirst({
-      where: {
-        userId: userId,
-        company: company,
+  const existingBalance = await prisma.userBalance.findFirst({
+    where: { userId, company },
+  });
+  if (existingBalance) {
+    return prisma.userBalance.update({
+      where: { id: existingBalance.id },
+      data: { balance: { [operation]: amount } },
+    });
+  } else {
+    return prisma.userBalance.create({
+      data: {
+        userId,
+        company,
+        balance: operation === "increment" ? amount : amount.negated(),
       },
     });
-
-    if (existingBalance) {
-      return await prisma.userBalance.update({
-        where: {
-          id: existingBalance.id,
-        },
-        data: {
-          balance: {
-            [operation]: amount,
-          },
-        },
-      });
-    } else {
-      return await prisma.userBalance.create({
-        data: {
-          userId: userId,
-          company: company,
-          balance: operation === "increment" ? amount : amount.negated(),
-        },
-      });
-    }
-  } catch (error) {
-    console.error(
-      `Erro ao ${operation === "increment" ? "adicionar" : "subtrair"} saldo:`,
-      error,
-    );
-    throw error;
   }
 }
-
 export async function editExpense(expenseId: string, data: ExpenseEdit) {
   const { userId } = await auth();
 
@@ -249,6 +176,9 @@ export async function editExpense(expenseId: string, data: ExpenseEdit) {
         const newAmount = new Prisma.Decimal(data.amount);
         const difference = newAmount.sub(oldAmount);
 
+        if (currentExpense.block.status !== "OPEN") {
+          throw new Error("Esté bloco está fechado");
+        }
         const updatedExpense = await prisma.expense.update({
           where: { id: expenseId },
           data: {
@@ -291,57 +221,61 @@ export async function editExpense(expenseId: string, data: ExpenseEdit) {
       : new Error("Erro ao editar despesa");
   }
 }
-
 export async function deleteExpense(expenseId: string) {
   const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
+  if (!userId) throw new Error("Unauthorized");
 
   try {
     const result = await db.$transaction(
       async (prisma) => {
         const expense = await prisma.expense.findUnique({
           where: { id: expenseId },
-          include: {
-            block: {
-              include: {
-                request: true,
-              },
-            },
-          },
+          include: { block: { include: { request: true } } },
         });
 
-        if (!expense) {
-          throw new Error("Despesa não encontrada");
-        }
-
-        if (expense.userId !== userId) {
+        if (!expense) throw new Error("Despesa não encontrada");
+        if (expense.userId !== userId)
           throw new Error("Você não tem permissão para excluir esta despesa");
+
+        await prisma.expense.delete({ where: { id: expenseId } });
+
+        const amount = expense.amount;
+
+        // Reverter saldos com base no tipo
+        if (expense.type === "CAIXA" || expense.type === "REEMBOLSO") {
+          await updateBalance(
+            prisma,
+            expense.block.request.userId,
+            expense.company,
+            amount,
+            "decrement",
+          );
+          await prisma.accountingBlock.update({
+            where: { id: expense.blockId },
+            data: { currentBalance: { decrement: amount } },
+          });
+        } else if (expense.type === "DESPESA") {
+          await updateBalance(
+            prisma,
+            expense.block.request.userId,
+            expense.company,
+            amount,
+            "increment",
+          );
+          await prisma.accountingBlock.update({
+            where: { id: expense.blockId },
+            data: { currentBalance: { increment: amount } },
+          });
         }
-
-        await prisma.expense.delete({
-          where: { id: expenseId },
-        });
-
-        await updateBalance(
-          prisma,
-          expense.block.request.userId,
-          expense.company,
-          expense.amount,
-          "increment",
-        );
 
         return expense;
       },
       {
-        maxWait: 20000, // Aumenta o tempo máximo de espera
-        timeout: 120000, // Aumenta o timeout da transação
+        maxWait: 20000,
+        timeout: 120000,
       },
     );
 
-    // Limpa o cache após modificações
     clearCache(`user-balance-${userId}`);
 
     revalidatePath("/");
@@ -368,6 +302,7 @@ export async function registerExpense(
     paymentMethod: PaymentMethod;
     date: Date;
     imageUrls: string[];
+    type: "CAIXA" | "DESPESA" | "REEMBOLSO";
   },
 ) {
   const { userId } = await auth();
@@ -388,11 +323,15 @@ export async function registerExpense(
           throw new Error("Bloco contábil não encontrado");
         }
 
+        const amountDecimal = new Prisma.Decimal(data.amount);
+        if (block.status !== "OPEN") {
+          throw new Error("Esté bloco está fechado");
+        }
         const expense = await prisma.expense.create({
           data: {
             name: data.name,
             description: data.description,
-            amount: new Prisma.Decimal(data.amount),
+            amount: amountDecimal,
             category: data.category,
             paymentMethod: data.paymentMethod,
             date: data.date,
@@ -401,22 +340,54 @@ export async function registerExpense(
             imageUrls: data.imageUrls,
             status: "WAITING",
             company: block.company,
+            type: data.type,
           },
         });
 
-        await updateBalance(
-          prisma,
-          block.request.userId,
-          block.company,
-          new Prisma.Decimal(data.amount),
-          "decrement",
-        );
+        // Atualiza saldos conforme tipo de registro
+        if (data.type === "CAIXA" || data.type === "REEMBOLSO") {
+          // Adiciona ao saldo do usuário e do bloco
+          await updateBalance(
+            prisma,
+            block.request.userId,
+            block.company,
+            amountDecimal,
+            "increment",
+          );
+
+          await prisma.accountingBlock.update({
+            where: { id: blockId },
+            data: {
+              currentBalance: {
+                increment: amountDecimal,
+              },
+            },
+          });
+        } else if (data.type === "DESPESA") {
+          // Subtrai do saldo do usuário e do bloco
+          await updateBalance(
+            prisma,
+            block.request.userId,
+            block.company,
+            amountDecimal,
+            "decrement",
+          );
+
+          await prisma.accountingBlock.update({
+            where: { id: blockId },
+            data: {
+              currentBalance: {
+                decrement: amountDecimal,
+              },
+            },
+          });
+        }
 
         return expense;
       },
       {
-        maxWait: 20000, // Aumenta o tempo máximo de espera
-        timeout: 120000, // Aumenta o timeout da transação
+        maxWait: 20000,
+        timeout: 120000,
       },
     );
 

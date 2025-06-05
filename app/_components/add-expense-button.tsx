@@ -9,14 +9,9 @@ import { AccountingBlock } from "@/app/types";
 interface AddExpenseButtonProps {
   blockId: string;
   block: AccountingBlock;
-  user: string;
 }
 
-export function AddExpenseButton({
-  blockId,
-  block,
-  user,
-}: AddExpenseButtonProps) {
+export function AddExpenseButton({ blockId, block }: AddExpenseButtonProps) {
   const [dialogIsOpen, setDialogIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -32,13 +27,12 @@ export function AddExpenseButton({
           <Loader2 className="h-4 w-4 animate-spin" />
         ) : (
           <>
-            Registrar despesa
+            Adicionar Registros
             <ArrowDownUpIcon className="ml-2 h-4 w-4" />
           </>
         )}
       </Button>
       <UpsertExpenseDialog
-        name={user}
         isOpen={dialogIsOpen}
         setIsOpen={setDialogIsOpen}
         onLoadingChange={setIsLoading}

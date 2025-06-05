@@ -3,13 +3,13 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { formatDate, formatCurrency } from "@/app/_lib/utils";
 import { ExpenseCategory, PaymentMethod, ExpenseStatus } from "@prisma/client";
+import { Badge } from "@/app/_components/ui/badge";
+import { ImageGallery } from "../_components/image-gallery";
 import {
   EXPENSE_CATEGORY_LABELS,
   PAYMENT_METHOD_LABELS,
   EXPENSE_STATUS_LABELS,
 } from "@/app/_constants/transactions";
-import { Badge } from "@/app/_components/ui/badge";
-import { ImageGallery } from "../_components/image-gallery";
 
 export type Expense = {
   id: string;

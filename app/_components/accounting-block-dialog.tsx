@@ -1,8 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -38,12 +40,7 @@ import {
   CarouselPrevious,
 } from "@/app/_components/ui/carousel";
 import { formatDate, formatCurrency } from "@/app/_lib/utils";
-import {
-  EXPENSE_CATEGORY_LABELS,
-  PAYMENT_METHOD_LABELS,
-  EXPENSE_STATUS_LABELS,
-  BLOCK_STATUS_LABELS,
-} from "@/app/_constants/transactions";
+
 import { Badge } from "@/app/_components/ui/badge";
 import type { AccountingBlock, Expense } from "@/app/types";
 import { AddExpenseButton } from "./add-expense-button";
@@ -61,16 +58,25 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/app/_components/ui/alert-dialog";
-import { DownloadPDFButton } from "./download-pdf-button";
+// import { DownloadPDFButton } from "./download-pdf-button";
 import { MoreVertical, Pencil, Trash } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/app/_components/ui/dropdown-menu";
 import { EditExpenseDialog } from "./edit-expense-dialog";
 import { deleteExpense } from "@/app/_lib/actions/balance";
+import {
+  BLOCK_STATUS_LABELS,
+  EXPENSE_CATEGORY_LABELS,
+  EXPENSE_STATUS_LABELS,
+  PAYMENT_METHOD_LABELS,
+} from "../_constants/transactions";
+import FecharBlocoButton from "./close-accounting-block-button";
 
 interface AccountingBlockDialogProps {
   block: AccountingBlock | null;
@@ -92,37 +98,47 @@ export function AccountingBlockDialog({
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const { toast } = useToast();
+  const router = useRouter();
 
   if (!block) return null;
 
   const totalAmount = block.expenses.reduce(
-    (total, expense) => total + Number(expense.amount),
+    (total, expense) =>
+      expense.type === "CAIXA"
+        ? total + Number(expense.amount)
+        : total - Number(expense.amount),
     0,
   );
 
-  const remainingBalance = Number(block.initialAmount) - totalAmount;
+  const remainingBalance = Number(block.currentBalance);
 
   const handleCloseAccounting = async () => {
     try {
       const result = await closeAccountingBlock(block.id);
-      if (result.status === "reimbursement_pending") {
+      if (result.status === "awaiting_reimbursement") {
         toast({
-          title: "Solicitação de reembolso criada",
-          description:
-            "Uma solicitação de reembolso foi criada. O bloco será fechado quando o reembolso for processado.",
+          title: "Reembolso obrigatório",
+          description: result.message,
+          variant: "destructive",
         });
-      } else if (result.success) {
+      } else if (result.status === "closed") {
         toast({
-          title: "Bloco fechado com sucesso",
-          description: `O bloco foi fechado com um saldo final de ${formatCurrency(result.remainingBalance)}.`,
+          title: "Fechado com sucesso",
+          description: result.message,
+        });
+        onOpenChange(false);
+        router.refresh();
+      } else {
+        toast({
+          title: "Erro inesperado",
+          description: result.message || "Não foi possível fechar o bloco.",
+          variant: "destructive",
         });
       }
-      onOpenChange(false);
     } catch (error) {
       toast({
-        title: "Erro ao fechar bloco",
-        description:
-          "Ocorreu um erro ao tentar fechar o bloco. Por favor, tente novamente.",
+        title: "Erro interno",
+        description: "Falha ao fechar a prestação. Tente novamente.",
         variant: "destructive",
       });
     }
@@ -136,15 +152,14 @@ export function AccountingBlockDialog({
     try {
       await deleteExpense(expenseId);
       toast({
-        title: "Despesa excluída com sucesso",
-        description: "A despesa foi removida da prestação de contas.",
+        title: "Despesa removida",
+        description: "Registro excluído com sucesso.",
       });
-      // You might want to refresh the block data here or update the local state
+      router.refresh();
     } catch (error) {
       toast({
-        title: "Erro ao excluir despesa",
-        description:
-          "Ocorreu um erro ao excluir a despesa. Por favor, tente novamente.",
+        title: "Erro ao excluir",
+        description: "Tente novamente em instantes.",
         variant: "destructive",
       });
     }
@@ -229,14 +244,8 @@ export function AccountingBlockDialog({
               </TabsTrigger>
             </TabsList>
             <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-              {block && (
-                <AddExpenseButton
-                  blockId={block.id}
-                  block={block}
-                  user={name}
-                />
-              )}
-              <DownloadPDFButton
+              {block && <AddExpenseButton blockId={block.id} block={block} />}
+              {/* <DownloadPDFButton
                 block={{
                   ...block,
                   request: block.request ?? undefined, // Se for null, transforma em undefined
@@ -250,13 +259,11 @@ export function AccountingBlockDialog({
                   })),
                 }}
                 userName={userName}
-              />
+              /> */}
               {block.status !== "CLOSED" && (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="outline" className="w-full sm:w-auto">
-                      Fechar Prestação
-                    </Button>
+                    <FecharBlocoButton block={block} />
                   </AlertDialogTrigger>
                   <AlertDialogContent className="max-w-md">
                     <AlertDialogHeader>
@@ -307,7 +314,7 @@ export function AccountingBlockDialog({
                         Método
                       </TableHead>
                       <TableHead>Valor</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead>Tipo</TableHead>
                       <TableHead className="w-[100px]">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -331,19 +338,7 @@ export function AccountingBlockDialog({
                         <TableCell>
                           {formatCurrency(Number(expense.amount))}
                         </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              expense.status === "APPROVED"
-                                ? "default"
-                                : expense.status === "DENIED"
-                                  ? "destructive"
-                                  : "secondary"
-                            }
-                          >
-                            {EXPENSE_STATUS_LABELS[expense.status]}
-                          </Badge>
-                        </TableCell>
+                        <TableCell>{expense.type}</TableCell>
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>

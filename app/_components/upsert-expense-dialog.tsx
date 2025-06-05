@@ -1,7 +1,16 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import { useState } from "react";
+import {
+  AwaitedReactNode,
+  JSXElementConstructor,
+  Key,
+  ReactElement,
+  ReactNode,
+  ReactPortal,
+  useState,
+} from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -37,14 +46,15 @@ import { DatePicker } from "./ui/date-picker";
 import { ImageUpload } from "./image-upload";
 import { Loader2 } from "lucide-react";
 import type { AccountingBlock } from "@/app/types";
+import { ExpenseCategory, PaymentMethod } from "@prisma/client";
 import {
   EXPENSE_CATEGORY_OPTIONS,
   PAYMENT_METHOD_OPTIONS,
-} from "@/app/_constants/transactions";
-import { ScrollArea } from "./ui/scroll-area";
-import { ExpenseCategory, PaymentMethod } from "@prisma/client";
+} from "../_constants/transactions";
+import { Input } from "./ui/input";
 
 const formSchema = z.object({
+  name: z.string().min(1, "O nome é obrigatório"),
   description: z.string().min(1, "A descrição é obrigatória"),
   amount: z.number().min(0.01, "O valor deve ser maior que zero"),
   category: z.nativeEnum(ExpenseCategory, {
@@ -56,6 +66,9 @@ const formSchema = z.object({
   date: z.date({
     required_error: "A data é obrigatória",
   }),
+  type: z.enum(["REEMBOLSO", "CAIXA", "DESPESA"], {
+    required_error: "O tipo é obrigatório",
+  }),
 });
 
 type FormSchema = z.infer<typeof formSchema>;
@@ -63,7 +76,6 @@ type FormSchema = z.infer<typeof formSchema>;
 interface UpsertExpenseDialogProps {
   isOpen: boolean;
   blockId: string;
-  name: string;
   block: AccountingBlock;
   setIsOpen: (isOpen: boolean) => void;
   onLoadingChange?: (isLoading: boolean) => void;
@@ -72,7 +84,6 @@ interface UpsertExpenseDialogProps {
 export function UpsertExpenseDialog({
   isOpen,
   blockId,
-  name,
   block,
   setIsOpen,
   onLoadingChange,
@@ -83,11 +94,13 @@ export function UpsertExpenseDialog({
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      name: "",
       amount: 0,
       category: ExpenseCategory.OTHER,
       description: "",
       paymentMethod: PaymentMethod.CASH,
       date: new Date(),
+      type: "DESPESA",
     },
   });
 
@@ -112,7 +125,6 @@ export function UpsertExpenseDialog({
       await registerExpense(blockId, {
         ...data,
         imageUrls: imagesBase64,
-        name: name,
       });
 
       toast({
@@ -149,19 +161,49 @@ export function UpsertExpenseDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Descrição</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Digite a descrição..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Nome do respon. pelo registro..."
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o tipo" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="DESPESA">Despesa</SelectItem>
+                        <SelectItem value="CAIXA">Caixa</SelectItem>
+                        <SelectItem value="REEMBOLSO">Reembolso</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="grid grid-cols-2 gap-4">
               <FormField
@@ -218,11 +260,32 @@ export function UpsertExpenseDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {EXPENSE_CATEGORY_OPTIONS.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
+                        {EXPENSE_CATEGORY_OPTIONS.map(
+                          (option: {
+                            value: Key | undefined;
+                            label:
+                              | string
+                              | number
+                              | bigint
+                              | boolean
+                              | ReactElement<
+                                  any,
+                                  string | JSXElementConstructor<any>
+                                >
+                              | Iterable<ReactNode>
+                              | ReactPortal
+                              | Promise<AwaitedReactNode>
+                              | null
+                              | undefined;
+                          }) => (
+                            <SelectItem
+                              key={option.value}
+                              value={option.value?.toString() ?? ""}
+                            >
+                              {option.label}
+                            </SelectItem>
+                          ),
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -246,11 +309,32 @@ export function UpsertExpenseDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {PAYMENT_METHOD_OPTIONS.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
+                        {PAYMENT_METHOD_OPTIONS.map(
+                          (option: {
+                            value: Key | null | undefined;
+                            label:
+                              | string
+                              | number
+                              | bigint
+                              | boolean
+                              | ReactElement<
+                                  any,
+                                  string | JSXElementConstructor<any>
+                                >
+                              | Iterable<ReactNode>
+                              | ReactPortal
+                              | Promise<AwaitedReactNode>
+                              | null
+                              | undefined;
+                          }) => (
+                            <SelectItem
+                              key={option.value}
+                              value={option.value?.toString() ?? ""}
+                            >
+                              {option.label}
+                            </SelectItem>
+                          ),
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -259,6 +343,19 @@ export function UpsertExpenseDialog({
               />
             </div>
 
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Descrição</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Digite a descrição..." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormItem>
               <FormLabel>Comprovantes</FormLabel>
               <FormControl>

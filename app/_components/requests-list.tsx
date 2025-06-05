@@ -26,14 +26,14 @@ import { useToast } from "@/app/_hooks/use-toast";
 import { ValidationUserDialog } from "./validation-user-dialog";
 import { ReimbursementDialog } from "./reimbursement-dialog";
 import { DenialReasonDialog } from "./denial-reason-dialog";
-import {
-  REQUEST_STATUS_LABELS,
-  REQUEST_TYPE_LABELS,
-} from "../_constants/transactions";
 import { useUser } from "@clerk/nextjs";
 import { Request } from "../types";
 import { RequestStatusDialog } from "./request-status-dialog";
 import UserInfo from "./user-info";
+import {
+  REQUEST_STATUS_LABELS,
+  REQUEST_TYPE_LABELS,
+} from "../_constants/transactions";
 
 interface User {
   id: string;

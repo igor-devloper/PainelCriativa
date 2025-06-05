@@ -19,6 +19,8 @@ import { ThemeToggle } from "./theme-toggle";
 import { Avatar } from "./ui/avatar";
 import { UserButton } from "@clerk/nextjs";
 
+export const dynamic = "force-dynamic";
+
 interface AccountingPageWrapperProps {
   userRole: UserRole;
   accountingBlocks: AccountingBlock[];
