@@ -191,7 +191,9 @@ export async function editExpense(expenseId: string, data: ExpenseEdit) {
             imageUrls: data.imageUrls,
           },
         });
-
+        if (!currentExpense.block?.request?.userId) {
+          throw new Error("Bloco não possui request com userId definido");
+        }
         if (!difference.equals(new Prisma.Decimal(0))) {
           await updateBalance(
             prisma,
@@ -240,7 +242,9 @@ export async function deleteExpense(expenseId: string) {
         await prisma.expense.delete({ where: { id: expenseId } });
 
         const amount = expense.amount;
-
+        if (!expense.block?.request?.userId) {
+          throw new Error("Bloco não possui request com userId definido");
+        }
         // Reverter saldos com base no tipo
         if (expense.type === "CAIXA" || expense.type === "REEMBOLSO") {
           await updateBalance(
@@ -343,7 +347,9 @@ export async function registerExpense(
             type: data.type,
           },
         });
-
+        if (!block.request?.userId) {
+          throw new Error("Bloco não possui request com userId definido");
+        }
         // Atualiza saldos conforme tipo de registro
         if (data.type === "CAIXA" || data.type === "REEMBOLSO") {
           // Adiciona ao saldo do usuário e do bloco
