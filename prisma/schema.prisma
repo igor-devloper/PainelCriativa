@@ -67,7 +67,7 @@ model Expense {
   block         AccountingBlock @relation(fields: [blockId], references: [id])
   date          DateTime
   status        ExpenseStatus   @default(WAITING)
-  type TransactionType @default(DESPESA)
+  type transactiontype @default(DESPESA)
   userId        String // ID do usuário Clerk que criou
   imageUrls     String[] // URLs dos comprovantes
   createdAt     DateTime        @default(now())
@@ -82,7 +82,7 @@ model UserBalance {
   company String
 }
 
-enum TransactionType {
+enum transactiontype {
   DESPESA
   CAIXA
   REEMBOLSO

@@ -49,7 +49,7 @@ import type { AccountingBlock } from "@/app/types";
 import {
   ExpenseCategory,
   PaymentMethod,
-  TransactionType,
+  transactiontype,
 } from "@prisma/client";
 import {
   EXPENSE_CATEGORY_OPTIONS,
@@ -70,8 +70,8 @@ const formSchema = z.object({
   date: z.date({
     required_error: "A data é obrigatória",
   }),
-  type: z.nativeEnum(TransactionType, {
-    errorMap: () => ({ message: "O tipo é obrigatório" }),
+  type: z.nativeEnum(transactiontype, {
+    required_error: "O tipo é obrigatório",
   }),
 });
 
@@ -129,7 +129,7 @@ export function UpsertExpenseDialog({
       await registerExpense(blockId, {
         ...data,
         imageUrls: imagesBase64,
-        type: data.type as TransactionType,
+        type: data.type as transactiontype,
       });
 
       toast({
