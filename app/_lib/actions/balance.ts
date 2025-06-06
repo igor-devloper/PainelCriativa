@@ -8,6 +8,7 @@ import {
   type ExpenseCategory,
   type PaymentMethod,
   Prisma,
+  TransactionType,
 } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
@@ -344,7 +345,7 @@ export async function registerExpense(
             imageUrls: data.imageUrls,
             status: "WAITING",
             company: block.company,
-            type: data.type,
+            type: data.type as TransactionType,
           },
         });
         if (!block.request?.userId) {
