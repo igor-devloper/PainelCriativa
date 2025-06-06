@@ -81,7 +81,7 @@ async function normalizeBase64Image(base64Data: string): Promise<{
       canvas.height = height;
       ctx.drawImage(img, 0, 0, width, height);
 
-      const normalizedBase64 = canvas.toDataURL("image/png");
+      const normalizedBase64 = canvas.toDataURL();
       resolve({
         base64: normalizedBase64,
         dimensions: { width, height },
@@ -245,7 +245,6 @@ export async function generateAccountingPDF(
   if (block.expenses.length > 0) {
     doc.addPage();
     pageNumber = 1;
-
     const expensesByCategory = calculateExpensesByCategory(block.expenses);
     autoTable(doc, {
       startY: 30,
@@ -297,7 +296,8 @@ export async function generateAccountingPDF(
           const { base64: normalized, dimensions } =
             await normalizeBase64Image(base64);
           const clean = cleanBase64String(normalized);
-          const format = getBase64ImageFormat(normalized);
+          let format = getBase64ImageFormat(normalized);
+          if (format === "JPG") format = "JPEG";
 
           doc.addPage();
           const pageWidth = doc.internal.pageSize.width;
