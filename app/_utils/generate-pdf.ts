@@ -271,7 +271,7 @@ export async function generateAccountingPDF(
 
   const addHeader = () => {
     try {
-      doc.addImage("/logo.png", "PNG", 15, 15, 40, 25);
+      doc.addImage("/logo.png", "PNG", 15, 15, 40, 48.6);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       console.warn("Logo não encontrada");

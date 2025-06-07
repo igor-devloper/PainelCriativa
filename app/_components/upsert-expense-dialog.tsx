@@ -157,7 +157,7 @@ export function UpsertExpenseDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-h-[90vh] max-w-2xl overflow-hidden">
+      <DialogContent className="max-h-[95vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle>Registrar despesa</DialogTitle>
           <DialogDescription>
@@ -165,7 +165,7 @@ export function UpsertExpenseDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[70vh] pb-10 pr-4">
+        <ScrollArea className="max-h-[50vh] pr-4">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
