@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
@@ -43,22 +44,7 @@ export async function closeAccountingBlock(blockId: string) {
   const responsibleName =
     block.request?.accountHolderName ?? "Usuário Responsável";
 
-  const doc = await generateAccountingPDF(
-    {
-      code: block.code,
-      createdAt: block.createdAt,
-      status: block.status,
-      initialAmount: block.initialAmount ?? 0,
-      expenses: block.expenses.map((e) => ({
-        ...e,
-        date: e.date.toISOString(),
-        description: e.description ?? "",
-      })),
-      request: block.request ?? undefined,
-    },
-    companyName,
-    responsibleName,
-  );
+  const doc = await generateAccountingPDF(block, companyName, responsibleName);
 
   const pdfBlob = doc.output("blob");
   const buffer = await pdfBlob.arrayBuffer();

@@ -244,7 +244,7 @@ function getRequestStatusLabel(status: RequestStatus): string {
   return REQUEST_STATUS_LABELS[status] || status;
 }
 
-export async function generateImprovedAccountingPDF(
+export async function generateAccountingPDF(
   block: AccountingBlock,
   companyName: string,
   name: string,
