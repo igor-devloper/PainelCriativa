@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState } from "react";
@@ -63,7 +63,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/app/_components/ui/alert-dialog";
-import { MoreVertical, Pencil, Trash, Camera } from "lucide-react";
+import { MoreVertical, Pencil, Trash } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -250,7 +250,7 @@ export function AccountingBlockDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-h-[95vh] w-[95vw] max-w-6xl overflow-y-auto p-4 sm:p-6">
+        <DialogContent className="max-h-[95vh] w-[95vw] max-w-6xl overflow-hidden p-4 sm:p-6">
           <DialogHeader className="mb-4">
             <DialogTitle className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
               <span className="text-lg sm:text-xl">
@@ -260,389 +260,391 @@ export function AccountingBlockDialog({
             </DialogTitle>
           </DialogHeader>
 
-          {/* Cards de Resumo Melhorados - CORRIGIDOS */}
-          <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Card className="w-full">
-              <CardHeader className="p-4">
-                <CardTitle className="text-sm font-medium">Status</CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 pt-0">
-                <Badge
-                  variant={
-                    block.status === "APPROVED"
-                      ? "default"
-                      : block.status === "DENIED"
-                        ? "destructive"
-                        : block.status === "CLOSED"
-                          ? "secondary"
-                          : "outline"
-                  }
-                >
-                  {getBlockStatusLabel(block.status)}
-                </Badge>
-              </CardContent>
-            </Card>
+          <ScrollArea className="max-h-[80vh] pr-4">
+            {/* Cards de Resumo Melhorados */}
+            <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <Card className="w-full">
+                <CardHeader className="p-4">
+                  <CardTitle className="text-sm font-medium">Status</CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 pt-0">
+                  <Badge
+                    variant={
+                      block.status === "APPROVED"
+                        ? "default"
+                        : block.status === "DENIED"
+                          ? "destructive"
+                          : block.status === "CLOSED"
+                            ? "secondary"
+                            : "outline"
+                    }
+                  >
+                    {getBlockStatusLabel(block.status)}
+                  </Badge>
+                </CardContent>
+              </Card>
 
-            <Card className="w-full">
-              <CardHeader className="p-4">
-                <CardTitle className="text-sm font-medium">
-                  Valor Disponibilizado
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 pt-0">
-                <p className="text-base font-bold text-blue-600 sm:text-lg">
-                  {formatCurrency(requestAmount)}
-                </p>
-                <p className="text-xs text-blue-500">Valor inicial</p>
-              </CardContent>
-            </Card>
+              <Card className="w-full">
+                <CardHeader className="p-4">
+                  <CardTitle className="text-sm font-medium">
+                    Valor Disponibilizado
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 pt-0">
+                  <p className="text-base font-bold text-blue-600 sm:text-lg">
+                    {formatCurrency(requestAmount)}
+                  </p>
+                  <p className="text-xs text-blue-500">Valor inicial</p>
+                </CardContent>
+              </Card>
 
-            <Card className="w-full">
-              <CardHeader className="p-4">
-                <CardTitle className="text-sm font-medium">
-                  Total Caixa
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 pt-0">
-                <p className="text-base font-bold text-green-600 sm:text-lg">
-                  {formatCurrency(totalCaixa)}
-                </p>
-                <p className="text-xs text-green-500">
-                  {caixa.length} entradas
-                </p>
-              </CardContent>
-            </Card>
+              <Card className="w-full">
+                <CardHeader className="p-4">
+                  <CardTitle className="text-sm font-medium">
+                    Total Caixa
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 pt-0">
+                  <p className="text-base font-bold text-green-600 sm:text-lg">
+                    {formatCurrency(totalCaixa)}
+                  </p>
+                  <p className="text-xs text-green-500">
+                    {caixa.length} entradas
+                  </p>
+                </CardContent>
+              </Card>
 
-            <Card className="w-full">
-              <CardHeader className="p-4">
-                <CardTitle className="text-sm font-medium">
-                  Saldo Final
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 pt-0">
-                <p
-                  className={`text-base font-bold sm:text-lg ${
-                    remainingBalance < 0 ? "text-red-600" : "text-green-600"
-                  }`}
-                >
-                  {formatCurrency(remainingBalance)}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {remainingBalance < 0
-                    ? "Reembolso necessário"
-                    : "Saldo positivo"}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Tabs defaultValue="expenses" className="w-full">
-            <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-              <TabsList className="w-full sm:w-auto">
-                <TabsTrigger value="expenses" className="flex-1 sm:flex-none">
-                  Despesas ({despesas.length})
-                </TabsTrigger>
-                <TabsTrigger value="cash" className="flex-1 sm:flex-none">
-                  Caixa ({caixa.length})
-                </TabsTrigger>
-                <TabsTrigger value="receipts" className="flex-1 sm:flex-none">
-                  Comprovantes
-                </TabsTrigger>
-              </TabsList>
-
-              <div className="flex w-full flex-wrap gap-2 sm:w-auto">
-                {/* Scanner de Recibos */}
-                <Button
-                  onClick={() => setShowScanner(true)}
-                  variant="outline"
-                  size="sm"
-                >
-                  <Camera className="mr-2 h-4 w-4" />
-                  Escanear Recibo
-                </Button>
-
-                {/* Botão de Adicionar Despesa */}
-                {block && <AddExpenseButton blockId={block.id} block={block} />}
-
-                {/* Gerador de PDF Melhorado */}
-                <ImprovedPDFGenerator
-                  block={block}
-                  userName={userName}
-                  companyName={block.company || name}
-                />
-
-                {/* Botão de Fechar Bloco */}
-                {block.status !== "CLOSED" && (
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive" size="sm">
-                        Fechar Bloco
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent className="max-w-md">
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>
-                          Fechar Prestação de Contas
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Você está prestes a fechar este bloco de prestação de
-                          contas.
-                          {remainingBalance < 0 ? (
-                            <p className="mt-2 text-red-500">
-                              O saldo final é negativo (
-                              {formatCurrency(remainingBalance)}). Uma
-                              solicitação de reembolso será criada
-                              automaticamente.
-                            </p>
-                          ) : (
-                            <p className="mt-2 text-green-600">
-                              O saldo final é positivo (
-                              {formatCurrency(remainingBalance)}).
-                            </p>
-                          )}
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleCloseAccounting}>
-                          Confirmar
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                )}
-              </div>
+              <Card className="w-full">
+                <CardHeader className="p-4">
+                  <CardTitle className="text-sm font-medium">
+                    Saldo Final
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 pt-0">
+                  <p
+                    className={`text-base font-bold sm:text-lg ${
+                      remainingBalance < 0 ? "text-red-600" : "text-green-600"
+                    }`}
+                  >
+                    {formatCurrency(remainingBalance)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {remainingBalance < 0
+                      ? "Reembolso necessário"
+                      : "Saldo positivo"}
+                  </p>
+                </CardContent>
+              </Card>
             </div>
 
-            {/* Tab de Despesas */}
-            <TabsContent value="expenses">
-              <ScrollArea className="h-[400px] w-full rounded-md border">
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[100px]">Data</TableHead>
-                        <TableHead>Nome</TableHead>
-                        <TableHead className="hidden sm:table-cell">
-                          Categoria
-                        </TableHead>
-                        <TableHead className="hidden md:table-cell">
-                          Método
-                        </TableHead>
-                        <TableHead>Valor</TableHead>
-                        <TableHead className="w-[100px]">Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {despesas.map((expense) => (
-                        <TableRow
-                          key={expense.id}
-                          className="cursor-pointer hover:bg-muted"
-                          onClick={() => setSelectedExpense(expense)}
-                        >
-                          <TableCell className="font-medium">
-                            {formatDate(expense.date)}
-                          </TableCell>
-                          <TableCell>{expense.name}</TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            {getCategoryLabel(expense.category)}
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell">
-                            {getPaymentMethodLabel(expense.paymentMethod)}
-                          </TableCell>
-                          <TableCell className="font-medium text-red-600">
-                            {formatCurrency(safeNumber(expense.amount))}
-                          </TableCell>
-                          <TableCell>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                  <span className="sr-only">Abrir menu</span>
-                                  <MoreVertical className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                  onClick={() => handleEditExpense(expense)}
-                                >
-                                  <Pencil className="mr-2 h-4 w-4" />
-                                  Editar
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    handleDeleteExpense(expense.id)
-                                  }
-                                >
-                                  <Trash className="mr-2 h-4 w-4" />
-                                  Excluir
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-                <ScrollBar orientation="horizontal" />
-              </ScrollArea>
-            </TabsContent>
+            <Tabs defaultValue="expenses" className="w-full">
+              <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+                <TabsList className="w-full sm:w-auto">
+                  <TabsTrigger value="expenses" className="flex-1 sm:flex-none">
+                    Despesas ({despesas.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="cash" className="flex-1 sm:flex-none">
+                    Caixa ({caixa.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="receipts" className="flex-1 sm:flex-none">
+                    Comprovantes
+                  </TabsTrigger>
+                </TabsList>
 
-            {/* Tab de Caixa */}
-            <TabsContent value="cash">
-              <ScrollArea className="h-[400px] w-full rounded-md border">
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[100px]">Data</TableHead>
-                        <TableHead>Descrição</TableHead>
-                        <TableHead>Valor</TableHead>
-                        <TableHead className="w-[100px]">Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {caixa.map((expense) => (
-                        <TableRow
-                          key={expense.id}
-                          className="cursor-pointer hover:bg-muted"
-                        >
-                          <TableCell className="font-medium">
-                            {formatDate(expense.date)}
-                          </TableCell>
-                          <TableCell>
-                            {expense.description || expense.name}
-                          </TableCell>
-                          <TableCell className="font-medium text-green-600">
-                            +{formatCurrency(safeNumber(expense.amount))}
-                          </TableCell>
-                          <TableCell>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                  <MoreVertical className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                  onClick={() => handleEditExpense(expense)}
-                                >
-                                  <Pencil className="mr-2 h-4 w-4" />
-                                  Editar
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    handleDeleteExpense(expense.id)
-                                  }
-                                >
-                                  <Trash className="mr-2 h-4 w-4" />
-                                  Excluir
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-                <ScrollBar orientation="horizontal" />
-              </ScrollArea>
-            </TabsContent>
-
-            {/* Tab de Comprovantes */}
-            <TabsContent value="receipts">
-              {selectedExpense ? (
-                <div className="space-y-4">
-                  <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
-                    <h3 className="text-lg font-semibold">
-                      Comprovantes - {selectedExpense.name}
-                    </h3>
-                    <div className="flex gap-2">
-                      <Badge>
-                        {formatCurrency(safeNumber(selectedExpense.amount))}
-                      </Badge>
-                      <Badge variant="outline">
-                        {getCategoryLabel(selectedExpense.category)}
-                      </Badge>
-                    </div>
-                  </div>
-
-                  {selectedExpense.imageUrls &&
-                  selectedExpense.imageUrls.length > 0 ? (
-                    <Carousel className="mx-auto w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl">
-                      <CarouselContent>
-                        {selectedExpense.imageUrls.map((url, index) => (
-                          <CarouselItem key={index}>
-                            <div className="p-1">
-                              <div className="flex aspect-square items-center justify-center p-2 sm:p-4">
-                                <Image
-                                  src={url || "/placeholder.svg"}
-                                  alt={`Comprovante ${index + 1}`}
-                                  width={400}
-                                  height={400}
-                                  className="h-auto max-w-full rounded-md object-contain"
-                                />
-                              </div>
-                            </div>
-                          </CarouselItem>
-                        ))}
-                      </CarouselContent>
-                      <CarouselPrevious />
-                      <CarouselNext />
-                    </Carousel>
-                  ) : (
-                    <div className="py-8 text-center text-muted-foreground">
-                      Nenhum comprovante disponível para esta despesa
-                    </div>
+                <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+                  {/* Botão de Adicionar Despesa */}
+                  {block && (
+                    <AddExpenseButton blockId={block.id} block={block} />
                   )}
 
-                  {/* Detalhes da despesa */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-sm">
-                        Detalhes da Despesa
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Data:</span>
-                        <span>{formatDate(selectedExpense.date)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">
-                          Categoria:
-                        </span>
-                        <span>
+                  {/* Gerador de PDF Melhorado */}
+                  <ImprovedPDFGenerator
+                    block={block}
+                    userName={userName}
+                    companyName={block.company || name}
+                  />
+
+                  {/* Botão de Fechar Bloco */}
+                  {block.status !== "CLOSED" && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="sm">
+                          Fechar Bloco
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="max-w-md">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>
+                            Fechar Prestação de Contas
+                          </AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Você está prestes a fechar este bloco de prestação
+                            de contas.
+                            {remainingBalance < 0 ? (
+                              <p className="mt-2 text-red-500">
+                                O saldo final é negativo (
+                                {formatCurrency(remainingBalance)}). Uma
+                                solicitação de reembolso será criada
+                                automaticamente.
+                              </p>
+                            ) : (
+                              <p className="mt-2 text-green-600">
+                                O saldo final é positivo (
+                                {formatCurrency(remainingBalance)}).
+                              </p>
+                            )}
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleCloseAccounting}>
+                            Confirmar
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                </div>
+              </div>
+
+              {/* Tab de Despesas */}
+              <TabsContent value="expenses">
+                <ScrollArea className="h-[400px] w-full rounded-md border">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-[100px]">Data</TableHead>
+                          <TableHead>Nome</TableHead>
+                          <TableHead className="hidden sm:table-cell">
+                            Categoria
+                          </TableHead>
+                          <TableHead className="hidden md:table-cell">
+                            Método
+                          </TableHead>
+                          <TableHead>Valor</TableHead>
+                          <TableHead className="w-[100px]">Ações</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {despesas.map((expense) => (
+                          <TableRow
+                            key={expense.id}
+                            className="cursor-pointer hover:bg-muted"
+                            onClick={() => setSelectedExpense(expense)}
+                          >
+                            <TableCell className="font-medium">
+                              {formatDate(expense.date)}
+                            </TableCell>
+                            <TableCell>{expense.name}</TableCell>
+                            <TableCell className="hidden sm:table-cell">
+                              {getCategoryLabel(expense.category)}
+                            </TableCell>
+                            <TableCell className="hidden md:table-cell">
+                              {getPaymentMethodLabel(expense.paymentMethod)}
+                            </TableCell>
+                            <TableCell className="font-medium text-red-600">
+                              {formatCurrency(safeNumber(expense.amount))}
+                            </TableCell>
+                            <TableCell>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    <span className="sr-only">Abrir menu</span>
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onClick={() => handleEditExpense(expense)}
+                                  >
+                                    <Pencil className="mr-2 h-4 w-4" />
+                                    Editar
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      handleDeleteExpense(expense.id)
+                                    }
+                                  >
+                                    <Trash className="mr-2 h-4 w-4" />
+                                    Excluir
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <ScrollBar orientation="horizontal" />
+                </ScrollArea>
+              </TabsContent>
+
+              {/* Tab de Caixa */}
+              <TabsContent value="cash">
+                <ScrollArea className="h-[400px] w-full rounded-md border">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-[100px]">Data</TableHead>
+                          <TableHead>Descrição</TableHead>
+                          <TableHead>Valor</TableHead>
+                          <TableHead className="w-[100px]">Ações</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {caixa.map((expense) => (
+                          <TableRow
+                            key={expense.id}
+                            className="cursor-pointer hover:bg-muted"
+                          >
+                            <TableCell className="font-medium">
+                              {formatDate(expense.date)}
+                            </TableCell>
+                            <TableCell>
+                              {expense.description || expense.name}
+                            </TableCell>
+                            <TableCell className="font-medium text-green-600">
+                              +{formatCurrency(safeNumber(expense.amount))}
+                            </TableCell>
+                            <TableCell>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onClick={() => handleEditExpense(expense)}
+                                  >
+                                    <Pencil className="mr-2 h-4 w-4" />
+                                    Editar
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      handleDeleteExpense(expense.id)
+                                    }
+                                  >
+                                    <Trash className="mr-2 h-4 w-4" />
+                                    Excluir
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <ScrollBar orientation="horizontal" />
+                </ScrollArea>
+              </TabsContent>
+
+              {/* Tab de Comprovantes */}
+              <TabsContent value="receipts">
+                {selectedExpense ? (
+                  <div className="space-y-4">
+                    <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
+                      <h3 className="text-lg font-semibold">
+                        Comprovantes - {selectedExpense.name}
+                      </h3>
+                      <div className="flex gap-2">
+                        <Badge>
+                          {formatCurrency(safeNumber(selectedExpense.amount))}
+                        </Badge>
+                        <Badge variant="outline">
                           {getCategoryLabel(selectedExpense.category)}
-                        </span>
+                        </Badge>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Método:</span>
-                        <span>
-                          {getPaymentMethodLabel(selectedExpense.paymentMethod)}
-                        </span>
+                    </div>
+
+                    {selectedExpense.imageUrls &&
+                    selectedExpense.imageUrls.length > 0 ? (
+                      <Carousel className="mx-auto w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl">
+                        <CarouselContent>
+                          {selectedExpense.imageUrls.map((url, index) => (
+                            <CarouselItem key={index}>
+                              <div className="p-1">
+                                <div className="flex aspect-square items-center justify-center p-2 sm:p-4">
+                                  <Image
+                                    src={url || "/placeholder.svg"}
+                                    alt={`Comprovante ${index + 1}`}
+                                    width={400}
+                                    height={400}
+                                    className="h-auto max-w-full rounded-md object-contain"
+                                  />
+                                </div>
+                              </div>
+                            </CarouselItem>
+                          ))}
+                        </CarouselContent>
+                        <CarouselPrevious />
+                        <CarouselNext />
+                      </Carousel>
+                    ) : (
+                      <div className="py-8 text-center text-muted-foreground">
+                        Nenhum comprovante disponível para esta despesa
                       </div>
-                      {selectedExpense.description && (
+                    )}
+
+                    {/* Detalhes da despesa */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-sm">
+                          Detalhes da Despesa
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Data:</span>
+                          <span>{formatDate(selectedExpense.date)}</span>
+                        </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">
-                            Descrição:
+                            Categoria:
                           </span>
-                          <span className="max-w-[200px] text-right">
-                            {selectedExpense.description}
+                          <span>
+                            {getCategoryLabel(selectedExpense.category)}
                           </span>
                         </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
-              ) : (
-                <div className="py-8 text-center text-muted-foreground">
-                  Selecione uma despesa para ver seus comprovantes
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Método:</span>
+                          <span>
+                            {getPaymentMethodLabel(
+                              selectedExpense.paymentMethod,
+                            )}
+                          </span>
+                        </div>
+                        {selectedExpense.description && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">
+                              Descrição:
+                            </span>
+                            <span className="max-w-[200px] text-right">
+                              {selectedExpense.description}
+                            </span>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+                ) : (
+                  <div className="py-8 text-center text-muted-foreground">
+                    Selecione uma despesa para ver seus comprovantes
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
 
