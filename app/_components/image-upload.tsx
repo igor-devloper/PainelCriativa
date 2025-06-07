@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { cn } from "@/app/_lib/utils";
 import { ReceiptScanner } from "./receipt-scanner";
+import { CameraPermissionHelper } from "./camera-permission-helper";
 import { Button } from "@/app/_components/ui/button";
 import { X, Eye } from "lucide-react";
 import Image from "next/image";
@@ -14,7 +15,7 @@ import {
   DialogTitle,
 } from "@/app/_components/ui/dialog";
 
-interface EnhancedImageUploadProps {
+interface ImageUploadProps {
   onChange: (files: File[]) => void;
   value: File[];
   maxFiles?: number;
@@ -26,8 +27,10 @@ export function ImageUpload({
   value,
   maxFiles = 3,
   isDisabled,
-}: EnhancedImageUploadProps) {
+}: ImageUploadProps) {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [showScanner, setShowScanner] = useState(false);
+  const [cameraPermissionGranted, setCameraPermissionGranted] = useState(false);
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
@@ -53,12 +56,14 @@ export function ImageUpload({
     if (value.length < maxFiles) {
       onChange([...value, file]);
     }
+    setShowScanner(false);
   };
 
   const handleScannerUpload = (files: File[]) => {
     const remainingSlots = maxFiles - value.length;
     const filesToAdd = files.slice(0, remainingSlots);
     onChange([...value, ...filesToAdd]);
+    setShowScanner(false);
   };
 
   const removeFile = (index: number) => {
@@ -71,15 +76,27 @@ export function ImageUpload({
     setPreviewImage(url);
   };
 
+  const handleOpenScanner = () => {
+    if (cameraPermissionGranted) {
+      setShowScanner(true);
+    } else {
+      // Mostrar helper de permissão primeiro
+      setShowScanner(true);
+    }
+  };
+
   return (
     <div className="space-y-4">
       {/* Scanner de Recibos */}
       <div className="flex justify-center">
-        <ReceiptScanner
-          onImageCapture={handleScannerCapture}
-          onImageUpload={handleScannerUpload}
+        <Button
+          onClick={handleOpenScanner}
           disabled={isDisabled || value.length >= maxFiles}
-        />
+          variant="outline"
+          size="sm"
+        >
+          Escanear Recibo
+        </Button>
       </div>
 
       {/* Área de Drop tradicional */}
@@ -160,6 +177,26 @@ export function ImageUpload({
                 className="h-auto max-w-full rounded-lg"
               />
             </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog do Scanner */}
+      <Dialog open={showScanner} onOpenChange={setShowScanner}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Escanear Recibo</DialogTitle>
+          </DialogHeader>
+          {!cameraPermissionGranted ? (
+            <CameraPermissionHelper
+              onPermissionGranted={() => setCameraPermissionGranted(true)}
+            />
+          ) : (
+            <ReceiptScanner
+              onImageCapture={handleScannerCapture}
+              onImageUpload={handleScannerUpload}
+              disabled={false}
+            />
           )}
         </DialogContent>
       </Dialog>
