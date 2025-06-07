@@ -27,9 +27,11 @@ async function processImageForPDF(base64String: string): Promise<{
       const img = new Image();
       img.crossOrigin = "anonymous";
 
-      const cleanBase64 = base64String.startsWith("data:")
-        ? base64String
-        : `data:image/jpeg;base64,${base64String}`;
+      // Limpar e validar base64
+      let cleanBase64 = base64String;
+      if (!cleanBase64.startsWith("data:")) {
+        cleanBase64 = `data:image/jpeg;base64,${cleanBase64}`;
+      }
 
       img.src = cleanBase64;
 
@@ -42,27 +44,45 @@ async function processImageForPDF(base64String: string): Promise<{
           return;
         }
 
-        // Definir tamanhos máximos mantendo proporção
-        const maxWidth = 400;
-        const maxHeight = 400;
-        let { width, height } = img;
+        // MELHORIA: Manter resolução alta para melhor qualidade
+        const originalWidth = img.naturalWidth || img.width;
+        const originalHeight = img.naturalHeight || img.height;
+
+        // Definir tamanhos máximos maiores para melhor qualidade
+        const maxWidth = 800; // Aumentado de 400 para 800
+        const maxHeight = 800; // Aumentado de 400 para 800
+
+        let { width, height } = {
+          width: originalWidth,
+          height: originalHeight,
+        };
 
         // Calcular escala mantendo proporção
         const scaleX = maxWidth / width;
         const scaleY = maxHeight / height;
-        const scale = Math.min(scaleX, scaleY); // Usar a menor escala para manter proporção
+        const scale = Math.min(scaleX, scaleY, 2); // Permitir até 2x de aumento para imagens pequenas
 
-        // Aplicar escala apenas se necessário (se a imagem for maior que o máximo)
-        if (scale < 1) {
-          width = width * scale;
-          height = height * scale;
-        }
+        // Aplicar escala
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
 
+        // Configurar canvas com alta qualidade
         canvas.width = width;
         canvas.height = height;
+
+        // MELHORIA: Configurações para melhor qualidade
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+
+        // Desenhar com fundo branco para melhor contraste
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, width, height);
+
+        // Desenhar a imagem
         ctx.drawImage(img, 0, 0, width, height);
 
-        const processedBase64 = canvas.toDataURL("image/jpeg", 0.8);
+        // MELHORIA: Usar qualidade máxima (0.95 em vez de 0.8)
+        const processedBase64 = canvas.toDataURL("image/jpeg", 0.95);
         const cleanProcessed = processedBase64.replace(
           /^data:image\/\w+;base64,/,
           "",
@@ -75,13 +95,104 @@ async function processImageForPDF(base64String: string): Promise<{
         });
       };
 
-      img.onerror = () => {
-        console.warn("Erro ao carregar imagem, ignorando...");
+      img.onerror = (error) => {
+        console.warn("Erro ao carregar imagem:", error);
         resolve(null);
       };
     });
   } catch (error) {
     console.warn("Erro ao processar imagem:", error);
+    return null;
+  }
+}
+
+// NOVA FUNÇÃO: Otimizar imagem para PDF mantendo qualidade
+async function optimizeImageForPDF(base64String: string): Promise<{
+  base64: string;
+  format: string;
+  dimensions: { width: number; height: number };
+} | null> {
+  try {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+
+      let cleanBase64 = base64String;
+      if (!cleanBase64.startsWith("data:")) {
+        cleanBase64 = `data:image/jpeg;base64,${cleanBase64}`;
+      }
+
+      img.src = cleanBase64;
+
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
+        if (!ctx) {
+          reject(new Error("Erro ao criar contexto do canvas"));
+          return;
+        }
+
+        const originalWidth = img.naturalWidth || img.width;
+        const originalHeight = img.naturalHeight || img.height;
+
+        // Para PDF, usar dimensões que se ajustem bem à página
+        const pageWidth = 210; // A4 em mm
+        const pageHeight = 297; // A4 em mm
+        const margin = 40; // margem em mm
+        const availableWidth = pageWidth - margin;
+        const availableHeight = pageHeight - 120; // espaço para texto
+
+        // Converter mm para pixels (aproximadamente 3.78 pixels por mm em 96 DPI)
+        const maxWidthPx = availableWidth * 3.78;
+        const maxHeightPx = availableHeight * 3.78;
+
+        // Calcular escala mantendo proporção
+        const scaleX = maxWidthPx / originalWidth;
+        const scaleY = maxHeightPx / originalHeight;
+        const scale = Math.min(scaleX, scaleY, 1.5); // Máximo 1.5x para evitar pixelização
+
+        const finalWidth = Math.round(originalWidth * scale);
+        const finalHeight = Math.round(originalHeight * scale);
+
+        canvas.width = finalWidth;
+        canvas.height = finalHeight;
+
+        // Configurações de alta qualidade
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+
+        // Aplicar filtros para melhorar a qualidade
+        ctx.filter = "contrast(1.1) brightness(1.05) saturate(1.1)";
+
+        // Fundo branco
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, finalWidth, finalHeight);
+
+        // Desenhar a imagem
+        ctx.drawImage(img, 0, 0, finalWidth, finalHeight);
+
+        // Usar qualidade máxima
+        const processedBase64 = canvas.toDataURL("image/jpeg", 0.98);
+        const cleanProcessed = processedBase64.replace(
+          /^data:image\/\w+;base64,/,
+          "",
+        );
+
+        resolve({
+          base64: cleanProcessed,
+          format: "JPEG",
+          dimensions: { width: finalWidth, height: finalHeight },
+        });
+      };
+
+      img.onerror = (error) => {
+        console.warn("Erro ao carregar imagem:", error);
+        resolve(null);
+      };
+    });
+  } catch (error) {
+    console.warn("Erro ao otimizar imagem:", error);
     return null;
   }
 }
@@ -161,6 +272,7 @@ export async function generateImprovedAccountingPDF(
   const addHeader = () => {
     try {
       doc.addImage("/logo.png", "PNG", 15, 15, 40, 25);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       console.warn("Logo não encontrada");
     }
@@ -360,33 +472,37 @@ export async function generateImprovedAccountingPDF(
     }
   }
 
-  // Páginas de comprovantes (apenas para despesas)
+  // MELHORIA: Páginas de comprovantes com ALTA QUALIDADE
   for (const expense of despesas) {
     if (expense.imageUrls?.length) {
       for (const base64 of expense.imageUrls) {
-        const processedImage = await processImageForPDF(base64);
+        // USAR A NOVA FUNÇÃO DE OTIMIZAÇÃO
+        const processedImage = await optimizeImageForPDF(base64);
 
         if (processedImage) {
           doc.addPage();
           const pageWidth = doc.internal.pageSize.width;
           const pageHeight = doc.internal.pageSize.height;
-          const margin = 20;
+          const margin = 15;
           const availableWidth = pageWidth - 2 * margin;
-          const availableHeight = pageHeight - 120; // Mais espaço para texto
+          const availableHeight = pageHeight - 100; // Espaço para texto
 
-          // Calcular escala mantendo proporção
-          const scaleX = availableWidth / processedImage.dimensions.width;
-          const scaleY = availableHeight / processedImage.dimensions.height;
-          const scale = Math.min(scaleX, scaleY, 1); // Não aumentar imagens pequenas
-
-          const imgWidth = processedImage.dimensions.width * scale;
-          const imgHeight = processedImage.dimensions.height * scale;
+          // MELHORIA: Calcular posição para centralizar melhor
+          const imgWidth = Math.min(
+            processedImage.dimensions.width * 0.264583,
+            availableWidth,
+          ); // Converter px para mm
+          const imgHeight = Math.min(
+            processedImage.dimensions.height * 0.264583,
+            availableHeight,
+          );
 
           // Centralizar a imagem
           const xPos = (pageWidth - imgWidth) / 2;
-          const yPos = 40; // Posição fixa do topo
+          const yPos = 30; // Posição do topo
 
           try {
+            // MELHORIA: Adicionar imagem com configurações de alta qualidade
             doc.addImage(
               processedImage.base64,
               processedImage.format,
@@ -394,38 +510,64 @@ export async function generateImprovedAccountingPDF(
               yPos,
               imgWidth,
               imgHeight,
+              undefined, // alias
+              "FAST", // compression - usar FAST para melhor qualidade
             );
 
             // Informações da despesa abaixo da imagem
-            const textY = yPos + imgHeight + 20;
-            doc.setFontSize(10);
+            const textY = yPos + imgHeight + 15;
+            doc.setFontSize(12);
             doc.setFont("helvetica", "bold");
-            doc.text(`Despesa: ${expense.name || "Sem nome"}`, margin, textY);
+            doc.text(
+              `COMPROVANTE - ${expense.name || "Sem nome"}`,
+              margin,
+              textY,
+            );
+
+            doc.setFontSize(10);
             doc.setFont("helvetica", "normal");
             doc.text(
               `Descrição: ${expense.description || "-"}`,
               margin,
-              textY + 8,
+              textY + 10,
             );
             doc.text(
               `Categoria: ${getCategoryLabel(expense.category)}`,
               margin,
-              textY + 16,
+              textY + 18,
             );
             doc.text(
               `Valor: ${formatCurrency(typeof expense.amount === "number" ? expense.amount : Number(expense.amount.toString()))}`,
               margin,
-              textY + 24,
+              textY + 26,
             );
             doc.text(
               `Data: ${formatDate(normalizeDate(expense.date))}`,
               margin,
-              textY + 32,
+              textY + 34,
             );
 
             addFooter();
           } catch (error) {
             console.error("Erro ao adicionar imagem ao PDF:", error);
+
+            // Fallback: adicionar página com erro
+            doc.setFontSize(12);
+            doc.setFont("helvetica", "bold");
+            doc.text(
+              "ERRO AO CARREGAR COMPROVANTE",
+              pageWidth / 2,
+              pageHeight / 2,
+              { align: "center" },
+            );
+            doc.setFont("helvetica", "normal");
+            doc.text(
+              `Despesa: ${expense.name}`,
+              pageWidth / 2,
+              pageHeight / 2 + 15,
+              { align: "center" },
+            );
+            addFooter();
           }
         }
       }
