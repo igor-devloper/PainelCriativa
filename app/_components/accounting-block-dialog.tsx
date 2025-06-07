@@ -73,6 +73,7 @@ import {
 import { EditExpenseDialog } from "./edit-expense-dialog";
 import { deleteExpense } from "@/app/_lib/actions/balance";
 import { ReceiptScanner } from "./receipt-scanner";
+import { ImprovedPDFGenerator } from "./improved-pdf-generator";
 
 interface AccountingBlockDialogProps {
   block: AccountingBlock | null;
@@ -331,11 +332,6 @@ export function AccountingBlockDialog({
                     ? "Reembolso necessário"
                     : "Saldo positivo"}
                 </p>
-                <p className="mt-1 text-xs text-gray-400">
-                  ({formatCurrency(requestAmount)} +{" "}
-                  {formatCurrency(totalCaixa)}) -{" "}
-                  {formatCurrency(totalDespesas)}
-                </p>
               </CardContent>
             </Card>
           </div>
@@ -367,6 +363,13 @@ export function AccountingBlockDialog({
 
                 {/* Botão de Adicionar Despesa */}
                 {block && <AddExpenseButton blockId={block.id} block={block} />}
+
+                {/* Gerador de PDF Melhorado */}
+                <ImprovedPDFGenerator
+                  block={block}
+                  userName={userName}
+                  companyName={block.company || name}
+                />
 
                 {/* Botão de Fechar Bloco */}
                 {block.status !== "CLOSED" && (
