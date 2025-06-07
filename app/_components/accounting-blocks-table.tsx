@@ -4,6 +4,7 @@
 import { Suspense, useState } from "react";
 import type { AccountingBlock } from "@/app/types";
 import { processAccountingBlock } from "@/app/types";
+import { AccountingBlockDialog } from "./accounting-block-dialog";
 import { formatDate, formatCurrency } from "@/app/_lib/utils";
 import { Badge } from "@/app/_components/ui/badge";
 import {
@@ -20,9 +21,8 @@ import { Button } from "@/app/_components/ui/button";
 import { Download, Eye, FileText } from "lucide-react";
 import Link from "next/link";
 import type { BlockStatus } from "@/app/types";
-import { AccountingBlockDialog } from "./accounting-block-dialog";
 
-interface AccountingBlocksTableProps {
+interface EnhancedAccountingBlocksTableProps {
   blocks: AccountingBlock[];
   name: string;
   userRole: string;
@@ -48,12 +48,12 @@ function getBlockStatusLabel(status: BlockStatus): string {
   return labels[status] || status;
 }
 
-export function AccountingBlocksTable({
+export function EnhancedAccountingBlocksTable({
   blocks,
   name,
   userRole,
   userName,
-}: AccountingBlocksTableProps) {
+}: EnhancedAccountingBlocksTableProps) {
   const [selectedBlock, setSelectedBlock] = useState<AccountingBlock | null>(
     null,
   );
@@ -107,31 +107,34 @@ export function AccountingBlocksTable({
           <div>
             <h2 className="text-2xl font-bold">Blocos de Prestação</h2>
             <p className="text-muted-foreground">
-              {blocks.length} bloco(s) • Total:{" "}
+              {blocks.length} bloco(s) • Total Disponibilizado:{" "}
               {formatCurrency(totals.requestAmount)}
             </p>
           </div>
         </div>
 
-        {/* Resumo rápido */}
+        {/* Resumo rápido - CORRIGIDO */}
         <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
           <div className="rounded-lg bg-blue-50 p-4">
             <p className="text-sm text-blue-600">Total Disponibilizado</p>
             <p className="text-xl font-bold text-blue-700">
               {formatCurrency(totals.requestAmount)}
             </p>
-          </div>
-          <div className="rounded-lg bg-red-50 p-4">
-            <p className="text-sm text-red-600">Total Despesas</p>
-            <p className="text-xl font-bold text-red-700">
-              {formatCurrency(totals.totalDespesas)}
-            </p>
+            <p className="text-xs text-blue-500">Valor inicial + Caixa</p>
           </div>
           <div className="rounded-lg bg-green-50 p-4">
             <p className="text-sm text-green-600">Total Caixa</p>
             <p className="text-xl font-bold text-green-700">
               {formatCurrency(totals.totalCaixa)}
             </p>
+            <p className="text-xs text-green-500">Entradas adicionais</p>
+          </div>
+          <div className="rounded-lg bg-red-50 p-4">
+            <p className="text-sm text-red-600">Total Despesas</p>
+            <p className="text-xl font-bold text-red-700">
+              {formatCurrency(totals.totalDespesas)}
+            </p>
+            <p className="text-xs text-red-500">Gastos realizados</p>
           </div>
           <div className="rounded-lg bg-gray-50 p-4">
             <p className="text-sm text-gray-600">Saldo Final</p>
@@ -139,6 +142,11 @@ export function AccountingBlocksTable({
               className={`text-xl font-bold ${totals.remainingBalance < 0 ? "text-red-700" : "text-green-700"}`}
             >
               {formatCurrency(totals.remainingBalance)}
+            </p>
+            <p className="text-xs text-gray-500">
+              {totals.remainingBalance < 0
+                ? "Reembolso necessário"
+                : "Saldo positivo"}
             </p>
           </div>
         </div>
@@ -153,6 +161,7 @@ export function AccountingBlocksTable({
                 <TableHead>Empresa</TableHead>
                 <TableHead>Data</TableHead>
                 <TableHead className="text-right">Disponibilizado</TableHead>
+                <TableHead className="text-right">Caixa</TableHead>
                 <TableHead className="text-right">Despesas</TableHead>
                 <TableHead className="text-right">Saldo</TableHead>
                 <TableHead>Status</TableHead>
@@ -176,8 +185,11 @@ export function AccountingBlocksTable({
                     <TableCell>{block.request?.name}</TableCell>
                     <TableCell>{block.company}</TableCell>
                     <TableCell>{formatDate(block.createdAt)}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right text-blue-600">
                       {formatCurrency(block.requestAmount)}
+                    </TableCell>
+                    <TableCell className="text-right text-green-600">
+                      {formatCurrency(block.totalCaixa)}
                     </TableCell>
                     <TableCell className="text-right text-red-600">
                       {formatCurrency(block.totalDespesas)}
@@ -254,8 +266,11 @@ export function AccountingBlocksTable({
                 <TableCell colSpan={4} className="font-medium">
                   Total
                 </TableCell>
-                <TableCell className="text-right font-medium">
+                <TableCell className="text-right font-medium text-blue-600">
                   {formatCurrency(totals.requestAmount)}
+                </TableCell>
+                <TableCell className="text-right font-medium text-green-600">
+                  {formatCurrency(totals.totalCaixa)}
                 </TableCell>
                 <TableCell className="text-right font-medium text-red-600">
                   {formatCurrency(totals.totalDespesas)}

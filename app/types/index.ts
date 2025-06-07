@@ -16,13 +16,13 @@ export interface Expense {
   category: ExpenseCategory;
   paymentMethod: PaymentMethod;
   blockId: string;
-  date: Date; // Mudança: sempre Date para consistência
+  date: Date;
   status: ExpenseStatus;
   type: transactiontype;
   userId: string;
   imageUrls: string[];
-  createdAt: Date; // Mudança: sempre Date
-  updatedAt: Date; // Mudança: sempre Date
+  createdAt: Date;
+  updatedAt: Date;
   company: string;
 }
 
@@ -38,11 +38,11 @@ export interface Request {
   userId: string;
   phoneNumber: string;
   financeId?: string | null;
-  expectedDate?: Date | null; // Mudança: sempre Date ou null
+  expectedDate?: Date | null;
   denialReason?: string | null;
   proofUrl?: string | null;
-  createdAt: Date; // Mudança: sempre Date
-  updatedAt: Date; // Mudança: sempre Date
+  createdAt: Date;
+  updatedAt: Date;
   responsibleCompany: string;
   whatsappMessageId?: string | null;
   whatsappMessageStatus?: string | null;
@@ -67,8 +67,8 @@ export interface AccountingBlock {
   currentBalance: number | Decimal;
   saldoFinal?: number | Decimal | null;
   expenses: Expense[];
-  createdAt: Date; // Mudança: sempre Date
-  updatedAt: Date; // Mudança: sempre Date
+  createdAt: Date;
+  updatedAt: Date;
   company: string;
 }
 
@@ -80,10 +80,10 @@ export interface ProcessedAccountingBlock {
   request?: Request | null;
   status: BlockStatus;
   pdfUrl?: string | null;
-  initialAmount: number; // Sempre number
-  currentBalance: number; // Sempre number
-  saldoFinal: number; // Sempre number
-  expenses: ProcessedExpense[]; // Usar ProcessedExpense
+  initialAmount: number;
+  currentBalance: number;
+  saldoFinal: number;
+  expenses: ProcessedExpense[];
   createdAt: Date;
   updatedAt: Date;
   company: string;
@@ -100,11 +100,11 @@ export interface ProcessedExpense {
   id: string;
   name: string;
   description?: string | null;
-  amount: number; // Sempre number
+  amount: number;
   category: ExpenseCategory;
   paymentMethod: PaymentMethod;
   blockId: string;
-  date: Date; // Sempre Date
+  date: Date;
   status: ExpenseStatus;
   type: transactiontype;
   userId: string;
@@ -139,14 +139,15 @@ export function processAccountingBlock(
 ): ProcessedAccountingBlock {
   const processedExpenses = block.expenses.map(processExpense);
 
+  // Separar despesas por tipo
   const totalDespesas = processedExpenses
     .filter((e) => e.type === "DESPESA")
     .reduce((sum, e) => sum + e.amount, 0);
-
   const totalCaixa = processedExpenses
     .filter((e) => e.type === "CAIXA")
     .reduce((sum, e) => sum + e.amount, 0);
 
+  // Converter valores do Prisma para number
   const initialAmount =
     typeof block.initialAmount === "number"
       ? block.initialAmount
@@ -155,18 +156,18 @@ export function processAccountingBlock(
     typeof block.currentBalance === "number"
       ? block.currentBalance
       : Number(block.currentBalance.toString());
-  const saldoFinal = block.saldoFinal
-    ? typeof block.saldoFinal === "number"
-      ? block.saldoFinal
-      : Number(block.saldoFinal.toString())
-    : 0;
   const requestAmount = block.request?.amount
     ? typeof block.request.amount === "number"
       ? block.request.amount
       : Number(block.request.amount.toString())
     : 0;
+
+  // CORREÇÃO: Lógica correta do saldo final
+  // Saldo Final = (Valor Disponibilizado + Total Caixa) - Total de Despesas
+  const remainingBalance = requestAmount + totalCaixa - totalDespesas;
+
   const totalAmount = totalDespesas + totalCaixa;
-  const remainingBalance = requestAmount - totalDespesas + totalCaixa;
+  const saldoFinal = remainingBalance; // O saldo final é o mesmo que remaining balance
 
   return {
     ...block,
@@ -187,7 +188,7 @@ export function processAccountingBlock(
     remainingBalance,
     totalDespesas,
     totalCaixa,
-    needsReimbursement: remainingBalance < 0,
+    needsReimbursement: remainingBalance < 0, // Só precisa reembolso se saldo for negativo
   };
 }
 

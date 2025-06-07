@@ -43,10 +43,10 @@ import { formatDate, formatCurrency } from "@/app/_lib/utils";
 import { Badge } from "@/app/_components/ui/badge";
 import type {
   AccountingBlock,
+  Expense,
   ExpenseCategory,
   PaymentMethod,
   BlockStatus,
-  Expense,
 } from "@/app/types";
 import { AddExpenseButton } from "./add-expense-button";
 import { Button } from "@/app/_components/ui/button";
@@ -73,7 +73,6 @@ import {
 import { EditExpenseDialog } from "./edit-expense-dialog";
 import { deleteExpense } from "@/app/_lib/actions/balance";
 import { ReceiptScanner } from "./receipt-scanner";
-import { ImprovedPDFGenerator } from "./improved-pdf-generator";
 
 interface AccountingBlockDialogProps {
   block: AccountingBlock | null;
@@ -150,8 +149,9 @@ export function AccountingBlockDialog({
   block,
   open,
   onOpenChange,
-  userName,
   name,
+  userRole,
+  userName,
 }: AccountingBlockDialogProps) {
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
@@ -171,7 +171,10 @@ export function AccountingBlockDialog({
   );
   const totalCaixa = caixa.reduce((sum, e) => sum + safeNumber(e.amount), 0);
   const requestAmount = safeNumber(block.request?.amount);
-  const remainingBalance = requestAmount - totalDespesas + totalCaixa;
+
+  // CORREÇÃO: Lógica correta do saldo final
+  // Saldo Final = (Valor Disponibilizado + Total Caixa) - Total de Despesas
+  const remainingBalance = requestAmount + totalCaixa - totalDespesas;
 
   const handleCloseAccounting = async () => {
     try {
@@ -256,7 +259,7 @@ export function AccountingBlockDialog({
             </DialogTitle>
           </DialogHeader>
 
-          {/* Cards de Resumo Melhorados */}
+          {/* Cards de Resumo Melhorados - CORRIGIDOS */}
           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Card className="w-full">
               <CardHeader className="p-4">
@@ -286,24 +289,25 @@ export function AccountingBlockDialog({
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 pt-0">
-                <p className="text-base font-bold sm:text-lg">
+                <p className="text-base font-bold text-blue-600 sm:text-lg">
                   {formatCurrency(requestAmount)}
                 </p>
+                <p className="text-xs text-blue-500">Valor inicial</p>
               </CardContent>
             </Card>
 
             <Card className="w-full">
               <CardHeader className="p-4">
                 <CardTitle className="text-sm font-medium">
-                  Total Despesas
+                  Total Caixa
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 pt-0">
-                <p className="text-base font-bold text-red-600 sm:text-lg">
-                  {formatCurrency(totalDespesas)}
+                <p className="text-base font-bold text-green-600 sm:text-lg">
+                  {formatCurrency(totalCaixa)}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  {despesas.length} registros
+                <p className="text-xs text-green-500">
+                  {caixa.length} entradas
                 </p>
               </CardContent>
             </Card>
@@ -322,9 +326,16 @@ export function AccountingBlockDialog({
                 >
                   {formatCurrency(remainingBalance)}
                 </p>
-                {remainingBalance < 0 && (
-                  <p className="text-xs text-red-500">Reembolso necessário</p>
-                )}
+                <p className="text-xs text-muted-foreground">
+                  {remainingBalance < 0
+                    ? "Reembolso necessário"
+                    : "Saldo positivo"}
+                </p>
+                <p className="mt-1 text-xs text-gray-400">
+                  ({formatCurrency(requestAmount)} +{" "}
+                  {formatCurrency(totalCaixa)}) -{" "}
+                  {formatCurrency(totalDespesas)}
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -357,13 +368,6 @@ export function AccountingBlockDialog({
                 {/* Botão de Adicionar Despesa */}
                 {block && <AddExpenseButton blockId={block.id} block={block} />}
 
-                {/* Gerador de PDF Melhorado */}
-                <ImprovedPDFGenerator
-                  block={block}
-                  userName={userName}
-                  companyName={block.company || name}
-                />
-
                 {/* Botão de Fechar Bloco */}
                 {block.status !== "CLOSED" && (
                   <AlertDialog>
@@ -388,9 +392,9 @@ export function AccountingBlockDialog({
                               automaticamente.
                             </p>
                           ) : (
-                            <p className="mt-2">
-                              O saldo final é de{" "}
-                              {formatCurrency(remainingBalance)}.
+                            <p className="mt-2 text-green-600">
+                              O saldo final é positivo (
+                              {formatCurrency(remainingBalance)}).
                             </p>
                           )}
                         </AlertDialogDescription>
@@ -443,7 +447,7 @@ export function AccountingBlockDialog({
                           <TableCell className="hidden md:table-cell">
                             {getPaymentMethodLabel(expense.paymentMethod)}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="font-medium text-red-600">
                             {formatCurrency(safeNumber(expense.amount))}
                           </TableCell>
                           <TableCell>
@@ -507,7 +511,7 @@ export function AccountingBlockDialog({
                             {expense.description || expense.name}
                           </TableCell>
                           <TableCell className="font-medium text-green-600">
-                            {formatCurrency(safeNumber(expense.amount))}
+                            +{formatCurrency(safeNumber(expense.amount))}
                           </TableCell>
                           <TableCell>
                             <DropdownMenu>
