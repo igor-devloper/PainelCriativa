@@ -37,30 +37,31 @@ async function processImageForPDF(base64String: string): Promise<{
       img.src = cleanBase64;
 
       img.onload = () => {
+        const scaleFactor = 2; // aumenta a resolução
+
+        const width = img.width * scaleFactor;
+        const height = img.height * scaleFactor;
+
         const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+
         const ctx = canvas.getContext("2d");
         if (!ctx) {
           reject(new Error("Erro ao criar contexto do canvas"));
           return;
         }
 
-        const maxWidth = 400;
-        const maxHeight = 400;
-        const { width, height } = img;
-        const scale = Math.min(maxWidth / width, maxHeight / height, 1);
-        const newWidth = width * scale;
-        const newHeight = height * scale;
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(img, 0, 0, width, height);
 
-        canvas.width = newWidth;
-        canvas.height = newHeight;
-        ctx.drawImage(img, 0, 0, newWidth, newHeight);
-
-        const processedBase64 = canvas.toDataURL("image/jpeg", 1);
+        const processedBase64 = canvas.toDataURL("image/jpeg", 1.0); // Qualidade máxima
 
         resolve({
           base64: processedBase64,
           format: "JPEG",
-          dimensions: { width: newWidth, height: newHeight },
+          dimensions: { width, height },
         });
       };
 
