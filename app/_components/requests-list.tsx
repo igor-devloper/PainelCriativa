@@ -27,7 +27,7 @@ import { ValidationUserDialog } from "./validation-user-dialog";
 import { ReimbursementDialog } from "./reimbursement-dialog";
 import { DenialReasonDialog } from "./denial-reason-dialog";
 import { useUser } from "@clerk/nextjs";
-import { Request } from "../types";
+import { Request } from "../_actions/types";
 import { RequestStatusDialog } from "./request-status-dialog";
 import UserInfo from "./user-info";
 import {
@@ -105,13 +105,12 @@ export function RequestsList({
         return;
       }
 
-      if (
-        newStatus === "COMPLETED" &&
-        selectedRequest?.type === "REIMBURSEMENT"
-      ) {
-        setReimbursementDialogOpen(true);
-        return;
-      }
+      // if (
+      //   newStatus === "COMPLETED"
+      // ) {
+      //   setReimbursementDialogOpen(true);
+      //   return;
+      // }
 
       if (newStatus === "COMPLETED") {
         setSelectedRequest(requests.find((r) => r.id === requestId) || null);
@@ -255,7 +254,7 @@ export function RequestsList({
                   : request.description}
               </TableCell>
               <TableCell>{formatDate(request.createdAt)}</TableCell>
-              <TableCell>{formatCurrency(request.amount)}</TableCell>
+              <TableCell>{formatCurrency(Number(request.amount))}</TableCell>
               <TableCell>
                 <UserInfo userId={request.userId} />
               </TableCell>

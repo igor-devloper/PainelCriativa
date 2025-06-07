@@ -1,112 +1,202 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import type {
-  Request as PrismaRequest,
-  AccountingBlock as PrismaAccountingBlock,
-  Expense as PrismaExpense,
-  RequestStatus as PrismaRequestStatus,
-  BlockStatus as PrismaBlockStatus,
   ExpenseCategory,
   PaymentMethod,
-  Prisma,
+  RequestStatus,
+  BlockStatus,
+  ExpenseStatus,
+  transactiontype,
 } from "@prisma/client";
+import type { Decimal } from "@prisma/client/runtime/library";
 
-import { Decimal } from "@prisma/client/runtime/library"; // Importação do Decimal
-
-// User and Role types
-export type UserRole = "ADMIN" | "FINANCE" | "USER";
-
-export interface User {
+export interface Expense {
   id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  role: UserRole;
-  joinedAt: string;
-}
-
-export interface FormattedUser {
-  id: string;
-  email: string;
   name: string;
-  role: UserRole;
-}
-
-// Stats interface
-export interface AdminStats {
-  totalUsers: number;
-  pendingRequests: number;
-  totalApprovedAmount: number;
-  openAccountingBlocks: number;
-}
-
-// Status types
-export type RequestStatus = PrismaRequestStatus;
-export type BlockStatus = PrismaBlockStatus;
-
-// Base interfaces extending Prisma types
-interface BaseRequest
-  extends Omit<PrismaRequest, "amount" | "currentBalance" | "expectedDate"> {
-  amount: number; // Converte Decimal para number
-  currentBalance: number | null; // Converte Decimal para number
-  expectedDate: Date | null;
-}
-
-interface BaseAccountingBlock
-  extends Omit<
-    PrismaAccountingBlock,
-    "createdAt" | "updatedAt" | "totalAmount"
-  > {
-  createdAt: Date;
-  updatedAt: Date;
-  totalAmount: number; // Converte Decimal para number
-}
-
-interface BaseExpense
-  extends Omit<PrismaExpense, "amount" | "date" | "createdAt" | "updatedAt"> {
-  amount: number; // Converte Decimal para number
-  date: Date;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-// Main interfaces with relationships
-export interface Request extends BaseRequest {
-  id: string;
-  amount: number;
-  currentBalance: number | null;
-  accountingBlock: AccountingBlock | null;
-}
-
-export interface AccountingBlock extends BaseAccountingBlock {
-  id: string;
-  totalAmount: number;
-  expenses: Expense[];
-  request: Request | null;
-}
-
-export interface Expense extends BaseExpense {
-  block?: AccountingBlock;
-}
-
-// Serialization-safe interfaces for client-server communication
-export interface ExpenseEdit {
-  name: string;
-  description: string | null;
-  amount: number;
+  description?: string | null;
+  amount: number | Decimal;
   category: ExpenseCategory;
   paymentMethod: PaymentMethod;
-  date: string;
+  blockId: string;
+  date: Date; // Mudança: sempre Date para consistência
+  status: ExpenseStatus;
+  type: transactiontype;
+  userId: string;
   imageUrls: string[];
+  createdAt: Date; // Mudança: sempre Date
+  updatedAt: Date; // Mudança: sempre Date
+  company: string;
 }
 
-// Prisma payload types
-export type RequestWithFullDetails = Prisma.RequestGetPayload<{
-  include: {
-    accountingBlock: {
-      include: {
-        expenses: true;
-        request: true;
-      };
-    };
+export interface Request {
+  id: string;
+  name: string;
+  description: string;
+  amount: number | Decimal;
+  currentBalance?: number | Decimal | null;
+  initialUserBalance?: number | Decimal | null;
+  balanceDeducted?: number | Decimal | null;
+  status: RequestStatus;
+  userId: string;
+  phoneNumber: string;
+  financeId?: string | null;
+  expectedDate?: Date | null; // Mudança: sempre Date ou null
+  denialReason?: string | null;
+  proofUrl?: string | null;
+  createdAt: Date; // Mudança: sempre Date
+  updatedAt: Date; // Mudança: sempre Date
+  responsibleCompany: string;
+  whatsappMessageId?: string | null;
+  whatsappMessageStatus?: string | null;
+  whatsappMessageError?: string | null;
+  gestor?: string | null;
+  responsibleValidationUserID?: string | null;
+  bankName?: string | null;
+  accountType?: string | null;
+  accountNumber?: string | null;
+  accountHolderName?: string | null;
+  pixKey?: string | null;
+}
+
+export interface AccountingBlock {
+  id: string;
+  code: string;
+  requestId?: string | null;
+  request?: Request | null;
+  status: BlockStatus;
+  pdfUrl?: string | null;
+  initialAmount: number | Decimal;
+  currentBalance: number | Decimal;
+  saldoFinal?: number | Decimal | null;
+  expenses: Expense[];
+  createdAt: Date; // Mudança: sempre Date
+  updatedAt: Date; // Mudança: sempre Date
+  company: string;
+}
+
+// Tipos auxiliares para trabalhar com os dados processados
+export interface ProcessedAccountingBlock {
+  id: string;
+  code: string;
+  requestId?: string | null;
+  request?: Request | null;
+  status: BlockStatus;
+  pdfUrl?: string | null;
+  initialAmount: number; // Sempre number
+  currentBalance: number; // Sempre number
+  saldoFinal: number; // Sempre number
+  expenses: ProcessedExpense[]; // Usar ProcessedExpense
+  createdAt: Date;
+  updatedAt: Date;
+  company: string;
+  // Propriedades calculadas
+  totalAmount: number;
+  requestAmount: number;
+  remainingBalance: number;
+  totalDespesas: number;
+  totalCaixa: number;
+  needsReimbursement: boolean;
+}
+
+export interface ProcessedExpense {
+  id: string;
+  name: string;
+  description?: string | null;
+  amount: number; // Sempre number
+  category: ExpenseCategory;
+  paymentMethod: PaymentMethod;
+  blockId: string;
+  date: Date; // Sempre Date
+  status: ExpenseStatus;
+  type: transactiontype;
+  userId: string;
+  imageUrls: string[];
+  createdAt: Date;
+  updatedAt: Date;
+  company: string;
+}
+
+// Função helper para converter dados do Prisma para tipos processados
+export function processExpense(expense: Expense): ProcessedExpense {
+  return {
+    ...expense,
+    amount:
+      typeof expense.amount === "number"
+        ? expense.amount
+        : Number(expense.amount.toString()),
+    date: expense.date instanceof Date ? expense.date : new Date(expense.date),
+    createdAt:
+      expense.createdAt instanceof Date
+        ? expense.createdAt
+        : new Date(expense.createdAt),
+    updatedAt:
+      expense.updatedAt instanceof Date
+        ? expense.updatedAt
+        : new Date(expense.updatedAt),
   };
-}>;
+}
+
+export function processAccountingBlock(
+  block: AccountingBlock,
+): ProcessedAccountingBlock {
+  const processedExpenses = block.expenses.map(processExpense);
+
+  const totalDespesas = processedExpenses
+    .filter((e) => e.type === "DESPESA")
+    .reduce((sum, e) => sum + e.amount, 0);
+
+  const totalCaixa = processedExpenses
+    .filter((e) => e.type === "CAIXA")
+    .reduce((sum, e) => sum + e.amount, 0);
+
+  const initialAmount =
+    typeof block.initialAmount === "number"
+      ? block.initialAmount
+      : Number(block.initialAmount.toString());
+  const currentBalance =
+    typeof block.currentBalance === "number"
+      ? block.currentBalance
+      : Number(block.currentBalance.toString());
+  const saldoFinal = block.saldoFinal
+    ? typeof block.saldoFinal === "number"
+      ? block.saldoFinal
+      : Number(block.saldoFinal.toString())
+    : 0;
+  const requestAmount = block.request?.amount
+    ? typeof block.request.amount === "number"
+      ? block.request.amount
+      : Number(block.request.amount.toString())
+    : 0;
+  const totalAmount = totalDespesas + totalCaixa;
+  const remainingBalance = requestAmount - totalDespesas + totalCaixa;
+
+  return {
+    ...block,
+    initialAmount,
+    currentBalance,
+    saldoFinal,
+    expenses: processedExpenses,
+    createdAt:
+      block.createdAt instanceof Date
+        ? block.createdAt
+        : new Date(block.createdAt),
+    updatedAt:
+      block.updatedAt instanceof Date
+        ? block.updatedAt
+        : new Date(block.updatedAt),
+    totalAmount,
+    requestAmount,
+    remainingBalance,
+    totalDespesas,
+    totalCaixa,
+    needsReimbursement: remainingBalance < 0,
+  };
+}
+
+// Re-exportar tipos do Prisma para facilitar o uso
+export type {
+  ExpenseCategory,
+  PaymentMethod,
+  RequestStatus,
+  BlockStatus,
+  ExpenseStatus,
+  transactiontype,
+} from "@prisma/client";

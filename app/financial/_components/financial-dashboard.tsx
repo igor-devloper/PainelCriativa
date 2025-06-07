@@ -6,7 +6,7 @@ import { CashFlowChart } from "./cash-flow-chart";
 import { PendingRequests } from "./pending-requests";
 import { ExpensesByCategoryChart } from "./expenses-by-category-chart";
 import type { FinancialDashboardData } from "@/app/_actions/get-financial-dashboard-data";
-import { AccountingBlock } from "@/app/types";
+import { AccountingBlock } from "@/app/_actions/types";
 import { RecentAccountingBlocks } from "./recent-accounting-blocks";
 
 interface FinancialDashboardProps {

@@ -2,7 +2,7 @@
 "use server";
 
 import { db } from "@/app/_lib/prisma";
-import type { UserRole, Request, RequestWithFullDetails } from "@/app/types";
+import type { UserRole, Request, RequestWithFullDetails } from "./types";
 import { serializeData } from "../_lib/utils";
 
 export async function getRequests(

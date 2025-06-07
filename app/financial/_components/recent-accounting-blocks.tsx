@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/app/_components/ui/table";
 import { formatCurrency } from "@/app/_lib/utils";
-import { AccountingBlock } from "@/app/types";
+import { AccountingBlock } from "@/app/_actions/types";
 import { STATUS_BLOCK_LABEL } from "@/app/types/block";
 
 interface RecentAccountingBlocksProps {

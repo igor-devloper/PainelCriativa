@@ -8,7 +8,7 @@ import {
 } from "@/app/_components/ui/sidebar";
 import { ScrollArea } from "@/app/_components/ui/scroll-area";
 import { AppSidebar } from "@/app/_components/app-sidebar";
-import type { AccountingBlock, UserRole } from "@/app/types";
+import type { AccountingBlock, UserRole } from "@/app/_actions/types";
 import { DashboardOverview } from "./dashboard-overview";
 import { HomeIcon } from "lucide-react";
 import { Avatar } from "@/app/_components/ui/avatar";

@@ -1,9 +1,9 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { Suspense, useState } from "react";
 import type { AccountingBlock } from "@/app/types";
-import { AccountingBlockDialog } from "./accounting-block-dialog";
+import { processAccountingBlock } from "@/app/types";
 import { formatDate, formatCurrency } from "@/app/_lib/utils";
 import { Badge } from "@/app/_components/ui/badge";
 import {
@@ -16,14 +16,36 @@ import {
   TableFooter,
 } from "@/app/_components/ui/table";
 import { TableSkeleton } from "@/app/_components/ui/table-skeleton";
-import { BLOCK_STATUS_LABELS } from "../_constants/transactions";
+import { Button } from "@/app/_components/ui/button";
+import { Download, Eye, FileText } from "lucide-react";
 import Link from "next/link";
+import type { BlockStatus } from "@/app/types";
+import { AccountingBlockDialog } from "./accounting-block-dialog";
 
 interface AccountingBlocksTableProps {
   blocks: AccountingBlock[];
   name: string;
   userRole: string;
   userName: string;
+  onCleanup?: (options: any) => Promise<void>;
+  statistics?: {
+    totalBlocks: number;
+    totalExpenses: number;
+    totalRequests: number;
+    oldestDate: string;
+    totalSize: string;
+  };
+}
+
+// Função para obter label do status
+function getBlockStatusLabel(status: BlockStatus): string {
+  const labels: Record<BlockStatus, string> = {
+    OPEN: "Aberto",
+    CLOSED: "Fechado",
+    APPROVED: "Aprovado",
+    DENIED: "Negado",
+  };
+  return labels[status] || status;
 }
 
 export function AccountingBlocksTable({
@@ -37,126 +59,224 @@ export function AccountingBlocksTable({
   );
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const sortedBlocks = [...blocks].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-  );
-
-  const blocksWithRemainingBalance = sortedBlocks.map((block) => {
-    const totalAmount = block.expenses.reduce(
-      (total, expense) =>
-        expense.type === "CAIXA"
-          ? total + Number(expense.amount)
-          : total - Number(expense.amount),
-      0,
-    );
-    const remainingBalance = Number(block.currentBalance);
-    return { ...block, remainingBalance };
+  const sortedBlocks = [...blocks].sort((a, b) => {
+    const dateA =
+      a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
+    const dateB =
+      b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
+    return dateB.getTime() - dateA.getTime();
   });
 
-  const totals = blocksWithRemainingBalance.reduce(
+  // Processar todos os blocos usando a função helper
+  const processedBlocks = sortedBlocks.map(processAccountingBlock);
+
+  // Calcular totais de forma segura
+  const totals = processedBlocks.reduce(
     (acc, block) => ({
-      initialAmount: acc.initialAmount + Number(block.initialAmount),
-      currentBalance: acc.currentBalance + Number(block.request?.amount),
+      requestAmount: acc.requestAmount + block.requestAmount,
       remainingBalance: acc.remainingBalance + block.remainingBalance,
+      totalDespesas: acc.totalDespesas + block.totalDespesas,
+      totalCaixa: acc.totalCaixa + block.totalCaixa,
     }),
     {
-      initialAmount: 0,
-      currentBalance: 0,
+      requestAmount: 0,
       remainingBalance: 0,
+      totalDespesas: 0,
+      totalCaixa: 0,
     },
   );
 
   const handleRowClick = (block: AccountingBlock) => {
-    // 🔽 Implementa a lógica: se status for "CLOSED", desabilita o clique
     if (block.status === "CLOSED") {
-      return; // Não faz nada se estiver fechado
+      return; // Não abre o dialog se estiver fechado
     }
+    setSelectedBlock(block);
+    setDialogOpen(true);
+  };
 
+  const handleViewClosed = (block: AccountingBlock) => {
     setSelectedBlock(block);
     setDialogOpen(true);
   };
 
   return (
     <>
-      <Suspense fallback={<TableSkeleton columns={7} rows={5} showFooter />}>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Código</TableHead>
-              <TableHead>Solicitação</TableHead>
-              <TableHead>Empresa</TableHead>
-              <TableHead>Data de Criação</TableHead>
-              <TableHead className="text-right">Valor Solicitado</TableHead>
-              <TableHead className="text-right">Saldo Restante</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {blocksWithRemainingBalance.map((block) => {
-              const isDisabled = block.status === "CLOSED";
+      <div className="space-y-4">
+        {/* Header com ações */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold">Blocos de Prestação</h2>
+            <p className="text-muted-foreground">
+              {blocks.length} bloco(s) • Total:{" "}
+              {formatCurrency(totals.requestAmount)}
+            </p>
+          </div>
+        </div>
 
-              return (
-                <TableRow
-                  key={block.id}
-                  className={` ${
-                    isDisabled
-                      ? "cursor-not-allowed opacity-60 hover:bg-transparent"
-                      : "cursor-pointer hover:bg-muted"
-                  } `}
-                  onClick={() => handleRowClick(block)}
-                >
-                  <TableCell>{block.code}</TableCell>
-                  <TableCell>{block.request?.name}</TableCell>
-                  <TableCell>{block.company}</TableCell>
-                  <TableCell>{formatDate(block.createdAt)}</TableCell>
-                  <TableCell className="text-right">
-                    {formatCurrency(Number(block.initialAmount))}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {formatCurrency(block.remainingBalance)}
-                  </TableCell>
-                  <TableCell className="flex items-center gap-2">
-                    <Badge
-                      variant={
-                        block.status === "APPROVED"
-                          ? "default"
-                          : block.status === "DENIED"
-                            ? "destructive"
-                            : block.status === "CLOSED"
-                              ? "secondary"
-                              : "outline"
-                      }
-                    >
-                      {BLOCK_STATUS_LABELS[block.status]}
-                    </Badge>
-                    {block.status === "CLOSED" ? (
-                      <div className="z-auto">
-                        <Badge>
-                          <Link href={block.pdfUrl ?? ""}>Baixar PDF</Link>
+        {/* Resumo rápido */}
+        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
+          <div className="rounded-lg bg-blue-50 p-4">
+            <p className="text-sm text-blue-600">Total Disponibilizado</p>
+            <p className="text-xl font-bold text-blue-700">
+              {formatCurrency(totals.requestAmount)}
+            </p>
+          </div>
+          <div className="rounded-lg bg-red-50 p-4">
+            <p className="text-sm text-red-600">Total Despesas</p>
+            <p className="text-xl font-bold text-red-700">
+              {formatCurrency(totals.totalDespesas)}
+            </p>
+          </div>
+          <div className="rounded-lg bg-green-50 p-4">
+            <p className="text-sm text-green-600">Total Caixa</p>
+            <p className="text-xl font-bold text-green-700">
+              {formatCurrency(totals.totalCaixa)}
+            </p>
+          </div>
+          <div className="rounded-lg bg-gray-50 p-4">
+            <p className="text-sm text-gray-600">Saldo Final</p>
+            <p
+              className={`text-xl font-bold ${totals.remainingBalance < 0 ? "text-red-700" : "text-green-700"}`}
+            >
+              {formatCurrency(totals.remainingBalance)}
+            </p>
+          </div>
+        </div>
+
+        {/* Tabela */}
+        <Suspense fallback={<TableSkeleton columns={9} rows={5} showFooter />}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Código</TableHead>
+                <TableHead>Solicitação</TableHead>
+                <TableHead>Empresa</TableHead>
+                <TableHead>Data</TableHead>
+                <TableHead className="text-right">Disponibilizado</TableHead>
+                <TableHead className="text-right">Despesas</TableHead>
+                <TableHead className="text-right">Saldo</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="w-[100px]">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {processedBlocks.map((block) => {
+                const isDisabled = block.status === "CLOSED";
+                const originalBlock = sortedBlocks.find(
+                  (b) => b.id === block.id,
+                )!;
+
+                return (
+                  <TableRow
+                    key={block.id}
+                    className={`${isDisabled ? "cursor-default opacity-80" : "cursor-pointer hover:bg-muted"}`}
+                    onClick={() => handleRowClick(originalBlock)}
+                  >
+                    <TableCell className="font-medium">{block.code}</TableCell>
+                    <TableCell>{block.request?.name}</TableCell>
+                    <TableCell>{block.company}</TableCell>
+                    <TableCell>{formatDate(block.createdAt)}</TableCell>
+                    <TableCell className="text-right">
+                      {formatCurrency(block.requestAmount)}
+                    </TableCell>
+                    <TableCell className="text-right text-red-600">
+                      {formatCurrency(block.totalDespesas)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <span
+                        className={`font-medium ${block.remainingBalance < 0 ? "text-red-600" : "text-green-600"}`}
+                      >
+                        {formatCurrency(block.remainingBalance)}
+                      </span>
+                      {block.needsReimbursement && (
+                        <Badge variant="destructive" className="ml-2 text-xs">
+                          Reembolso
                         </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          block.status === "APPROVED"
+                            ? "default"
+                            : block.status === "DENIED"
+                              ? "destructive"
+                              : block.status === "CLOSED"
+                                ? "secondary"
+                                : "outline"
+                        }
+                      >
+                        {getBlockStatusLabel(block.status)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        {block.status === "CLOSED" ? (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewClosed(originalBlock);
+                              }}
+                            >
+                              <Eye className="h-3 w-3" />
+                            </Button>
+                            {block.pdfUrl && (
+                              <Button size="sm" variant="outline" asChild>
+                                <Link href={block.pdfUrl} target="_blank">
+                                  <Download className="h-3 w-3" />
+                                </Link>
+                              </Button>
+                            )}
+                          </>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRowClick(originalBlock);
+                            }}
+                          >
+                            <FileText className="h-3 w-3" />
+                          </Button>
+                        )}
                       </div>
-                    ) : (
-                      ""
-                    )}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-          <TableFooter>
-            <TableRow>
-              <TableCell colSpan={4}>Total</TableCell>
-              <TableCell className="text-right">
-                {formatCurrency(totals.initialAmount)}
-              </TableCell>
-              <TableCell className="text-right">
-                {formatCurrency(totals.remainingBalance)}
-              </TableCell>
-              <TableCell />
-            </TableRow>
-          </TableFooter>
-        </Table>
-      </Suspense>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+            <TableFooter>
+              <TableRow>
+                <TableCell colSpan={4} className="font-medium">
+                  Total
+                </TableCell>
+                <TableCell className="text-right font-medium">
+                  {formatCurrency(totals.requestAmount)}
+                </TableCell>
+                <TableCell className="text-right font-medium text-red-600">
+                  {formatCurrency(totals.totalDespesas)}
+                </TableCell>
+                <TableCell className="text-right font-medium">
+                  <span
+                    className={
+                      totals.remainingBalance < 0
+                        ? "text-red-600"
+                        : "text-green-600"
+                    }
+                  >
+                    {formatCurrency(totals.remainingBalance)}
+                  </span>
+                </TableCell>
+                <TableCell colSpan={2} />
+              </TableRow>
+            </TableFooter>
+          </Table>
+        </Suspense>
+      </div>
 
       <AccountingBlockDialog
         userRole={userRole}

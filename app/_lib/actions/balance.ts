@@ -2,7 +2,7 @@
 "use server";
 
 import { db } from "@/app/_lib/prisma";
-import { ExpenseEdit } from "@/app/types";
+import { ExpenseEdit } from "@/app/_actions/types";
 import { auth } from "@clerk/nextjs/server";
 import {
   type ExpenseCategory,

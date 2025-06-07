@@ -16,7 +16,7 @@ export interface Expense {
   status: ExpenseStatus;
   description: string;
   imageUrls?: string[];
-  type: string;
+  type?: string;
 }
 
 export interface AccountingBlock {

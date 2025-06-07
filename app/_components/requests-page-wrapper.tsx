@@ -9,7 +9,7 @@ import {
 } from "@/app/_components/ui/sidebar";
 import { ScrollArea, ScrollBar } from "@/app/_components/ui/scroll-area";
 import { AppSidebar } from "@/app/_components/app-sidebar";
-import type { UserRole, Request } from "@/app/types";
+import type { UserRole, Request } from "@/app/_actions/types";
 import { RequestsList } from "./requests-list";
 import { Siren } from "lucide-react";
 import { TableSkeleton } from "@/app/_components/ui/table-skeleton";

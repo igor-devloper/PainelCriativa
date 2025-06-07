@@ -2,7 +2,6 @@
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { getUserRole } from "@/app/_lib/utils";
-import { UserRole } from "@/app/types";
 
 export async function POST(request: Request) {
   try {

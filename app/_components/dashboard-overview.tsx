@@ -5,7 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/app/_components/ui/card";
-import type { AccountingBlock, UserRole } from "@/app/types";
+import type { AccountingBlock, UserRole } from "@/app/_actions/types";
 import { ClipboardList, Users, FileText } from "lucide-react";
 // import { formatDistanceToNow } from "date-fns";
 // import { ptBR } from "date-fns/locale";

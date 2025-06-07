@@ -5,7 +5,6 @@ import { clerkClient } from "@clerk/nextjs/server";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import type { UserRole } from "@/app/types";
 
 const userSchema = z.object({
   firstName: z.string().min(1, "O nome é obrigatório"),

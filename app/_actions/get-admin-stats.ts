@@ -1,6 +1,6 @@
 import { db } from "@/app/_lib/prisma";
 import { clerkClient } from "@clerk/nextjs/server";
-import { AdminStats } from "@/app/types";
+import { AdminStats } from "./types";
 
 export async function getAdminStats(): Promise<AdminStats> {
   try {

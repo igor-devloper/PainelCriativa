@@ -44,13 +44,13 @@ import { ImageUpload } from "./image-upload";
 import { Loader2, X } from "lucide-react";
 import { MoneyInput } from "./money-input";
 
-import { type Expense } from "@/app/types";
 import { ExpenseCategory, PaymentMethod } from "@prisma/client";
 import { editExpense } from "../_lib/actions/balance";
 import {
   EXPENSE_CATEGORY_OPTIONS,
   PAYMENT_METHOD_OPTIONS,
 } from "../_constants/transactions";
+import { Expense } from "../types";
 
 const formSchema = z.object({
   description: z.string().nullable(),
@@ -86,7 +86,7 @@ export function EditExpenseDialog({
     resolver: zodResolver(formSchema),
     defaultValues: {
       description: expense.description,
-      amount: expense.amount,
+      amount: Number(expense.amount),
       category: expense.category,
       paymentMethod: expense.paymentMethod,
       date: new Date(expense.date),

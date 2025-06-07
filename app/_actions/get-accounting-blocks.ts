@@ -4,7 +4,7 @@ import { db, executeWithRetry } from "@/app/_lib/prisma";
 import { queryWithCache } from "@/app/_lib/db-utils";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { getUserRole } from "@/app/_lib/utils";
-import type { AccountingBlock } from "@/app/types";
+import type { AccountingBlock } from "@/app/_actions/types";
 
 export async function getAccountingBlocks(): Promise<AccountingBlock[]> {
   const { userId } = await auth();
