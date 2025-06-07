@@ -22,7 +22,7 @@ import { Download, Eye, FileText } from "lucide-react";
 import Link from "next/link";
 import type { BlockStatus } from "@/app/types";
 
-interface EnhancedAccountingBlocksTableProps {
+interface AccountingBlocksTableProps {
   blocks: AccountingBlock[];
   name: string;
   userRole: string;
@@ -48,12 +48,12 @@ function getBlockStatusLabel(status: BlockStatus): string {
   return labels[status] || status;
 }
 
-export function EnhancedAccountingBlocksTable({
+export function AccountingBlocksTable({
   blocks,
   name,
   userRole,
   userName,
-}: EnhancedAccountingBlocksTableProps) {
+}: AccountingBlocksTableProps) {
   const [selectedBlock, setSelectedBlock] = useState<AccountingBlock | null>(
     null,
   );
