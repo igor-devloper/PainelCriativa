@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import type {
   Request as PrismaRequest,
   AccountingBlock as PrismaAccountingBlock,
@@ -116,6 +118,7 @@ export interface ProcessedAccountingBlock extends AccountingBlock {
   totalCaixa: number;
   needsReimbursement: boolean;
 }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function convertPrismaToAccountingBlock(prismaBlock: any): AccountingBlock {
   return {
     id: prismaBlock.id,
