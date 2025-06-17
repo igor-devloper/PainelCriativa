@@ -1,14 +1,14 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import type { Decimal } from "@prisma/client/runtime/library";
 import { formatCurrency, formatDate } from "../_lib/utils";
 import {
   EXPENSE_CATEGORY_LABELS,
   BLOCK_STATUS_LABELS,
   REQUEST_STATUS_LABELS,
 } from "@/app/_constants/transactions";
-import type { AccountingBlock, Expense } from "@/app/types";
-import type { BlockStatus, RequestStatus, ExpenseCategory } from "@/app/types";
+import { type BlockStatus, RequestStatus } from "@prisma/client";
+import { AccountingBlock, Expense } from "../types";
 
 const COMPANY_CNPJS: Record<string, string> = {
   "GSM SOLARION 02": "44.910.546/0001-55",
@@ -17,325 +17,102 @@ const COMPANY_CNPJS: Record<string, string> = {
   "EXATA I": "38.406.585/0001-17",
 };
 
-async function processImageForPDF(base64String: string): Promise<{
-  base64: string;
-  format: string;
-  dimensions: { width: number; height: number };
-} | null> {
-  try {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-
-      // Limpar e validar base64
-      let cleanBase64 = base64String;
-      if (!cleanBase64.startsWith("data:")) {
-        cleanBase64 = `data:image/jpeg;base64,${cleanBase64}`;
-      }
-
-      img.src = cleanBase64;
-
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-
-        if (!ctx) {
-          reject(new Error("Erro ao criar contexto do canvas"));
-          return;
-        }
-
-        // MELHORIA: Manter resolução alta para melhor qualidade
-        const originalWidth = img.naturalWidth || img.width;
-        const originalHeight = img.naturalHeight || img.height;
-
-        // Definir tamanhos máximos maiores para melhor qualidade
-        const maxWidth = 800; // Aumentado de 400 para 800
-        const maxHeight = 800; // Aumentado de 400 para 800
-
-        let { width, height } = {
-          width: originalWidth,
-          height: originalHeight,
-        };
-
-        // Calcular escala mantendo proporção
-        const scaleX = maxWidth / width;
-        const scaleY = maxHeight / height;
-        const scale = Math.min(scaleX, scaleY, 2); // Permitir até 2x de aumento para imagens pequenas
-
-        // Aplicar escala
-        width = Math.round(width * scale);
-        height = Math.round(height * scale);
-
-        // Configurar canvas com alta qualidade
-        canvas.width = width;
-        canvas.height = height;
-
-        // MELHORIA: Configurações para melhor qualidade
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = "high";
-
-        // Desenhar com fundo branco para melhor contraste
-        ctx.fillStyle = "white";
-        ctx.fillRect(0, 0, width, height);
-
-        // Desenhar a imagem
-        ctx.drawImage(img, 0, 0, width, height);
-
-        // MELHORIA: Usar qualidade máxima (0.95 em vez de 0.8)
-        const processedBase64 = canvas.toDataURL("image/jpeg", 0.95);
-        const cleanProcessed = processedBase64.replace(
-          /^data:image\/\w+;base64,/,
-          "",
-        );
-
-        resolve({
-          base64: cleanProcessed,
-          format: "JPEG",
-          dimensions: { width, height },
-        });
-      };
-
-      img.onerror = (error) => {
-        console.warn("Erro ao carregar imagem:", error);
-        resolve(null);
-      };
-    });
-  } catch (error) {
-    console.warn("Erro ao processar imagem:", error);
-    return null;
-  }
+function getBase64ImageFormat(base64String: string): string {
+  const match = base64String.match(/^data:image\/(\w+);base64,/);
+  return match ? match[1].toUpperCase() : "PNG";
 }
 
-// NOVA FUNÇÃO: Otimizar imagem para PDF mantendo qualidade
-async function optimizeImageForPDF(base64String: string): Promise<{
-  base64: string;
-  format: string;
-  dimensions: { width: number; height: number };
-} | null> {
-  try {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
+function cleanBase64String(base64String: string): string {
+  return base64String.replace(/^data:image\/\w+;base64,/, "");
+}
 
-      let cleanBase64 = base64String;
-      if (!cleanBase64.startsWith("data:")) {
-        cleanBase64 = `data:image/jpeg;base64,${cleanBase64}`;
+async function normalizeBase64Image(base64Data: string): Promise<{
+  base64: string;
+  dimensions: { width: number; height: number };
+}> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = base64Data;
+
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      if (!ctx) {
+        reject(new Error("Erro ao criar contexto do canvas"));
+        return;
       }
 
-      img.src = cleanBase64;
+      const maxWidth = 800;
+      const maxHeight = 800;
+      let { width, height } = img;
 
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
+      const aspectRatio = width / height;
 
-        if (!ctx) {
-          reject(new Error("Erro ao criar contexto do canvas"));
-          return;
-        }
+      if (width > maxWidth) {
+        width = maxWidth;
+        height = width / aspectRatio;
+      }
+      if (height > maxHeight) {
+        height = maxHeight;
+        width = height * aspectRatio;
+      }
 
-        const originalWidth = img.naturalWidth || img.width;
-        const originalHeight = img.naturalHeight || img.height;
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(img, 0, 0, width, height);
 
-        // Para PDF, usar dimensões que se ajustem bem à página
-        const pageWidth = 210; // A4 em mm
-        const pageHeight = 297; // A4 em mm
-        const margin = 40; // margem em mm
-        const availableWidth = pageWidth - margin;
-        const availableHeight = pageHeight - 120; // espaço para texto
+      const normalizedBase64 = canvas.toDataURL("image/png");
+      resolve({
+        base64: normalizedBase64,
+        dimensions: { width, height },
+      });
+    };
 
-        // Converter mm para pixels (aproximadamente 3.78 pixels por mm em 96 DPI)
-        const maxWidthPx = availableWidth * 3.78;
-        const maxHeightPx = availableHeight * 3.78;
+    img.onerror = () => {
+      reject(new Error("Erro ao carregar imagem"));
+    };
+  });
+}
 
-        // Calcular escala mantendo proporção
-        const scaleX = maxWidthPx / originalWidth;
-        const scaleY = maxHeightPx / originalHeight;
-        const scale = Math.min(scaleX, scaleY, 1.5); // Máximo 1.5x para evitar pixelização
-
-        const finalWidth = Math.round(originalWidth * scale);
-        const finalHeight = Math.round(originalHeight * scale);
-
-        canvas.width = finalWidth;
-        canvas.height = finalHeight;
-
-        // Configurações de alta qualidade
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = "high";
-
-        // Aplicar filtros para melhorar a qualidade
-        ctx.filter = "contrast(1.1) brightness(1.05) saturate(1.1)";
-
-        // Fundo branco
-        ctx.fillStyle = "white";
-        ctx.fillRect(0, 0, finalWidth, finalHeight);
-
-        // Desenhar a imagem
-        ctx.drawImage(img, 0, 0, finalWidth, finalHeight);
-
-        // Usar qualidade máxima
-        const processedBase64 = canvas.toDataURL("image/jpeg", 0.98);
-        const cleanProcessed = processedBase64.replace(
-          /^data:image\/\w+;base64,/,
-          "",
-        );
-
-        resolve({
-          base64: cleanProcessed,
-          format: "JPEG",
-          dimensions: { width: finalWidth, height: finalHeight },
-        });
-      };
-
-      img.onerror = (error) => {
-        console.warn("Erro ao carregar imagem:", error);
-        resolve(null);
-      };
-    });
-  } catch (error) {
-    console.warn("Erro ao otimizar imagem:", error);
-    return null;
-  }
+function calculateExpensesByCategory(expenses: Expense[]): Record<string, number> {
+  return expenses.reduce((acc, expense) => {
+    const categoryLabel = EXPENSE_CATEGORY_LABELS[expense.category];
+    acc[categoryLabel] = (acc[categoryLabel] || 0) + Number(expense.amount.toString());
+    return acc;
+  }, {} as Record<string, number>);
 }
 
 function separateExpensesByType(expenses: Expense[]) {
   const despesas = expenses.filter((e) => e.type === "DESPESA");
   const caixa = expenses.filter((e) => e.type === "CAIXA");
-
   return { despesas, caixa };
 }
 
 function calculateTotals(expenses: Expense[]) {
   const { despesas, caixa } = separateExpensesByType(expenses);
-
   const totalDespesas = despesas.reduce((sum, e) => {
-    const amount =
-      typeof e.amount === "number" ? e.amount : Number(e.amount.toString());
+    const amount = typeof e.amount === "number" ? e.amount : Number(e.amount.toString());
     return sum + amount;
   }, 0);
-
   const totalCaixa = caixa.reduce((sum, e) => {
-    const amount =
-      typeof e.amount === "number" ? e.amount : Number(e.amount.toString());
+    const amount = typeof e.amount === "number" ? e.amount : Number(e.amount.toString());
     return sum + amount;
   }, 0);
-
   return { totalDespesas, totalCaixa };
 }
 
-// Função para normalizar datas
-function normalizeDate(date: string | Date): string {
-  if (date instanceof Date) {
-    return date.toISOString();
-  }
-  return date;
-}
 
-// Função para obter label segura das categorias
-function getCategoryLabel(category: string): string {
-  return EXPENSE_CATEGORY_LABELS[category as ExpenseCategory] || category;
-}
 
-// Função para obter label segura dos status
-function getBlockStatusLabel(status: BlockStatus): string {
-  return BLOCK_STATUS_LABELS[status] || status;
-}
-
-function getRequestStatusLabel(status: RequestStatus): string {
-  return REQUEST_STATUS_LABELS[status] || status;
-}
-
+// Função principal para gerar o PDF
 export async function generateAccountingPDF(
   block: AccountingBlock,
   companyName: string,
   name: string,
 ) {
   const doc = new jsPDF();
-  let pageNumber = 1;
 
-  const addFooter = () => {
-    const pageWidth = doc.internal.pageSize.width;
-    const pageHeight = doc.internal.pageSize.height;
-    doc.setFontSize(8);
-    doc.setTextColor(100, 100, 100);
-    doc.text(
-      `© ${new Date().getFullYear()} Criativa Energia`,
-      pageWidth / 2,
-      pageHeight - 15,
-      { align: "center" },
-    );
-    doc.setFontSize(10);
-    doc.setTextColor(0, 0, 0);
-    doc.text(`Página ${pageNumber}`, pageWidth - 20, pageHeight - 10);
-    pageNumber++;
-  };
-
-  const addHeader = () => {
-    try {
-      doc.addImage("/logo.png", "PNG", 15, 15, 40, 48.6);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (e) {
-      console.warn("Logo não encontrada");
-    }
-
-    doc.setFontSize(18);
-    doc.setFont("helvetica", "bold");
-    doc.text(
-      "Relatório de Prestação de Contas",
-      doc.internal.pageSize.width / 2,
-      30,
-      { align: "center" },
-    );
-  };
-
-  // Página 1: Informações gerais
-  addHeader();
-
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
-  doc.text("DADOS DA PRESTAÇÃO DE CONTAS", 15, 60);
-
-  const yStart = 70;
-  const lineHeight = 8;
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-
-  // Dados da empresa e responsável
-  const infoData = [
-    ["Empresa:", companyName],
-    ["CNPJ:", COMPANY_CNPJS[companyName] || "Não informado"],
-    ["Responsável:", name],
-    ["Código:", block.code],
-    ["Data:", formatDate(normalizeDate(block.createdAt))],
-  ];
-
-  infoData.forEach(([label, value], index) => {
-    doc.setFont("helvetica", "bold");
-    doc.text(label, 15, yStart + index * lineHeight);
-    doc.setFont("helvetica", "normal");
-    doc.text(value, 50, yStart + index * lineHeight);
-  });
-
-  // Dados bancários
-  const bankingY = yStart + lineHeight * 6;
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
-  doc.text("DADOS BANCÁRIOS DO COLABORADOR", 15, bankingY);
-
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  const bankingData = [
-    `Banco: ${block.request?.bankName || "Não informado"}`,
-    `Tipo: ${block.request?.accountType || "Não informado"}`,
-    `Conta: ${block.request?.accountNumber || "Não informado"}`,
-    `Titular: ${block.request?.accountHolderName || "Não informado"}`,
-    `PIX: ${block.request?.pixKey || "Não informado"}`,
-  ];
-
-  bankingData.forEach((text, index) => {
-    doc.text(text, 15, bankingY + 15 + index * 8);
-  });
-
-  // Resumo melhorado - CORRIGIDO
   const { despesas, caixa } = separateExpensesByType(block.expenses);
   const { totalDespesas, totalCaixa } = calculateTotals(block.expenses);
   const valorSolicitado = block.request?.amount
@@ -344,235 +121,330 @@ export async function generateAccountingPDF(
       : Number(block.request.amount.toString())
     : 0;
 
-  // CORREÇÃO: Lógica correta do saldo final
-  // Saldo Final = (Valor Disponibilizado + Total Caixa) - Total de Despesas
   const saldoFinal = valorSolicitado + totalCaixa - totalDespesas;
+  // Função para adicionar rodapé
+  const addFooter = (pageNumber: number) => {
+    const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
 
-  const summaryY = bankingY + 80;
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
-  doc.text("RESUMO DE FECHAMENTO", 15, summaryY);
+    // Adiciona linha separadora
+    doc.setDrawColor(26, 132, 53);
+    doc.setLineWidth(0.5);
+    doc.line(10, pageHeight - 25, pageWidth - 10, pageHeight - 25);
 
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
+    // Adiciona logo pequena mantendo proporção
+    const logoHeight = 25;
+    const logoWidth = logoHeight * (453 / 551); // Correct aspect ratio based on original dimensions
+    doc.addImage(
+      "/logo.png",
+      "PNG",
+      10,
+      pageHeight - 24, // Changed from 7 to pageHeight - 20
+      logoWidth,
+      logoHeight,
+      undefined,
+      "FAST",
+    );
 
-  const summaryData = [
-    `Status do Bloco: ${getBlockStatusLabel(block.status)}`,
-    `Status da Solicitação: ${getRequestStatusLabel(block.request?.status || "WAITING")}`,
-    `Valor Disponibilizado: ${formatCurrency(valorSolicitado)}`,
-    `Total em Caixa: ${formatCurrency(totalCaixa)}`,
-    `Total de Despesas: ${formatCurrency(totalDespesas)}`,
-    `Saldo Final: ${formatCurrency(saldoFinal)}`,
-  ];
+    // Adiciona texto de copyright
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    const currentYear = new Date().getFullYear();
+    const copyrightText = `© ${currentYear} Criativa Energia. Todos os direitos reservados. Este documento é confidencial e contém informações proprietárias.`;
+    doc.text(copyrightText, pageWidth / 2, pageHeight - 15, {
+      align: "center",
+    });
 
-  summaryData.forEach((text, index) => {
-    doc.text(text, 15, summaryY + 15 + index * 8);
-  });
+    // Adiciona número da página
+    doc.setFontSize(10);
+    doc.text(`Página ${pageNumber}`, pageWidth - 20, pageHeight - 10);
+  };
+  // Função para adicionar cabeçalho (apenas na primeira página)
+  const addHeader = () => {
+    // Adiciona logo mantendo proporção original
+    const logoHeight = 30;
+    const logoWidth = logoHeight * (453 / 551); // Proporção correta baseada nas dimensões originais
 
-  // Indicar se foi reembolsado - CORRIGIDO
-  if (saldoFinal < 0) {
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(255, 0, 0);
-    doc.text(
-      "REEMBOLSO NECESSÁRIO",
-      15,
-      summaryY + 15 + summaryData.length * 8 + 10,
+    doc.setFontSize(20);
+    doc.setFillColor(248, 249, 250);
+    doc.roundedRect(10, 10, doc.internal.pageSize.width - 20, 30, 3, 3, "F");
+    doc.addImage(
+      "/logo.png",
+      "PNG",
+      10,
+      10,
+      logoWidth,
+      logoHeight,
+      undefined,
+      "FAST",
     );
     doc.setTextColor(0, 0, 0);
-    doc.setFont("helvetica", "normal");
-  } else if (block.request?.status === "COMPLETED") {
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(0, 128, 0);
-    doc.text("SALDO POSITIVO", 15, summaryY + 15 + summaryData.length * 8 + 10);
-    doc.setTextColor(0, 0, 0);
-    doc.setFont("helvetica", "normal");
+    doc.text(
+      "Relatório de Prestação de Contas",
+      doc.internal.pageSize.width / 2,
+      28,
+      {
+        align: "center",
+      },
+    );
+  };
+
+  // Adiciona cabeçalho apenas na primeira página
+  addHeader();
+
+  const companyCNPJ = COMPANY_CNPJS[companyName] || "";
+  // Adiciona informações do documento
+  doc.setFillColor(248, 249, 250);
+  doc.roundedRect(10, 50, doc.internal.pageSize.width - 20, 60, 3, 3, "F");
+
+  autoTable(doc, {
+    startY: 55,
+    head: [["DADOS DA PRESTAÇÃO DE CONTAS", "", "", ""]],
+    body: [
+      ["Empresa:", companyName],
+      ["CNPJ:", companyCNPJ],
+      ["Responsável:", name],
+      ["Código:", block.code],
+      ["Data:", formatDate(block.createdAt)],
+    ],
+    theme: "plain",
+    styles: {
+      fontSize: 11,
+      cellPadding: 2,
+    },
+    columnStyles: {
+      0: { fontStyle: "bold" },
+    },
+    headStyles: {
+      fillColor: [26, 132, 53],
+      textColor: [255, 255, 255],
+      fontStyle: "bold",
+    },
+    margin: { left: 15 },
+  });
+
+  // Adiciona informações bancárias
+  doc.setFillColor(248, 249, 250);
+  doc.roundedRect(10, 115, 190, 70, 3, 3, "F");
+
+  autoTable(doc, {
+    startY: 120,
+    head: [["DADOS BANCÁRIOS DO COLABORADOR"]],
+    body: [
+      [`Banco: ${block.request?.bankName || "Não informado"}`],
+      [`Tipo de Conta: ${block.request?.accountType || "Não informado"}`],
+      [`Número da Conta: ${block.request?.accountNumber || "Não informado"}`],
+      [`Titular: ${block.request?.accountHolderName || "Não informado"}`],
+      [`Chave PIX: ${block.request?.pixKey || "Não informado"}`],
+    ],
+    theme: "plain",
+    styles: { fontSize: 11, cellPadding: 3 },
+    headStyles: {
+      fillColor: [26, 132, 53],
+      textColor: [255, 255, 255],
+      fontStyle: "bold",
+    },
+    margin: { left: 15, right: 15 },
+  });
+
+  // Adiciona resumo financeiro
+  const totalExpenses = block.expenses.reduce(
+    (total, expense) => total + Number(expense.amount.toString()),
+    0,
+  );
+  const remainingBalance =
+    Number(block.initialAmount?.toString()) - totalExpenses;
+
+  const expensesByCategory = calculateExpensesByCategory(block.expenses);
+
+  const statusY = doc.lastAutoTable.finalY + 20;
+  doc.setFillColor(248, 249, 250);
+  doc.roundedRect(10, statusY, 190, 70, 3, 3, "F");
+
+  autoTable(doc, {
+    startY: statusY + 5,
+    head: [["RESUMO DE FECHAMENTO", "", "", "", ""]],
+    body: [
+      ["Status da Prestação de Contas:", BLOCK_STATUS_LABELS[block.status]],
+      [
+        "Status da Solicitação:",
+        REQUEST_STATUS_LABELS[block.request?.status || RequestStatus.WAITING],
+      ],
+      [
+        "Valor disponibilizado:",
+        formatCurrency(Number(block.request?.amount?.toString())),
+      ],
+      ["Total das despesas:", formatCurrency(totalExpenses)],
+      ["Total em caixa:", formatCurrency(totalCaixa)],
+      ["Saldo final:", formatCurrency(saldoFinal)]
+    ],
+    theme: "plain",
+    styles: { fontSize: 11, cellPadding: 2 },
+    headStyles: {
+      fillColor: [26, 132, 53],
+      textColor: [255, 255, 255],
+      fontStyle: "bold",
+    },
+    columnStyles: {
+      0: { fontStyle: "bold" },
+    },
+    margin: { left: 15 },
+  });
+  // Adiciona resumo por categoria
+
+  autoTable(doc, {
+    startY: doc.lastAutoTable.finalY + 25,
+    head: [["RESUMO POR CATEGORIA", "VALOR"]],
+    body: Object.entries(expensesByCategory).map(([category, total]) => [
+      category,
+      formatCurrency(total),
+    ]),
+    headStyles: {
+      fillColor: [26, 132, 53],
+      textColor: [255, 255, 255],
+      fontStyle: "bold",
+    },
+    columnStyles: {
+      1: { halign: "right" },
+    },
+    styles: { fontSize: 11, cellPadding: 4 },
+    margin: { left: 10, right: 10 },
+  });
+  const margin = 10;
+  function safe(value: string | number | null | undefined): string {
+    if (value === null || value === undefined) return "";
+    return String(value);
   }
+  // Adiciona tabela detalhada de despesas
+  let pageNumber = 1;
+  autoTable(doc, {
+    startY: doc.lastAutoTable.finalY + 20,
+    showHead: "firstPage",
+    head: [
+      ["TABELA DE REGISTRO DAS DESPESAS", "", "", ""],
+      ["Data", "Categoria", "Valor", "Descrição"],
+    ],
+    body: block.expenses.map((expense) => [
+      safe(formatDate(expense.date)),
+      safe(EXPENSE_CATEGORY_LABELS[expense.category]),
+      safe(formatCurrency(Number(expense.amount))),
+      safe(expense.description),
+    ]),
+    headStyles: {
+      fillColor: [26, 132, 53],
+      textColor: [255, 255, 255],
+      fontStyle: "bold",
+    },
+    styles: {
+      fontSize: 10,
+      cellPadding: 4,
+      overflow: "linebreak",
+      minCellHeight: 15,
+    },
+    columnStyles: {
+      0: { cellWidth: 60 },
+      1: { cellWidth: 30, halign: "right" },
+      2: { cellWidth: 30, halign: "right" },
+      3: { cellWidth: "auto" },
+    },
+    margin: { left: margin, right: margin, bottom: 40 },
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    didDrawPage: (data) => {
+      addFooter(pageNumber);
+    },
+    pageBreak: "auto",
+    showFoot: "lastPage",
+    foot: [[{ content: "", colSpan: 4 }]],
+    footStyles: {
+      minCellHeight: 0,
+      fillColor: [255, 255, 255],
+    }, // Reserve space for footer
+  });
 
-  addFooter();
+  // Adiciona imagens das despesas
 
-  // Página 2: Apenas despesas (separadas por tipo)
-  if (block.expenses.length > 0) {
-    doc.addPage();
+  for (const expense of block.expenses) {
+    if (expense.imageUrls && expense.imageUrls.length > 0) {
+      for (const base64Data of expense.imageUrls) {
+        try {
+          const { base64: normalizedBase64, dimensions } =
+            await normalizeBase64Image(base64Data);
+          const cleanBase64 = cleanBase64String(normalizedBase64);
+          const imageFormat = getBase64ImageFormat(normalizedBase64);
 
-    doc.setFontSize(16);
-    doc.setFont("helvetica", "bold");
-    doc.text("DETALHAMENTO DAS DESPESAS", 15, 30);
-
-    let currentY = 50;
-
-    // Seção de Caixa
-    if (caixa.length > 0) {
-      doc.setFontSize(14);
-      doc.setFont("helvetica", "bold");
-      doc.text("ENTRADAS DE CAIXA", 15, currentY);
-
-      autoTable(doc, {
-        startY: currentY + 10,
-        head: [["Data", "Descrição", "Valor"]],
-        body: caixa.map((e) => [
-          formatDate(normalizeDate(e.date)),
-          e.description || e.name || "Entrada de caixa",
-          formatCurrency(
-            typeof e.amount === "number"
-              ? e.amount
-              : Number(e.amount.toString()),
-          ),
-        ]),
-        headStyles: {
-          fillColor: [0, 128, 0],
-          textColor: [255, 255, 255],
-          fontStyle: "bold",
-        },
-        styles: { fontSize: 10, cellPadding: 4 },
-        columnStyles: {
-          0: { cellWidth: 30 },
-          1: { cellWidth: 100 },
-          2: { cellWidth: 30, halign: "right" },
-        },
-        margin: { left: 15, right: 15 },
-      });
-
-      currentY = doc.lastAutoTable.finalY + 20;
-    }
-
-    // Seção de Despesas
-    if (despesas.length > 0) {
-      doc.setFontSize(14);
-      doc.setFont("helvetica", "bold");
-      doc.text("DESPESAS", 15, currentY);
-
-      autoTable(doc, {
-        startY: currentY + 10,
-        head: [["Data", "Categoria", "Valor", "Descrição"]],
-        body: despesas.map((e) => [
-          formatDate(normalizeDate(e.date)),
-          getCategoryLabel(e.category),
-          formatCurrency(
-            typeof e.amount === "number"
-              ? e.amount
-              : Number(e.amount.toString()),
-          ),
-          e.description || e.name || "",
-        ]),
-        headStyles: {
-          fillColor: [220, 53, 69],
-          textColor: [255, 255, 255],
-          fontStyle: "bold",
-        },
-        styles: { fontSize: 10, cellPadding: 4, overflow: "linebreak" },
-        columnStyles: {
-          0: { cellWidth: 25 },
-          1: { cellWidth: 40 },
-          2: { cellWidth: 25, halign: "right" },
-          3: { cellWidth: "auto" },
-        },
-        margin: { left: 15, right: 15, bottom: 40 },
-        didDrawPage: () => addFooter(),
-      });
-    }
-  }
-
-  // MELHORIA: Páginas de comprovantes com ALTA QUALIDADE
-  for (const expense of despesas) {
-    if (expense.imageUrls?.length) {
-      for (const base64 of expense.imageUrls) {
-        // USAR A NOVA FUNÇÃO DE OTIMIZAÇÃO
-        const processedImage = await optimizeImageForPDF(base64);
-
-        if (processedImage) {
           doc.addPage();
-          const pageWidth = doc.internal.pageSize.width;
-          const pageHeight = doc.internal.pageSize.height;
-          const margin = 15;
-          const availableWidth = pageWidth - 2 * margin;
-          const availableHeight = pageHeight - 100; // Espaço para texto
+          pageNumber++;
 
-          // MELHORIA: Calcular posição para centralizar melhor
-          const imgWidth = Math.min(
-            processedImage.dimensions.width * 0.264583,
-            availableWidth,
-          ); // Converter px para mm
-          const imgHeight = Math.min(
-            processedImage.dimensions.height * 0.264583,
-            availableHeight,
+          const margin = 20;
+          const pageWidth = doc.internal.pageSize.width - 2 * margin;
+          const pageHeight = doc.internal.pageSize.height - 2 * margin - 80; // Increased margin for footer
+
+          // Calcula dimensões para ajustar à página mantendo proporção
+          const scale = Math.min(
+            pageWidth / dimensions.width,
+            (pageHeight * 0.85) / dimensions.height, // Changed from 0.7 to 0.85
+          ); // Reduced to 70% of page height
+
+          const imgWidth = dimensions.width * scale;
+          const imgHeight = dimensions.height * scale;
+
+          // Centraliza imagem horizontalmente
+          const xPos = margin + (pageWidth - imgWidth) / 2;
+          const yPos = 40;
+
+          // Adiciona imagem
+          doc.addImage(
+            cleanBase64,
+            imageFormat,
+            xPos,
+            50, // Adjusted starting position
+            imgWidth,
+            imgHeight,
+            undefined,
+            "FAST",
           );
 
-          // Centralizar a imagem
-          const xPos = (pageWidth - imgWidth) / 2;
-          const yPos = 30; // Posição do topo
+          // Adiciona box para detalhes da despesa
+          const textY = yPos + imgHeight + 20;
+          doc.setFillColor(248, 249, 250);
+          doc.roundedRect(margin, textY, pageWidth - 2 * margin, 45, 3, 3, "F"); // Modify text box height from 55 to 45
 
-          try {
-            // MELHORIA: Adicionar imagem com configurações de alta qualidade
-            doc.addImage(
-              processedImage.base64,
-              processedImage.format,
-              xPos,
-              yPos,
-              imgWidth,
-              imgHeight,
-              undefined, // alias
-              "FAST", // compression - usar FAST para melhor qualidade
-            );
+          // Adiciona detalhes da despesa com melhor formatação
+          doc.setFontSize(9); // Reduce font size from 10 to 9
+          doc.setTextColor(0, 0, 0);
+          const expenseDetails = [
+            `Despesa: ${expense.name}`,
+            `Descrição: ${expense.description}`,
+            `Categoria: ${EXPENSE_CATEGORY_LABELS[expense.category]}`,
+            `Valor: ${formatCurrency(Number(expense.amount.toString()))}`,
+          ];
 
-            // Informações da despesa abaixo da imagem
-            const textY = yPos + imgHeight + 15;
-            doc.setFontSize(12);
-            doc.setFont("helvetica", "bold");
-            doc.text(
-              `COMPROVANTE - ${expense.name || "Sem nome"}`,
-              margin,
-              textY,
-            );
+          expenseDetails.forEach((line, index) => {
+            doc.text(line, margin + 10, textY + 12 + index * 8); // Adjust spacing between lines from 10 to 8
+          });
 
-            doc.setFontSize(10);
-            doc.setFont("helvetica", "normal");
-            doc.text(
-              `Descrição: ${expense.description || "-"}`,
-              margin,
-              textY + 10,
-            );
-            doc.text(
-              `Categoria: ${getCategoryLabel(expense.category)}`,
-              margin,
-              textY + 18,
-            );
-            doc.text(
-              `Valor: ${formatCurrency(typeof expense.amount === "number" ? expense.amount : Number(expense.amount.toString()))}`,
-              margin,
-              textY + 26,
-            );
-            doc.text(
-              `Data: ${formatDate(normalizeDate(expense.date))}`,
-              margin,
-              textY + 34,
-            );
+          expenseDetails.forEach((line, index) => {
+            doc.text(line, margin + 10, textY + 12 + index * 8); // Adjust spacing between lines from 10 to 8
+          });
 
-            addFooter();
-          } catch (error) {
-            console.error("Erro ao adicionar imagem ao PDF:", error);
-
-            // Fallback: adicionar página com erro
-            doc.setFontSize(12);
-            doc.setFont("helvetica", "bold");
-            doc.text(
-              "ERRO AO CARREGAR COMPROVANTE",
-              pageWidth / 2,
-              pageHeight / 2,
-              { align: "center" },
-            );
-            doc.setFont("helvetica", "normal");
-            doc.text(
-              `Despesa: ${expense.name}`,
-              pageWidth / 2,
-              pageHeight / 2 + 15,
-              { align: "center" },
-            );
-            addFooter();
-          }
+          addFooter(pageNumber);
+        } catch (error) {
+          console.error("Erro ao processar imagem para o PDF:", error);
         }
       }
     }
   }
 
+  doc.setPage(2);
+  addFooter(1);
+
   return doc;
 }
+
+// Exporta as funções auxiliares para uso em outros módulos
+export {
+  getBase64ImageFormat,
+  cleanBase64String,
+  normalizeBase64Image,
+  calculateExpensesByCategory,
+};

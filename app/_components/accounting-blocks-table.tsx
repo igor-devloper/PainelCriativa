@@ -195,16 +195,18 @@ export function AccountingBlocksTable({
                       {formatCurrency(block.totalDespesas)}
                     </TableCell>
                     <TableCell className="text-right">
-                      <span
-                        className={`font-medium ${block.remainingBalance < 0 ? "text-red-600" : "text-green-600"}`}
-                      >
-                        {formatCurrency(block.remainingBalance)}
-                      </span>
-                      {block.needsReimbursement && (
-                        <Badge variant="destructive" className="ml-2 text-xs">
-                          Reembolso
-                        </Badge>
-                      )}
+                      <div className="flex items-center flex-col">
+                        <span
+                          className={`font-medium ${block.remainingBalance < 0 ? "text-red-600" : "text-green-600"}`}
+                        >
+                          {formatCurrency(block.saldoFinal)}
+                        </span>
+                        {block.needsReimbursement && (
+                          <Badge variant="destructive" className="ml-2 text-xs">
+                            Reembolso
+                          </Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <Badge

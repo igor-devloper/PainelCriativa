@@ -9,6 +9,7 @@ import type {
   PaymentMethod,
   Prisma,
   transactiontype,
+  ExpenseStatus,
 } from "@prisma/client";
 
 import { Decimal } from "@prisma/client/runtime/library"; // Importação do Decimal
@@ -63,12 +64,21 @@ interface BaseAccountingBlock
 }
 
 interface BaseExpense
-  extends Omit<PrismaExpense, "amount" | "date" | "createdAt" | "updatedAt"> {
+  extends Omit<PrismaExpense, "amount" | "date" | "createdAt" | "updatedAt" | "name" | "category" | "paymentMethod" | "status" | "description" | "imageUrls" | "type"> {
   amount: number | Decimal; // Converte Decimal para number
   date: Date;
   createdAt: Date;
   updatedAt: Date;
+  name: string;
+  category: ExpenseCategory;
+  paymentMethod: PaymentMethod;
+  status: ExpenseStatus;
+  description: string;
+  imageUrls?: string[];
+  type?: string;
+
 }
+
 
 // Main interfaces with relationships
 export interface Request extends BaseRequest {
