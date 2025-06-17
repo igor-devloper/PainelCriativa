@@ -31,7 +31,7 @@ import { Button } from "@/app/_components/ui/button";
 import { updateUser } from "@/app/_actions/user-actions";
 import { useToast } from "@/app/_hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import type { UserRole } from "@/app/_actions/types";
+import { UserRole } from "@/types";
 
 const formSchema = z.object({
   firstName: z.string().min(1, "O nome é obrigatório"),

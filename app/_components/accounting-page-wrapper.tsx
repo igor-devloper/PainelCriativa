@@ -8,7 +8,6 @@ import {
 import { Separator } from "@/app/_components/ui/separator";
 import { ScrollArea, ScrollBar } from "@/app/_components/ui/scroll-area";
 import { AppSidebar } from "@/app/_components/app-sidebar";
-import type { AccountingBlock } from "@/app/_actions/types";
 import { AccountingBlocksTable } from "./accounting-blocks-table";
 import { UserBalance } from "./user-balance";
 import { HandCoins } from "lucide-react";
@@ -18,7 +17,8 @@ import { TableSkeleton } from "./ui/table-skeleton";
 import { ThemeToggle } from "./theme-toggle";
 import { Avatar } from "./ui/avatar";
 import { UserButton } from "@clerk/nextjs";
-import { UserRole } from "../_actions/types";
+import { AccountingBlock } from "../types";
+import { UserRole } from "@/types";
 
 export const dynamic = "force-dynamic";
 

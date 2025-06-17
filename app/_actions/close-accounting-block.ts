@@ -7,12 +7,77 @@ import { revalidatePath } from "next/cache";
 import { generateAccountingPDF } from "@/app/_utils/generate-pdf";
 import { db } from "../_lib/prisma";
 import { uploadPdfToSupabase } from "../_lib/upload";
+import { type AccountingBlock, type ExpenseRequest, type ExpenseItem, convertPrismaToAccountingBlock } from "@/app/types";
+
+// Função helper para converter dados do Prisma
+// function convertPrismaToAccountingBlock(prismaBlock: any): AccountingBlock {
+//   return {
+//     id: prismaBlock.id,
+//     code: prismaBlock.code,
+//     requestId: prismaBlock.requestId,
+//     status: prismaBlock.status,
+//     pdfUrl: prismaBlock.pdfUrl,
+//     initialAmount: prismaBlock.initialAmount.toNumber(),
+//     currentBalance: prismaBlock.currentBalance.toNumber(),
+//     saldoFinal: prismaBlock.saldoFinal?.toNumber() || null,
+//     createdAt: prismaBlock.createdAt,
+//     updatedAt: prismaBlock.updatedAt,
+//     company: prismaBlock.company,
+//     expenses: prismaBlock.expenses.map((expense: any): ExpenseItem => ({
+//       id: expense.id,
+//       name: expense.name,
+//       description: expense.description,
+//       amount: expense.amount.toNumber(),
+//       category: expense.category,
+//       paymentMethod: expense.paymentMethod,
+//       blockId: expense.blockId,
+//       date: expense.date,
+//       status: expense.status,
+//       type: expense.type,
+//       userId: expense.userId,
+//       imageUrls: expense.imageUrls,
+//       createdAt: expense.createdAt,
+//       updatedAt: expense.updatedAt,
+//       company: expense.company,
+//     })),
+//     request: prismaBlock.request ? {
+//       id: prismaBlock.request.id,
+//       name: prismaBlock.request.name,
+//       description: prismaBlock.request.description,
+//       amount: prismaBlock.request.amount.toNumber(),
+//       currentBalance: prismaBlock.request.currentBalance?.toNumber() || null,
+//       initialUserBalance: prismaBlock.request.initialUserBalance?.toNumber() || 0,
+//       balanceDeducted: prismaBlock.request.balanceDeducted?.toNumber() || 0,
+//       status: prismaBlock.request.status,
+//       userId: prismaBlock.request.userId,
+//       phoneNumber: prismaBlock.request.phoneNumber,
+//       type: prismaBlock.request.type,
+//       financeId: prismaBlock.request.financeId,
+//       expectedDate: prismaBlock.request.expectedDate,
+//       denialReason: prismaBlock.request.denialReason,
+//       proofUrl: prismaBlock.request.proofUrl,
+//       createdAt: prismaBlock.request.createdAt,
+//       updatedAt: prismaBlock.request.updatedAt,
+//       responsibleCompany: prismaBlock.request.responsibleCompany,
+//       whatsappMessageId: prismaBlock.request.whatsappMessageId,
+//       whatsappMessageStatus: prismaBlock.request.whatsappMessageStatus,
+//       whatsappMessageError: prismaBlock.request.whatsappMessageError,
+//       gestor: prismaBlock.request.gestor,
+//       responsibleValidationUserID: prismaBlock.request.responsibleValidationUserID,
+//       bankName: prismaBlock.request.bankName,
+//       accountType: prismaBlock.request.accountType,
+//       accountNumber: prismaBlock.request.accountNumber,
+//       accountHolderName: prismaBlock.request.accountHolderName,
+//       pixKey: prismaBlock.request.pixKey,
+//     } : null,
+//   };
+// }
 
 export async function closeAccountingBlock(blockId: string) {
   const { userId } = await auth();
   if (!userId) throw new Error("Usuário não autenticado");
 
-  const block = await db.accountingBlock.findUnique({
+  const prismaBlock = await db.accountingBlock.findUnique({
     where: { id: blockId },
     include: {
       expenses: true,
@@ -20,11 +85,15 @@ export async function closeAccountingBlock(blockId: string) {
     },
   });
 
-  if (!block) throw new Error("Bloco não encontrado");
+  if (!prismaBlock) throw new Error("Bloco não encontrado");
+
+  // Converter dados do Prisma para tipos customizados
+  const block = convertPrismaToAccountingBlock(prismaBlock);
+
 
   // Calcular saldo total
   const saldo = block.expenses.reduce((acc, t) => {
-    return t.type === "CAIXA" ? acc + Number(t.amount) : acc - Number(t.amount);
+    return t.type === "CAIXA" ? acc + t.amount : acc - t.amount;
   }, 0);
 
   // Validar fechamento com saldo negativo
@@ -39,7 +108,7 @@ export async function closeAccountingBlock(blockId: string) {
     }
   }
 
-  // Gerar PDF
+  // Gerar PDF - agora com dados convertidos
   const companyName = block.company;
   const responsibleName =
     block.request?.accountHolderName ?? "Usuário Responsável";
@@ -60,7 +129,7 @@ export async function closeAccountingBlock(blockId: string) {
       where: { id: blockId },
       data: {
         status: "CLOSED",
-        saldoFinal: block.currentBalance,
+        saldoFinal: prismaBlock.currentBalance, // Use o valor original do Prisma
         pdfUrl,
         requestId: null,
       },
@@ -72,16 +141,11 @@ export async function closeAccountingBlock(blockId: string) {
     });
 
     // Deleta request
-    if (block.request?.id) {
+    if (prismaBlock.request?.id) {
       await prisma.request.delete({
-        where: { id: block.request.id },
+        where: { id: prismaBlock.request.id },
       });
     }
-
-    // // Por fim, deleta o bloco
-    // await prisma.accountingBlock.delete({
-    //   where: { id: blockId },
-    // });
   });
 
   revalidatePath("/accounting");

@@ -8,8 +8,9 @@ import {
 import { Separator } from "@/app/_components/ui/separator";
 import { ScrollArea } from "@/app/_components/ui/scroll-area";
 import { AppSidebar } from "@/app/_components/app-sidebar";
-import { UserRole, AdminStats } from "@/app/_actions/types";
 import { AdminDashboard } from "./admin-dashboard";
+import { UserRole } from "@/types";
+import { AdminStats } from "../types";
 
 interface AdminPageWrapperProps {
   userRole: UserRole;

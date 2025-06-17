@@ -5,7 +5,7 @@ import {
   acceptedRequestTemplate,
 } from "./email-templates";
 import { clerkClient } from "@clerk/nextjs/server";
-import type { UserRole } from "@/app/_actions/types";
+import { UserRole } from "@/types";
 
 // Usando o email verificado do Resend para desenvolvimento e produção
 // até que tenhamos um domínio verificado

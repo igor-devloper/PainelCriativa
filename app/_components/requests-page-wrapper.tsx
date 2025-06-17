@@ -9,7 +9,6 @@ import {
 } from "@/app/_components/ui/sidebar";
 import { ScrollArea, ScrollBar } from "@/app/_components/ui/scroll-area";
 import { AppSidebar } from "@/app/_components/app-sidebar";
-import type { UserRole, Request } from "@/app/_actions/types";
 import { RequestsList } from "./requests-list";
 import { Siren } from "lucide-react";
 import { TableSkeleton } from "@/app/_components/ui/table-skeleton";
@@ -17,10 +16,12 @@ import { Separator } from "@/app/_components/ui/separator";
 import { ThemeToggle } from "./theme-toggle";
 import { Avatar } from "./ui/avatar";
 import { UserButton } from "@clerk/nextjs";
+import { UserRole } from "@/types";
+import { ExpenseRequest } from "../types";
 
 interface RequestsPageWrapperProps {
   userRole: UserRole;
-  requests: Request[];
+  requests: ExpenseRequest[];
   users: any[]; // TODO: Type this properly
   userId: string;
 }

@@ -43,7 +43,7 @@ import { formatDate, formatCurrency } from "@/app/_lib/utils";
 import { Badge } from "@/app/_components/ui/badge";
 import type {
   AccountingBlock,
-  Expense,
+  ExpenseItem as Expense,
   ExpenseCategory,
   PaymentMethod,
   BlockStatus,

@@ -1,42 +1,47 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import type {
+  Request as PrismaRequest,
+  AccountingBlock as PrismaAccountingBlock,
+  Expense as PrismaExpense,
+  RequestStatus as PrismaRequestStatus,
+  BlockStatus as PrismaBlockStatus,
   ExpenseCategory,
   PaymentMethod,
-  RequestStatus,
-  BlockStatus,
-  ExpenseStatus,
+  Prisma,
   transactiontype,
+  ExpenseStatus,
+  RequestType,
 } from "@prisma/client";
-import type { Decimal } from "@prisma/client/runtime/library";
 
-export interface Expense {
-  id: string;
-  name: string;
-  description?: string | null;
-  amount: number | Decimal;
-  category: ExpenseCategory;
-  paymentMethod: PaymentMethod;
-  blockId: string;
-  date: Date;
-  status: ExpenseStatus;
-  type: transactiontype;
-  userId: string;
-  imageUrls: string[];
-  createdAt: Date;
-  updatedAt: Date;
-  company: string;
+import { Decimal } from "@prisma/client/runtime/library";
+
+// User and Role types
+export type UserRole = "ADMIN" | "FINANCE" | "USER";
+
+// Status types
+export type RequestStatus = PrismaRequestStatus;
+export type BlockStatus = PrismaBlockStatus;
+
+export interface AdminStats {
+  totalUsers: number;
+  pendingRequests: number;
+  totalApprovedAmount: number;
+  openAccountingBlocks: number;
 }
 
-export interface Request {
+// Main interfaces - VERSÃO ÚNICA E DEFINITIVA
+export interface ExpenseRequest {
   id: string;
   name: string;
   description: string;
-  amount: number | Decimal;
-  currentBalance?: number | Decimal | null;
-  initialUserBalance?: number | Decimal | null;
-  balanceDeducted?: number | Decimal | null;
+  amount: number; // Converted from Decimal
+  currentBalance?: number | null; // Converted from Decimal
+  initialUserBalance?: number; // Converted from Decimal
+  balanceDeducted?: number; // Converted from Decimal
   status: RequestStatus;
   userId: string;
   phoneNumber: string;
+  type?: RequestType | null;
   financeId?: string | null;
   expectedDate?: Date | null;
   denialReason?: string | null;
@@ -54,53 +59,24 @@ export interface Request {
   accountNumber?: string | null;
   accountHolderName?: string | null;
   pixKey?: string | null;
+  accountingBlock?: AccountingBlock | null;
 }
 
-export interface AccountingBlock {
-  id: string;
-  code: string;
-  requestId?: string | null;
-  request?: Request | null;
-  status: BlockStatus;
-  pdfUrl?: string | null;
-  initialAmount: number | Decimal;
-  currentBalance: number | Decimal;
-  saldoFinal?: number | Decimal | null;
-  expenses: Expense[];
-  createdAt: Date;
-  updatedAt: Date;
-  company: string;
+export interface ExpenseEdit {
+  name: string;
+  description: string | null;
+  amount: number;
+  category: ExpenseCategory;
+  paymentMethod: PaymentMethod;
+  date: string;
+  imageUrls: string[];
 }
 
-// Tipos auxiliares para trabalhar com os dados processados
-export interface ProcessedAccountingBlock {
-  id: string;
-  code: string;
-  requestId?: string | null;
-  request?: Request | null;
-  status: BlockStatus;
-  pdfUrl?: string | null;
-  initialAmount: number;
-  currentBalance: number;
-  saldoFinal: number;
-  expenses: ProcessedExpense[];
-  createdAt: Date;
-  updatedAt: Date;
-  company: string;
-  // Propriedades calculadas
-  totalAmount: number;
-  requestAmount: number;
-  remainingBalance: number;
-  totalDespesas: number;
-  totalCaixa: number;
-  needsReimbursement: boolean;
-}
-
-export interface ProcessedExpense {
+export interface ExpenseItem {
   id: string;
   name: string;
   description?: string | null;
-  amount: number;
+  amount: number; // Converted from Decimal
   category: ExpenseCategory;
   paymentMethod: PaymentMethod;
   blockId: string;
@@ -114,90 +90,164 @@ export interface ProcessedExpense {
   company: string;
 }
 
-// Função helper para converter dados do Prisma para tipos processados
-export function processExpense(expense: Expense): ProcessedExpense {
+export interface AccountingBlock {
+  id: string;
+  code: string;
+  requestId?: string | null;
+  request?: ExpenseRequest | null; // USAR ExpenseRequest, não Request
+  status: BlockStatus;
+  pdfUrl?: string | null;
+  initialAmount: number; // Converted from Decimal
+  currentBalance: number; // Converted from Decimal
+  saldoFinal?: number | null; // Converted from Decimal
+  expenses: ExpenseItem[];
+  createdAt: Date;
+  updatedAt: Date;
+  company: string;
+}
+
+// Tipos auxiliares para trabalhar com os dados processados
+export interface ProcessedAccountingBlock extends AccountingBlock {
+  // Propriedades calculadas
+  totalAmount: number;
+  requestAmount: number;
+  remainingBalance: number;
+  totalDespesas: number;
+  totalCaixa: number;
+  needsReimbursement: boolean;
+}
+export function convertPrismaToAccountingBlock(prismaBlock: any): AccountingBlock {
   return {
-    ...expense,
-    amount:
-      typeof expense.amount === "number"
-        ? expense.amount
-        : Number(expense.amount.toString()),
-    date: expense.date instanceof Date ? expense.date : new Date(expense.date),
-    createdAt:
-      expense.createdAt instanceof Date
-        ? expense.createdAt
-        : new Date(expense.createdAt),
-    updatedAt:
-      expense.updatedAt instanceof Date
-        ? expense.updatedAt
-        : new Date(expense.updatedAt),
+    id: prismaBlock.id,
+    code: prismaBlock.code,
+    requestId: prismaBlock.requestId,
+    status: prismaBlock.status,
+    pdfUrl: prismaBlock.pdfUrl,
+    initialAmount: Number(prismaBlock.initialAmount.toString()),
+    currentBalance: Number(prismaBlock.currentBalance.toString()),
+    saldoFinal: prismaBlock.saldoFinal ? Number(prismaBlock.saldoFinal.toString()) : null,
+    createdAt: prismaBlock.createdAt,
+    updatedAt: prismaBlock.updatedAt,
+    company: prismaBlock.company,
+    expenses: prismaBlock.expenses.map((expense: any): ExpenseItem => ({
+      id: expense.id,
+      name: expense.name,
+      description: expense.description,
+      amount: Number(expense.amount.toString()),
+      category: expense.category,
+      paymentMethod: expense.paymentMethod,
+      blockId: expense.blockId,
+      date: expense.date,
+      status: expense.status,
+      type: expense.type,
+      userId: expense.userId,
+      imageUrls: expense.imageUrls,
+      createdAt: expense.createdAt,
+      updatedAt: expense.updatedAt,
+      company: expense.company,
+    })),
+    request: prismaBlock.request ? {
+      id: prismaBlock.request.id,
+      name: prismaBlock.request.name,
+      description: prismaBlock.request.description,
+      amount: Number(prismaBlock.request.amount.toString()),
+      currentBalance: prismaBlock.request.currentBalance ? Number(prismaBlock.request.currentBalance.toString()) : null,
+      initialUserBalance: prismaBlock.request.initialUserBalance ? Number(prismaBlock.request.initialUserBalance.toString()) : 0,
+      balanceDeducted: prismaBlock.request.balanceDeducted ? Number(prismaBlock.request.balanceDeducted.toString()) : 0,
+      status: prismaBlock.request.status,
+      userId: prismaBlock.request.userId,
+      phoneNumber: prismaBlock.request.phoneNumber,
+      type: prismaBlock.request.type,
+      financeId: prismaBlock.request.financeId,
+      expectedDate: prismaBlock.request.expectedDate,
+      denialReason: prismaBlock.request.denialReason,
+      proofUrl: prismaBlock.request.proofUrl,
+      createdAt: prismaBlock.request.createdAt,
+      updatedAt: prismaBlock.request.updatedAt,
+      responsibleCompany: prismaBlock.request.responsibleCompany,
+      whatsappMessageId: prismaBlock.request.whatsappMessageId,
+      whatsappMessageStatus: prismaBlock.request.whatsappMessageStatus,
+      whatsappMessageError: prismaBlock.request.whatsappMessageError,
+      gestor: prismaBlock.request.gestor,
+      responsibleValidationUserID: prismaBlock.request.responsibleValidationUserID,
+      bankName: prismaBlock.request.bankName,
+      accountType: prismaBlock.request.accountType,
+      accountNumber: prismaBlock.request.accountNumber,
+      accountHolderName: prismaBlock.request.accountHolderName,
+      pixKey: prismaBlock.request.pixKey,
+    } : null,
+  };
+}
+// Função helper para converter dados do Prisma para tipos processados
+export function processExpense(expense: PrismaExpense): ExpenseItem {
+  return {
+    id: expense.id,
+    name: expense.name,
+    description: expense.description,
+    amount: expense.amount.toNumber(),
+    category: expense.category,
+    paymentMethod: expense.paymentMethod,
+    blockId: expense.blockId,
+    date: expense.date,
+    status: expense.status,
+    type: expense.type,
+    userId: expense.userId,
+    imageUrls: expense.imageUrls,
+    createdAt: expense.createdAt,
+    updatedAt: expense.updatedAt,
+    company: expense.company,
   };
 }
 
 export function processAccountingBlock(
   block: AccountingBlock,
 ): ProcessedAccountingBlock {
-  const processedExpenses = block.expenses.map(processExpense);
+  const processedExpenses = block.expenses;
 
-  // Separar despesas por tipo
   const totalDespesas = processedExpenses
     .filter((e) => e.type === "DESPESA")
     .reduce((sum, e) => sum + e.amount, 0);
+    
   const totalCaixa = processedExpenses
     .filter((e) => e.type === "CAIXA")
     .reduce((sum, e) => sum + e.amount, 0);
 
-  // Converter valores do Prisma para number
-  const initialAmount =
-    typeof block.initialAmount === "number"
-      ? block.initialAmount
-      : Number(block.initialAmount.toString());
-  const currentBalance =
-    typeof block.currentBalance === "number"
-      ? block.currentBalance
-      : Number(block.currentBalance.toString());
-  const requestAmount = block.request?.amount
-    ? typeof block.request.amount === "number"
-      ? block.request.amount
-      : Number(block.request.amount.toString())
-    : 0;
+  const totalReembolso = processedExpenses
+    .filter((e) => e.type === "REEMBOLSO")
+    .reduce((sum, e) => sum + e.amount, 0);
 
-  // CORREÇÃO: Lógica correta do saldo final
-  // Saldo Final = (Valor Disponibilizado + Total Caixa) - Total de Despesas
-  const remainingBalance = requestAmount + totalCaixa - totalDespesas;
-
-  const totalAmount = totalDespesas + totalCaixa;
-  const saldoFinal = remainingBalance; // O saldo final é o mesmo que remaining balance
+  const requestAmount = block.request?.amount ?? 0;
+  const remainingBalance = (requestAmount ?? 0) + totalCaixa + totalReembolso - totalDespesas;
+  const totalAmount = totalDespesas + totalCaixa + totalReembolso;
+  const saldoFinal = remainingBalance;
 
   return {
     ...block,
-    initialAmount,
-    currentBalance,
-    saldoFinal,
-    expenses: processedExpenses,
-    createdAt:
-      block.createdAt instanceof Date
-        ? block.createdAt
-        : new Date(block.createdAt),
-    updatedAt:
-      block.updatedAt instanceof Date
-        ? block.updatedAt
-        : new Date(block.updatedAt),
     totalAmount,
     requestAmount,
     remainingBalance,
     totalDespesas,
     totalCaixa,
-    needsReimbursement: remainingBalance < 0, // Só precisa reembolso se saldo for negativo
+    needsReimbursement: remainingBalance < 0,
+    saldoFinal,
   };
 }
-
-// Re-exportar tipos do Prisma para facilitar o uso
+// Re-exportar tipos do Prisma
 export type {
   ExpenseCategory,
   PaymentMethod,
-  RequestStatus,
-  BlockStatus,
-  ExpenseStatus,
   transactiontype,
+  ExpenseStatus,
 } from "@prisma/client";
+
+// Prisma payload types
+export type RequestWithFullDetails = Prisma.RequestGetPayload<{
+  include: {
+    accountingBlock: {
+      include: {
+        expenses: true;
+        request: true;
+      };
+    };
+  };
+}>;

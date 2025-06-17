@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import { db } from "@/app/_lib/prisma";
-import type { UserRole } from "@/app/_actions/types";
+import { UserRole } from "@/types";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

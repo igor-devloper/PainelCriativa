@@ -18,7 +18,7 @@ import {
 } from "@/app/_components/ui/select";
 import { Button } from "@/app/_components/ui/button";
 import { toast } from "@/app/_hooks/use-toast";
-import { UserRole } from "@/app/_actions/types";
+import { UserRole } from "@/types";
 
 interface User {
   id: string;

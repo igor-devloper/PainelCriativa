@@ -5,7 +5,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/app/_components/ui/card";
-import type { AccountingBlock, UserRole } from "@/app/_actions/types";
 import { ClipboardList, Users, FileText } from "lucide-react";
 // import { formatDistanceToNow } from "date-fns";
 // import { ptBR } from "date-fns/locale";
@@ -14,6 +13,8 @@ import Link from "next/link";
 import { Button } from "./ui/button";
 import { UserBalance } from "./user-balance";
 import { RecentAccountingBlocks } from "../financial/_components/recent-accounting-blocks";
+import { UserRole } from "@/types";
+import { AccountingBlock } from "../types";
 
 interface User {
   id: string;

@@ -17,7 +17,7 @@ import { ImageUploadAproveRequest } from "@/app/_components/ui/image-upload-apro
 import { Card, CardContent } from "@/app/_components/ui/card";
 import { Separator } from "@/app/_components/ui/separator";
 import { Copy, Download } from "lucide-react";
-import type { Request } from "@/app/_actions/types";
+import type { ExpenseRequest as Request } from "@/app/types";
 import { formatCurrency } from "@/app/_lib/utils";
 import { generatePixQRCode } from "../_utils/pix";
 

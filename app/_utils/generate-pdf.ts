@@ -8,7 +8,7 @@ import {
   REQUEST_STATUS_LABELS,
 } from "@/app/_constants/transactions";
 import { type BlockStatus, RequestStatus } from "@prisma/client";
-import { AccountingBlock, Expense } from "../types";
+import { AccountingBlock, ExpenseItem } from "../types";
 
 const COMPANY_CNPJS: Record<string, string> = {
   "GSM SOLARION 02": "44.910.546/0001-55",
@@ -76,7 +76,7 @@ async function normalizeBase64Image(base64Data: string): Promise<{
   });
 }
 
-function calculateExpensesByCategory(expenses: Expense[]): Record<string, number> {
+function calculateExpensesByCategory(expenses: ExpenseItem[]): Record<string, number> {
   return expenses.reduce((acc, expense) => {
     const categoryLabel = EXPENSE_CATEGORY_LABELS[expense.category];
     acc[categoryLabel] = (acc[categoryLabel] || 0) + Number(expense.amount.toString());
@@ -84,20 +84,20 @@ function calculateExpensesByCategory(expenses: Expense[]): Record<string, number
   }, {} as Record<string, number>);
 }
 
-function separateExpensesByType(expenses: Expense[]) {
+function separateExpensesByType(expenses: ExpenseItem[]) {
   const despesas = expenses.filter((e) => e.type === "DESPESA");
   const caixa = expenses.filter((e) => e.type === "CAIXA");
   return { despesas, caixa };
 }
 
-function calculateTotals(expenses: Expense[]) {
+function calculateTotals(expenses: ExpenseItem[]) {
   const { despesas, caixa } = separateExpensesByType(expenses);
   const totalDespesas = despesas.reduce((sum, e) => {
-    const amount = typeof e.amount === "number" ? e.amount : Number(e.amount.toString());
+    const amount = typeof e.amount === "number" ? e.amount : Number(e.amount);
     return sum + amount;
   }, 0);
   const totalCaixa = caixa.reduce((sum, e) => {
-    const amount = typeof e.amount === "number" ? e.amount : Number(e.amount.toString());
+    const amount = typeof e.amount === "number" ? e.amount : Number(e.amount);
     return sum + amount;
   }, 0);
   return { totalDespesas, totalCaixa };
@@ -118,7 +118,7 @@ export async function generateAccountingPDF(
   const valorSolicitado = block.request?.amount
     ? typeof block.request.amount === "number"
       ? block.request.amount
-      : Number(block.request.amount.toString())
+      : Number(block.request.amount)
     : 0;
 
   const saldoFinal = valorSolicitado + totalCaixa - totalDespesas;

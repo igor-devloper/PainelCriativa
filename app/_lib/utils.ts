@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { UserRole } from "@/types";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { UserRole } from "@/app/_actions/types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

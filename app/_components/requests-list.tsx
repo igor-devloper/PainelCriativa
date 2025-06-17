@@ -27,7 +27,7 @@ import { ValidationUserDialog } from "./validation-user-dialog";
 import { ReimbursementDialog } from "./reimbursement-dialog";
 import { DenialReasonDialog } from "./denial-reason-dialog";
 import { useUser } from "@clerk/nextjs";
-import { Request } from "../_actions/types";
+import { ExpenseRequest as Request } from "../types";
 import { RequestStatusDialog } from "./request-status-dialog";
 import UserInfo from "./user-info";
 import {

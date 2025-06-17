@@ -4,8 +4,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/app/_components/ui/card";
-import { AdminStats } from "../_actions/types";
 import { formatCurrency } from "@/app/_lib/utils";
+import { AdminStats } from "../types";
 
 interface AdminDashboardProps {
   stats: AdminStats;

@@ -4,7 +4,7 @@ import { db, executeWithRetry } from "@/app/_lib/prisma";
 import { queryWithCache } from "@/app/_lib/db-utils";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { getUserRole } from "@/app/_lib/utils";
-import type { AccountingBlock } from "@/app/_actions/types";
+import { AccountingBlock, convertPrismaToAccountingBlock } from "../types";
 
 export async function getAccountingBlocks(): Promise<AccountingBlock[]> {
   const { userId } = await auth();
@@ -46,11 +46,11 @@ export async function getAccountingBlocks(): Promise<AccountingBlock[]> {
           take: 20,
         }),
       );
-
+       const accountingBlocks = blocks.map(convertPrismaToAccountingBlock);
       // Serialize the data before returning
       return JSON.parse(
         JSON.stringify(
-          blocks.map((block) => ({
+          accountingBlocks.map((block) => ({
             ...block,
             totalAmount: block.expenses.reduce(
               (sum, expense) => sum + Number(expense.amount),

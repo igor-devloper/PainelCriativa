@@ -50,7 +50,7 @@ import {
   EXPENSE_CATEGORY_OPTIONS,
   PAYMENT_METHOD_OPTIONS,
 } from "../_constants/transactions";
-import { Expense } from "../types";
+import { ExpenseItem as Expense } from "../types";
 
 const formSchema = z.object({
   description: z.string().nullable(),
