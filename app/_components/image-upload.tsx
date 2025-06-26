@@ -182,24 +182,7 @@ export function ImageUpload({
       </Dialog>
 
       {/* Dialog do Scanner */}
-      <Dialog open={showScanner} onOpenChange={setShowScanner}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Escanear Recibo</DialogTitle>
-          </DialogHeader>
-          {!cameraPermissionGranted ? (
-            <CameraPermissionHelper
-              onPermissionGranted={() => setCameraPermissionGranted(true)}
-            />
-          ) : (
-            <ReceiptScanner
-              onImageCapture={handleScannerCapture}
-              onImageUpload={handleScannerUpload}
-              disabled={false}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      
     </div>
   );
 }
