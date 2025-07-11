@@ -326,7 +326,7 @@ export function AccountingBlockDialog({
                       block.saldoFinal ?? 0 < 0 ? "text-red-600" : "text-green-600"
                     }`}
                   >
-                    {formatCurrency(block.saldoFinal || remainingBalance)}
+                    {formatCurrency(block.saldoFinal ?? 0)}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {block.saldoFinal ?? 0 < 0
