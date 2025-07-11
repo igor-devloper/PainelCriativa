@@ -121,7 +121,6 @@ export async function generateAccountingPDF(
       : Number(block.request.amount)
     : 0;
 
-  const saldoFinal = valorSolicitado + totalCaixa - totalDespesas;
   // Função para adicionar rodapé
   const addFooter = (pageNumber: number) => {
     const pageWidth = doc.internal.pageSize.width;
@@ -260,6 +259,8 @@ export async function generateAccountingPDF(
   const statusY = doc.lastAutoTable.finalY + 20;
   doc.setFillColor(248, 249, 250);
   doc.roundedRect(10, statusY, 190, 70, 3, 3, "F");
+  const saldoFinal = block.saldoFinal ?? 0
+  const rembolsoNecessario = saldoFinal < 0 ? "Reembolso necessário" : "Reembolso feito";
 
   autoTable(doc, {
     startY: statusY + 5,
@@ -272,6 +273,7 @@ export async function generateAccountingPDF(
       ],
       ["Total das despesas:", formatCurrency(totalExpenses)],
       ["Total em caixa:", formatCurrency(totalCaixa)],
+      ["Reembolso:", rembolsoNecessario],
       ["Saldo final:", formatCurrency(block.saldoFinal ?? 0)]
     ],
     theme: "plain",
