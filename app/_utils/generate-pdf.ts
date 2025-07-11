@@ -272,7 +272,7 @@ export async function generateAccountingPDF(
       ],
       ["Total das despesas:", formatCurrency(totalExpenses)],
       ["Total em caixa:", formatCurrency(totalCaixa)],
-      ["Saldo final:", formatCurrency(block.saldoFinal || remainingBalance)]
+      ["Saldo final:", formatCurrency(block.saldoFinal ?? 0)]
     ],
     theme: "plain",
     styles: { fontSize: 11, cellPadding: 2 },
