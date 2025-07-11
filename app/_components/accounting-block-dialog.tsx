@@ -323,13 +323,13 @@ export function AccountingBlockDialog({
                 <CardContent className="p-4 pt-0">
                   <p
                     className={`text-base font-bold sm:text-lg ${
-                      remainingBalance < 0 ? "text-red-600" : "text-green-600"
+                      block.saldoFinal ?? 0 < 0 ? "text-red-600" : "text-green-600"
                     }`}
                   >
-                    {formatCurrency(remainingBalance)}
+                    {formatCurrency(block.saldoFinal || remainingBalance)}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {remainingBalance < 0
+                    {block.saldoFinal ?? 0 < 0
                       ? "Reembolso necessário"
                       : "Saldo positivo"}
                   </p>

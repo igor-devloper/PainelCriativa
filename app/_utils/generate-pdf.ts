@@ -267,16 +267,12 @@ export async function generateAccountingPDF(
     body: [
       ["Status da Prestação de Contas:", BLOCK_STATUS_LABELS[block.status]],
       [
-        "Status da Solicitação:",
-        REQUEST_STATUS_LABELS[block.request?.status || RequestStatus.WAITING],
-      ],
-      [
         "Valor disponibilizado:",
         formatCurrency(Number(block.request?.amount?.toString())),
       ],
       ["Total das despesas:", formatCurrency(totalExpenses)],
       ["Total em caixa:", formatCurrency(totalCaixa)],
-      ["Saldo final:", formatCurrency(saldoFinal)]
+      ["Saldo final:", formatCurrency(block.saldoFinal || remainingBalance)]
     ],
     theme: "plain",
     styles: { fontSize: 11, cellPadding: 2 },
