@@ -380,17 +380,17 @@ export function AccountingBlockDialog({
                           <AlertDialogDescription>
                             Você está prestes a fechar este bloco de prestação
                             de contas.
-                            {remainingBalance < 0 ? (
+                            {block.saldoFinal ?? 0 < 0 ? (
                               <p className="mt-2 text-red-500">
                                 O saldo final é negativo (
-                                {formatCurrency(remainingBalance)}). Uma
+                                {formatCurrency(block.saldoFinal ?? 0)}). Uma
                                 solicitação de reembolso será criada
                                 automaticamente.
                               </p>
                             ) : (
                               <p className="mt-2 text-green-600">
                                 O saldo final é positivo (
-                                {formatCurrency(remainingBalance)}).
+                                {formatCurrency(block.saldoFinal ?? 0)}).
                               </p>
                             )}
                           </AlertDialogDescription>

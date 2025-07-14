@@ -197,7 +197,7 @@ export function AccountingBlocksTable({
                     <TableCell className="text-right">
                       <div className="flex items-center flex-col">
                         <span
-                          className={`font-medium ${block.remainingBalance < 0 ? "text-red-600" : "text-green-600"}`}
+                          className={`font-medium ${block.saldoFinal ?? 0 < 0 ? "text-red-600" : "text-green-600"}`}
                         >
                           {formatCurrency(block.saldoFinal)}
                         </span>
