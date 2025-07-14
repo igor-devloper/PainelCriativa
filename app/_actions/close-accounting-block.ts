@@ -92,9 +92,7 @@ export async function closeAccountingBlock(blockId: string) {
 
 
   // Calcular saldo total
-  const saldo = block.expenses.reduce((acc, t) => {
-    return t.type === "CAIXA" ? acc + t.amount : acc - t.amount;
-  }, 0);
+  const saldo = block.saldoFinal ?? 0;
 
   // Validar fechamento com saldo negativo
   if (saldo < 0) {

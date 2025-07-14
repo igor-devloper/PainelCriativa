@@ -199,7 +199,7 @@ export function AccountingBlocksTable({
                         <span
                           className={`font-medium ${block.saldoFinal ?? 0 < 0 ? "text-red-600" : "text-green-600"}`}
                         >
-                          {formatCurrency(block.saldoFinal)}
+                          {formatCurrency(block.saldoFinal ?? 0)}
                         </span>
                         {block.needsReimbursement && (
                           <Badge variant="destructive" className="ml-2 text-xs">
