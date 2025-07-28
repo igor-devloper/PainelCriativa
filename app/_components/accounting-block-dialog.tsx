@@ -165,8 +165,13 @@ export function AccountingBlockDialog({
   // Separar despesas por tipo
   const despesas = block.expenses.filter((e) => e.type === "DESPESA");
   const caixa = block.expenses.filter((e) => e.type === "CAIXA");
+  const reembolso = block.expenses.filter((e) => e.type === "REEMBOLSO");
 
   const totalDespesas = despesas.reduce(
+    (sum, e) => sum + safeNumber(e.amount),
+    0,
+  );
+   const totalReembolso = reembolso.reduce(
     (sum, e) => sum + safeNumber(e.amount),
     0,
   );
@@ -175,7 +180,7 @@ export function AccountingBlockDialog({
 
   // CORREÇÃO: Lógica correta do saldo final
   // Saldo Final = (Valor Disponibilizado + Total Caixa) - Total de Despesas
-  const remainingBalance = requestAmount + totalCaixa - totalDespesas;
+  const remainingBalance = (totalReembolso + requestAmount + totalCaixa) - totalDespesas;
 
   const handleCloseAccounting = async () => {
     try {
@@ -323,13 +328,13 @@ export function AccountingBlockDialog({
                 <CardContent className="p-4 pt-0">
                   <p
                     className={`text-base font-bold sm:text-lg ${
-                      block.saldoFinal ?? 0 < 0 ? "text-red-600" : "text-green-600"
+                      remainingBalance < 0 ? "text-red-600" : "text-green-600"
                     }`}
                   >
-                    {formatCurrency(block.saldoFinal ?? 0)}
+                    {formatCurrency(remainingBalance)}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {block.saldoFinal ?? 0 < 0
+                    {remainingBalance < 0
                       ? "Reembolso necessário"
                       : "Saldo positivo"}
                   </p>
@@ -380,17 +385,17 @@ export function AccountingBlockDialog({
                           <AlertDialogDescription>
                             Você está prestes a fechar este bloco de prestação
                             de contas.
-                            {block.saldoFinal ?? 0 < 0 ? (
+                            {remainingBalance < 0 ? (
                               <p className="mt-2 text-red-500">
                                 O saldo final é negativo (
-                                {formatCurrency(block.saldoFinal ?? 0)}). Uma
+                                {formatCurrency(remainingBalance)}). Uma
                                 solicitação de reembolso será criada
                                 automaticamente.
                               </p>
                             ) : (
                               <p className="mt-2 text-green-600">
                                 O saldo final é positivo (
-                                {formatCurrency(block.saldoFinal ?? 0)}).
+                                {formatCurrency(remainingBalance)}).
                               </p>
                             )}
                           </AlertDialogDescription>
