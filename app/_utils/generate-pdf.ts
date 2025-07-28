@@ -9,6 +9,7 @@ import {
 } from "@/app/_constants/transactions";
 import { type BlockStatus, RequestStatus } from "@prisma/client";
 import { AccountingBlock, ExpenseItem } from "../types";
+import { safeNumber } from "../_components/accounting-block-dialog";
 
 const COMPANY_CNPJS: Record<string, string> = {
   "GSM SOLARION 02": "44.910.546/0001-55",
@@ -245,14 +246,17 @@ export async function generateAccountingPDF(
     },
     margin: { left: 15, right: 15 },
   });
-
+  const reembolso = block.expenses.filter((e) => e.type === "REEMBOLSO");
   // Adiciona resumo financeiro
   const totalExpenses = block.expenses.reduce(
     (total, expense) => total + Number(expense.amount.toString()),
     0,
   );
-  const remainingBalance =
-    Number(block.initialAmount?.toString()) - totalExpenses;
+   const totalReembolso = reembolso.reduce(
+    (sum, e) => sum + safeNumber(e.amount),
+    0,
+  );
+  const remainingBalance = (Number(block.initialAmount?.toString()) + totalCaixa + totalReembolso) - totalExpenses;
 
   const expensesByCategory = calculateExpensesByCategory(block.expenses);
 
@@ -260,7 +264,7 @@ export async function generateAccountingPDF(
   doc.setFillColor(248, 249, 250);
   doc.roundedRect(10, statusY, 190, 70, 3, 3, "F");
   const saldoFinal = block.saldoFinal ?? 0
-  const rembolsoNecessario = saldoFinal < 0 ? "Reembolso necessário" : "Reembolso feito";
+  const rembolsoNecessario = remainingBalance < 0 ? "Reembolso necessário" : "Reembolso feito";
 
   autoTable(doc, {
     startY: statusY + 5,
@@ -274,7 +278,7 @@ export async function generateAccountingPDF(
       ["Total das despesas:", formatCurrency(totalExpenses)],
       ["Total em caixa:", formatCurrency(totalCaixa)],
       ["Reembolso:", rembolsoNecessario],
-      ["Saldo final:", formatCurrency(block.saldoFinal ?? 0)]
+      ["Saldo final:", formatCurrency(remainingBalance)]
     ],
     theme: "plain",
     styles: { fontSize: 11, cellPadding: 2 },

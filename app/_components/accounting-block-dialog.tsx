@@ -85,7 +85,7 @@ interface AccountingBlockDialogProps {
 }
 
 // Função helper para converter valores para número de forma segura
-function safeNumber(value: any): number {
+export function safeNumber(value: any): number {
   if (value === null || value === undefined) return 0;
   if (typeof value === "number") return isNaN(value) ? 0 : value;
   if (typeof value === "string") {
