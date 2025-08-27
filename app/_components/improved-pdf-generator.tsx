@@ -6,7 +6,7 @@ import { Button } from "@/app/_components/ui/button";
 import { FileText, Download, Loader2 } from "lucide-react";
 import { useToast } from "@/app/_hooks/use-toast";
 import type { AccountingBlock } from "@/app/types";
-import { generateAccountingPDF } from "../_utils/generate-pdf";
+import { generateAccountingPDFBrowser as generateAccountingPDF } from "../_utils/generate-pdf.browser";
 
 interface ImprovedPDFGeneratorProps {
   block: AccountingBlock;
@@ -25,11 +25,8 @@ export function ImprovedPDFGenerator({
   const handleGeneratePDF = async () => {
     setIsGenerating(true);
     try {
-      const doc = await generateAccountingPDF(
-        block,
-        companyName,
-        userName,
-      );
+      const doc = await generateAccountingPDF(block, companyName, userName);
+
       doc.save(`prestacao-contas-${block.code}.pdf`);
 
       toast({

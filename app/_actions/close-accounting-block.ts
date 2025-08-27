@@ -4,10 +4,10 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
-import { generateAccountingPDF } from "@/app/_utils/generate-pdf";
 import { db } from "../_lib/prisma";
 import { uploadPdfToSupabase } from "../_lib/upload";
 import { type AccountingBlock, type ExpenseRequest, type ExpenseItem, convertPrismaToAccountingBlock } from "@/app/types";
+import { generateAccountingPDF } from "../_utils/generate-pdf.server";
 
 // Função helper para converter dados do Prisma
 // function convertPrismaToAccountingBlock(prismaBlock: any): AccountingBlock {
