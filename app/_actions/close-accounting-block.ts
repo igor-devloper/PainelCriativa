@@ -113,12 +113,10 @@ export async function closeAccountingBlock(blockId: string) {
 
   const doc = await generateAccountingPDF(block, companyName, responsibleName);
 
-  const pdfBlob = doc.output("blob");
-  const buffer = await pdfBlob.arrayBuffer();
-  const pdfUrl = await uploadPdfToSupabase(
-    Buffer.from(buffer),
-    `${block.code}.pdf`,
-  );
+  // Em closeAccountingBlock:
+  const pdfArrayBuffer = doc.output("arraybuffer"); // em vez de "blob"
+  const pdfUrl = await uploadPdfToSupabase(Buffer.from(pdfArrayBuffer), `${block.code}.pdf`);
+
 
   // Atualiza e apaga o bloco, despesas e request
   await db.$transaction(async (prisma) => {
