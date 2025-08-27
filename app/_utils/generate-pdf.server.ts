@@ -35,22 +35,17 @@ const COMPANY_CNPJS: Record<string, string> = {
 };
 
 // Lê arquivo do /public como DataURL (Node/Server)
-async function loadPublicImageAsDataURL(relPath: string) {
-  const [{ readFile }, path] = await Promise.all([
-    import("node:fs/promises"),
-    import("node:path"),
-  ]);
-  const clean = relPath.replace(/^\/+/, "");
-  const abs = path.join(process.cwd(), "public", clean);
-  const buf = await readFile(abs);
-  const ext = path.extname(abs).toLowerCase();
-  const mime =
-    ext === ".png"
-      ? "image/png"
-      : ext === ".jpg" || ext === ".jpeg"
-      ? "image/jpeg"
-      : "application/octet-stream";
-  return `data:${mime};base64,${buf.toString("base64")}`;
+async function fetchPublicImageAsDataURL(relPath: string) {
+  const url = `${process.env.NEXT_PUBLIC_SITE_URL || ""}/${relPath.replace(/^\/+/, "")}`;
+
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Erro ao carregar imagem pública: ${url}`);
+  }
+
+  const buf = Buffer.from(await res.arrayBuffer());
+  const ext = relPath.endsWith(".jpg") || relPath.endsWith(".jpeg") ? "jpeg" : "png";
+  return `data:image/${ext};base64,${buf.toString("base64")}`;
 }
 
 // Normaliza imagens (base64) com Sharp p/ garantir PNG válido
@@ -113,7 +108,7 @@ export async function generateAccountingPDF(
   const doc = new jsPDF();
 
   // Logo uma única vez
-  const logoDataURL = await loadPublicImageAsDataURL("logo.png");
+  const logoDataURL = await fetchPublicImageAsDataURL("logo.png");
 
   const { totalDespesas, totalCaixa } = calculateTotals(block.expenses);
 
