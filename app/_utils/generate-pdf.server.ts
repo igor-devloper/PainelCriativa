@@ -8,6 +8,7 @@ import {
   BLOCK_STATUS_LABELS,
 } from "@/app/_constants/transactions";
 import { AccountingBlock, ExpenseItem } from "../types";
+import Logo from '@/public/logo.png'
 
 /* ========= helpers ========= */
 
@@ -35,16 +36,25 @@ const COMPANY_CNPJS: Record<string, string> = {
 };
 
 // Lê arquivo do /public como DataURL (Node/Server)
+function resolvePublicUrl(pathname: string) {
+  const base =
+    process.env.NEXT_PUBLIC_SITE_URL // defina no Vercel (e local, se quiser)
+      ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000"); // fallback
+
+  // garante / no começo
+  const normalized = pathname.startsWith("/") ? pathname : `/${pathname}`;
+  return new URL(normalized, base).toString();
+}
+
 async function fetchPublicImageAsDataURL(relPath: string) {
-  const url = `${process.env.NEXT_PUBLIC_SITE_URL || ""}/${relPath.replace(/^\/+/, "")}`;
-
-  const res = await fetch(url);
+  const url = resolvePublicUrl(relPath); // ex: /logo.png -> https://seu-dominio.com/logo.png
+  const res = await fetch(url, { cache: "force-cache" });
   if (!res.ok) {
-    throw new Error(`Erro ao carregar imagem pública: ${url}`);
+    throw new Error(`Erro ao carregar imagem pública: ${url} (${res.status})`);
   }
-
   const buf = Buffer.from(await res.arrayBuffer());
-  const ext = relPath.endsWith(".jpg") || relPath.endsWith(".jpeg") ? "jpeg" : "png";
+  const lower = relPath.toLowerCase();
+  const ext = lower.endsWith(".jpg") || lower.endsWith(".jpeg") ? "jpeg" : "png";
   return `data:image/${ext};base64,${buf.toString("base64")}`;
 }
 
