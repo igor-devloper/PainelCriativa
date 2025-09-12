@@ -3,7 +3,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { formatCurrency, formatDate } from "../_lib/utils";
-import { AccountingBlock, ExpenseItem } from "../types";
+import { AccountingBlock, ExpenseItem, processAccountingBlock } from "../types";
 import {
   EXPENSE_CATEGORY_LABELS,
   BLOCK_STATUS_LABELS,
@@ -44,7 +44,8 @@ async function loadLogoAsDataURL(url = "/logo.png") {
     img.crossOrigin = "anonymous";
     img.onload = () => {
       const c = document.createElement("canvas");
-      c.width = img.width; c.height = img.height;
+      c.width = img.width;
+      c.height = img.height;
       const ctx = c.getContext("2d");
       if (!ctx) return reject(new Error("canvas ctx null"));
       ctx.drawImage(img, 0, 0);
@@ -53,14 +54,6 @@ async function loadLogoAsDataURL(url = "/logo.png") {
     img.onerror = () => reject(new Error("logo load error"));
     img.src = url;
   });
-}
-
-function calculateTotals(expenses: any[]) {
-  const despesas = expenses.filter((e) => e.type === "DESPESA");
-  const caixa = expenses.filter((e) => e.type === "CAIXA");
-  const totalDespesas = despesas.reduce((sum, e) => sum + Number(e.amount), 0);
-  const totalCaixa = caixa.reduce((sum, e) => sum + Number(e.amount), 0);
-  return { totalDespesas, totalCaixa };
 }
 
 function calculateExpensesByCategory(expenses: ExpenseItem[]): Record<string, number> {
@@ -84,7 +77,15 @@ export async function generateAccountingPDFBrowser(
   const doc = new jsPDF();
 
   const logoDataURL = await loadLogoAsDataURL("/logo.png");
-  const { totalDespesas, totalCaixa } = calculateTotals(block.expenses);
+
+  // Usa o mesmo processamento de totais do componente da tabela
+  const processedBlock = processAccountingBlock(block);
+  const {
+    requestAmount,
+    totalDespesas,
+    totalCaixa,
+    remainingBalance,
+  } = processedBlock;
 
   const addHeader = () => {
     const logoHeight = 30;
@@ -160,19 +161,7 @@ export async function generateAccountingPDFBrowser(
     margin: { left: 15, right: 15 },
   });
 
-  // Resumo financeiro
-  const reembolso = block.expenses.filter((e: any) => e.type === "REEMBOLSO");
-  const totalExpenses = block.expenses.reduce(
-    (total: number, expense: any) => total + Number(expense.amount.toString()),
-    0
-  );
-  const totalReembolso = reembolso.reduce((sum: number, e: any) => sum + safeNumber(e.amount), 0);
-
-  const remainingBalance =
-    (Number(block.initialAmount?.toString()) + totalCaixa + totalReembolso) - totalExpenses;
-
   const expensesByCategory = calculateExpensesByCategory(block.expenses);
-
   const statusY = doc.lastAutoTable?.finalY ? doc.lastAutoTable.finalY + 20 : 200;
 
   doc.setFillColor(248, 249, 250);
@@ -184,8 +173,8 @@ export async function generateAccountingPDFBrowser(
     head: [["RESUMO DE FECHAMENTO", "", "", "", ""]],
     body: [
       ["Status da Prestação de Contas:", BLOCK_STATUS_LABELS[block.status]],
-      ["Valor disponibilizado:", formatCurrency(Number(block.request?.amount?.toString()))],
-      ["Total das despesas:", formatCurrency(totalExpenses)],
+      ["Valor disponibilizado:", formatCurrency(requestAmount)],
+      ["Total das despesas:", formatCurrency(totalDespesas)],
       ["Total em caixa:", formatCurrency(totalCaixa)],
       ["Reembolso:", rembolsoNecessario],
       ["Saldo final:", formatCurrency(remainingBalance)],
@@ -237,7 +226,7 @@ export async function generateAccountingPDFBrowser(
     footStyles: { minCellHeight: 0, fillColor: [255, 255, 255] },
   });
 
-  // Comprovantes: aqui assumimos que imageUrls já são DataURLs válidos
+  // Comprovantes
   for (const expense of block.expenses) {
     if (!expense.imageUrls?.length) continue;
     for (const base64 of expense.imageUrls) {
@@ -252,10 +241,8 @@ export async function generateAccountingPDFBrowser(
         const pageWidth = doc.internal.pageSize.width - 2 * margin;
         const pageHeight = doc.internal.pageSize.height - 2 * margin - 80;
 
-        // No browser não sabemos as dimensões sem criar Image; usamos largura padrão
-        // Opcional: medir com <img/> e canvas, mas mantemos simples
         const img = new Image();
-        const dims = await new Promise<{ w: number; h: number }>((resolve, reject) => {
+        const dims = await new Promise<{ w: number; h: number }>((resolve) => {
           img.onload = () => resolve({ w: img.width, h: img.height });
           img.onerror = () => resolve({ w: 800, h: 600 });
           img.src = base64;
