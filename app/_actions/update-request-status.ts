@@ -262,7 +262,6 @@ async function sendEmailNotification(
 const COMPANY_PREFIXES: Record<string, string> = {
   "GSM SOLARION 02": "SOL",
   "CRIATIVA ENERGIA": "CRIA",
-  "OESTE BIOGÁS": "BIO",
   "EXATA I": "EXA",
 };
 

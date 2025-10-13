@@ -50,7 +50,7 @@ const formSchema = z.object({
     .min(0.01, "O valor deve ser maior que zero")
     .max(1000000, "O valor máximo permitido é R$ 1.000.000,00"),
   responsibleCompany: z.enum(
-    ["GSM SOLARION 02", "CRIATIVA ENERGIA", "OESTE BIOGÁS", "EXATA I"],
+    ["GSM SOLARION 02", "CRIATIVA ENERGIA",  "EXATA I"],
     {
       errorMap: () => ({ message: "Selecione a empresa responsável" }),
     },
@@ -188,9 +188,7 @@ export function CreateRequestDialog({
                             <SelectItem value="CRIATIVA ENERGIA">
                               CRIATIVA ENERGIA
                             </SelectItem>
-                            <SelectItem value="OESTE BIOGÁS">
-                              OESTE BIOGÁS
-                            </SelectItem>
+
                             <SelectItem value="EXATA I">EXATA I</SelectItem>
                           </SelectContent>
                         </Select>

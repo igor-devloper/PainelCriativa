@@ -11,7 +11,6 @@ import { cn } from "@/app/_lib/utils";
 type CompanyName =
   | "GSM SOLARION 02"
   | "CRIATIVA ENERGIA"
-  | "OESTE BIOGÁS"
   | "EXATA I";
 
 interface UserBalanceProps {
@@ -29,7 +28,6 @@ export function UserBalance({ balances = {} }: UserBalanceProps) {
   const companies: CompanyName[] = [
     "GSM SOLARION 02",
     "CRIATIVA ENERGIA",
-    "OESTE BIOGÁS",
     "EXATA I",
   ];
 

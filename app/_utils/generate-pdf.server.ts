@@ -30,8 +30,7 @@ function safeNumber(value: unknown): number {
 
 const COMPANY_CNPJS: Record<string, string> = {
   "GSM SOLARION 02": "44.910.546/0001-55",
-  "CRIATIVA ENERGIA": "Não consta",
-  "OESTE BIOGÁS": "41.106.939/0001-12",
+  "CRIATIVA ENERGIA": "41.106.939/0001-12",
   "EXATA I": "38.406.585/0001-17",
 };
 
